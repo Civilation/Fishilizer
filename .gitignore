@@ -1,0 +1,11 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+
+# Build artifacts
+# (Uncomment the next line if you want to build locally and not upload the compiled file)
+# Fishilizer.lua
