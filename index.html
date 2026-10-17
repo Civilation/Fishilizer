@@ -1,3 +1,5 @@
+<!-- esentially the sites source-->
+
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -317,7 +319,7 @@ pre .c-fn { color: var(--c-fn); }
   width: 100%;
   cursor: pointer;
   text-decoration: none;
-  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, border-color 0.2s;
 }
 .discord-widget:hover {
   border-color: var(--accent);
@@ -491,15 +493,6 @@ td.n { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(-
   max-width: 780px;
 }
 .note b { color: var(--yellow); }
-
-footer {
-  border-top: 1px solid var(--border);
-  padding: 28px;
-  text-align: center;
-  font-size: 0.82rem;
-  color: var(--fg-3);
-  background: var(--bg);
-}
 </style>
 </head>
 <body>
@@ -624,21 +617,23 @@ loadstring(src)()</pre>
   </section>
 
   <section id="tab-api" class="panel">
-    <h1>API</h1>
+    <h1>API Reference</h1>
+    <p class="lead">Fishilizer is designed to be highly modular and can be dropped into any internal script. All methods are exposed on the returned table.</p>
 
-    <h2>Methods</h2>
+    <h2>Core Methods</h2>
     <table>
-      <tr><th style="width:42%">Signature</th><th>What it does</th></tr>
-      <tr><td><code>Fish.Init()</code></td><td>Resolves decompile and bytecode functions.</td></tr>
-      <tr><td><code>Fish.Save(inst, name?, opts?)</code></td><td>Main entry. Accepts game, a single instance, or an array. Returns the XML string.</td></tr>
-      <tr><td><code>Fish.SaveGame(name?, opts?)</code></td><td>Shorthand for Save(game, ...).</td></tr>
-      <tr><td><code>Fish.SaveInstance(inst, name?, opts?)</code></td><td>Forces Mode = "full".</td></tr>
-      <tr><td><code>Fish.SaveScripts(inst, name?, opts?)</code></td><td>Forces Mode = "scripts" and enables decompile.</td></tr>
-      <tr><td><code>Fish.SaveModels(inst, name?, opts?)</code></td><td>Forces Mode = "models" and skips decompile.</td></tr>
-      <tr><td><code>Fish.FetchClasses(cacheFile?)</code></td><td>Downloads the API dump and merges class property maps.</td></tr>
+      <tr><th style="width:40%">Signature</th><th>Description</th></tr>
+      <tr><td><code>Fish.Init()</code></td><td>Initializes the environment. Resolves decompiler and bytecode functions from the executor. Returns the Fish table.</td></tr>
+      <tr><td><code>Fish.Save(instance, name?, opts?)</code></td><td>Main entry point. Accepts `game`, a single Instance, or an array of Instances. Returns the serialized XML string.</td></tr>
+      <tr><td><code>Fish.SaveGame(name?, opts?)</code></td><td>Shorthand for <code>Fish.Save(game, ...)</code>.</td></tr>
+      <tr><td><code>Fish.SaveInstance(inst, name?, opts?)</code></td><td>Forces `Mode = "full"`. Useful for isolating a single model.</td></tr>
+      <tr><td><code>Fish.SaveScripts(inst, name?, opts?)</code></td><td>Forces `Mode = "scripts"` and enables `Decompile = true`.</td></tr>
+      <tr><td><code>Fish.SaveModels(inst, name?, opts?)</code></td><td>Forces `Mode = "models"` and forces `Decompile = false`.</td></tr>
+      <tr><td><code>Fish.FetchClasses(cacheFile?)</code></td><td>Fetches the official Roblox API Dump and merges new class property maps into memory. Useful for games using newly released instances.</td></tr>
     </table>
 
-    <h2>Grab the XML directly</h2>
+    <h2>Callbacks & Interception</h2>
+    <p>Instead of writing directly to disk, you can intercept the XML string by passing a <code>Callback</code> function in the options table. This is useful for uploading to a webhook or processing the data internally.</p>
     <div style="position:relative">
       <button class="copy-btn" data-t="cb">copy</button>
 <pre id="cb">getgenv().FISHILIZER_NO_AUTORUN = true
@@ -650,51 +645,69 @@ Fish.Init()
 local xml = Fish.Save(game, "Preview", {
     Callback = function(data)
         print("bytes: " .. #data)
+        -- writefile("my_custom_path.rbxlx", data)
     end,
+})</pre>
+    </div>
+
+    <h2>Advanced Injection</h2>
+    <p>You can load specific parts of the engine without saving the whole game. For example, this script saves only the workspace lighting and terrain, ignoring all scripts and player characters.</p>
+    <div style="position:relative">
+      <button class="copy-btn" data-t="adv">copy</button>
+<pre id="adv">getgenv().FISHILIZER_NO_AUTORUN = true
+local Fish = loadstring(game:HttpGetAsync(
+    "https://civilation.github.io/Fishilizer/Fishilizer.lua"
+))()
+Fish.Init()
+
+Fish.Save({
+    workspace,
+    game:GetService("Lighting"),
+    game:GetService("ReplicatedStorage")
+}, "EnvironmentAndAssets", {
+    Mode = "models",
+    IgnoreDefaultProps = true
 })</pre>
     </div>
   </section>
 
   <section id="tab-options" class="panel">
     <h1>Options</h1>
+    <p class="lead">Every configuration key, its default, and what it does. These can be passed directly to the <code>opts</code> table or via the <code>FISHILIZER_CONFIG</code> global.</p>
 
     <table>
-      <tr><th style="width:28%">Key</th><th style="width:16%">Default</th><th>What it does</th></tr>
-      <tr><td><code>Decompile</code></td><td class="n">false</td><td>Decompile every script during the save.</td></tr>
-      <tr><td><code>DecompileTimeout</code></td><td class="n">10</td><td>Seconds before giving up on a script.</td></tr>
-      <tr><td><code>MaxThreads</code></td><td class="n">3</td><td>Parallel decompile workers.</td></tr>
-      <tr><td><code>SaveBytecode</code></td><td class="n">false</td><td>Base64 bytecode when source is empty.</td></tr>
-      <tr><td><code>RemovePlayerCharacters</code></td><td class="n">true</td><td>Strip every player character model.</td></tr>
-      <tr><td><code>IncludeBackpack</code></td><td class="n">true</td><td>Preserve runtime tools via StarterPack.</td></tr>
-      <tr><td><code>IgnoreDefaultProps</code></td><td class="n">true</td><td>Skip properties matching a fresh Instance.new().</td></tr>
-      <tr><td><code>IgnoreNotArchivable</code></td><td class="n">true</td><td>Skip Archivable = false.</td></tr>
-      <tr><td><code>UseGetProperties</code></td><td class="n">true</td><td>Call getproperties when supported.</td></tr>
-      <tr><td><code>FetchDocs</code></td><td class="n">false</td><td>Pull the API dump on Init.</td></tr>
-      <tr><td><code>Mode</code></td><td class="n">"full"</td><td>full, scripts, or models.</td></tr>
-      <tr><td><code>FilePath</code></td><td class="n">false</td><td>Absolute output path. Overrides OUT.</td></tr>
-      <tr><td><code>OUT</code></td><td class="n">"Fishilizer"</td><td>Folder name when no FilePath.</td></tr>
-      <tr><td><code>Callback</code></td><td class="n">false</td><td>function(xml) instead of writing to disk.</td></tr>
-      <tr><td><code>Clipboard</code></td><td class="n">false</td><td>Copy XML to clipboard instead of writing.</td></tr>
-      <tr><td><code>AvoidFileOverwrite</code></td><td class="n">true</td><td>Do not delete existing files.</td></tr>
-      <tr><td><code>SafeMode</code></td><td class="n">false</td><td>Kick before saving. Use an alt.</td></tr>
-      <tr><td><code>BoostFPS</code></td><td class="n">false</td><td>Lower render quality during save.</td></tr>
-      <tr><td><code>KillAllScripts</code></td><td class="n">false</td><td>Disable scripts before saving.</td></tr>
-      <tr><td><code>Anonymous</code></td><td class="n">false</td><td>Replace player names.</td></tr>
-      <tr><td><code>EmitTags</code></td><td class="n">true</td><td>Serialize CollectionService tags.</td></tr>
-      <tr><td><code>EmitAttributes</code></td><td class="n">true</td><td>Serialize GetAttributes.</td></tr>
-      <tr><td><code>StripCharacters</code></td><td class="n">true</td><td>Auto remove character models.</td></tr>
-      <tr><td><code>StripCoreScripts</code></td><td class="n">true</td><td>Auto remove Roblox modules.</td></tr>
-      <tr><td><code>Depth</code></td><td class="n">1000</td><td>Max recursion depth.</td></tr>
-      <tr><td><code>Notify</code></td><td class="n">true</td><td>Toasts on start, finish, fail.</td></tr>
-      <tr><td><code>ShowStatus</code></td><td class="n">true</td><td>On screen status panel.</td></tr>
+      <tr><th style="width:28%">Key</th><th style="width:16%">Default</th><th>Description</th></tr>
+      <tr><td><code>Decompile</code></td><td class="n">false</td><td>Runs the environment decompiler on every script during save.</td></tr>
+      <tr><td><code>DecompileTimeout</code></td><td class="n">10</td><td>Max seconds to spend decompiling a single script.</td></tr>
+      <tr><td><code>MaxThreads</code></td><td class="n">3</td><td>Number of parallel decompile workers.</td></tr>
+      <tr><td><code>SaveBytecode</code></td><td class="n">false</td><td>If decompilation fails or source is empty, saves base64 bytecode instead.</td></tr>
+      <tr><td><code>RemovePlayerCharacters</code></td><td class="n">true</td><td>Strips every player character model from the save.</td></tr>
+      <tr><td><code>IncludeBackpack</code></td><td class="n">true</td><td>Temporarily moves runtime tools to StarterPack to preserve hotbar icons.</td></tr>
+      <tr><td><code>IgnoreDefaultProps</code></td><td class="n">true</td><td>Compares properties to a fresh Instance.new() and skips them to reduce file size.</td></tr>
+      <tr><td><code>IgnoreNotArchivable</code></td><td class="n">true</td><td>Skips any instance where <code>Archivable = false</code>.</td></tr>
+      <tr><td><code>UseGetProperties</code></td><td class="n">true</td><td>Calls <code>getproperties(inst)</code> to enumerate every engine property.</td></tr>
+      <tr><td><code>FetchDocs</code></td><td class="n">false</td><td>Pulls the MaximumADHD API dump on Init to generate live class maps.</td></tr>
+      <tr><td><code>Mode</code></td><td class="n">"full"</td><td>Accepts <code>"full"</code>, <code>"scripts"</code>, or <code>"models"</code>.</td></tr>
+      <tr><td><code>FilePath</code></td><td class="n">false</td><td>Absolute output path. Overrides <code>OUT</code>.</td></tr>
+      <tr><td><code>OUT</code></td><td class="n">"Fishilizer"</td><td>Folder name when no FilePath is specified.</td></tr>
+      <tr><td><code>Callback</code></td><td class="n">false</td><td><code>function(xml)</code> instead of writing to disk.</td></tr>
+      <tr><td><code>Clipboard</code></td><td class="n">false</td><td>Copies the XML to the clipboard instead of writing a file.</td></tr>
+      <tr><td><code>AvoidFileOverwrite</code></td><td class="n">true</td><td>Does not delete existing files at the target path.</td></tr>
+      <tr><td><code>SafeMode</code></td><td class="n">false</td><td>Kicks the client before saving to prevent anti-cheat interference.</td></tr>
+      <tr><td><code>BoostFPS</code></td><td class="n">false</td><td>Lowers render quality during save to improve performance.</td></tr>
+      <tr><td><code>KillAllScripts</code></td><td class="n">false</td><td>Disables all running scripts before saving.</td></tr>
+      <tr><td><code>Anonymous</code></td><td class="n">false</td><td>Replaces player names with Player_UserId.</td></tr>
+      <tr><td><code>EmitTags</code></td><td class="n">true</td><td>Serializes CollectionService tags.</td></tr>
+      <tr><td><code>EmitAttributes</code></td><td class="n">true</td><td>Serializes GetAttributes() into binary blobs.</td></tr>
+      <tr><td><code>StripCharacters</code></td><td class="n">true</td><td>Automatically removes character models.</td></tr>
+      <tr><td><code>StripCoreScripts</code></td><td class="n">true</td><td>Automatically removes Roblox internal modules.</td></tr>
+      <tr><td><code>Depth</code></td><td class="n">1000</td><td>Maximum recursion depth.</td></tr>
+      <tr><td><code>Notify</code></td><td class="n">true</td><td>Toasts on start, finish, and fail.</td></tr>
+      <tr><td><code>ShowStatus</code></td><td class="n">true</td><td>Shows the progress bar UI in the top right corner.</td></tr>
     </table>
   </section>
 
 </div>
-
-<footer>
-  <p>Fishilizer</p>
-</footer>
 
 <script>
 (function(){
