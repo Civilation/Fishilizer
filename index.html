@@ -4,20 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://files.catbox.moe data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://files.catbox.moe https://raw.githubusercontent.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline';">
 <title>Fishilizer</title>
 <meta name="description" content="An accurate, lightweight Roblox place serializer written in pure Lua."/>
+
 
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://civilation.github.io/Fishilizer/">
 <meta property="og:title" content="Fishilizer">
 <meta property="og:description" content="An accurate, lightweight Roblox place serializer written in pure Lua.">
-<meta property="og:image" content="https://files.catbox.moe/317iqn.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Civilation/Fishilizer/main/embed.PNG">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Fishilizer">
 <meta name="twitter:description" content="An accurate, lightweight Roblox place serializer written in pure Lua.">
-<meta name="twitter:image" content="https://files.catbox.moe/317iqn.png">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Civilation/Fishilizer/main/embed.PNG">
 
 <link rel="icon" type="image/png" href="https://files.catbox.moe/5uumgz.png">
 <style>
@@ -27,7 +28,7 @@
   --bg: #eeeeee;
   --bg-alt: #e4e4e4;
   --bg-panel: #f5f5f5;
-  --bg-code: #121212;
+  --bg-code: #1e1e1e;
   --fg: #1f1f1f;
   --fg-2: #565656;
   --fg-3: #8a8a8a;
@@ -127,6 +128,11 @@ header {
   width: 38px;
   object-fit: contain;
   display: block;
+}
+
+/* Make logo black in light mode using a filter */
+html[data-theme="light"] .brand img {
+  filter: brightness(0);
 }
 
 .brand-name {
