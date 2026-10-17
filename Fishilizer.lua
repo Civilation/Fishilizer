@@ -2,7 +2,7 @@
 
 Fishilizer is now open-sourced.
 
-A gift from SourceKids. Eventually, once Fishilizer reaches its full capabilities, it will no longer be open-sourced.
+A gift from Garfield Cat. Eventually, once Fishilizer reaches its full capabilities, it will no longer be open-sourced.
 
 Enjoy this special gift <3
 
@@ -11,59 +11,13 @@ Enjoy this special gift <3
 
 
 local Fish = {}
----begin
-Fish.VERSION = "10.1.1"
+Fish.VERSION = "10.7.0"
 Fish.NAME = "Fishilizer"
-
-
---- a list of options for our loadstring we can later use 
-Fish.Options = {
-    Decompile = false,
-    DecompileTimeout = 10,
-    MaxThreads = 3,
-    DecompileIgnore = {"Chat", "CoreGui", "CorePackages"},
-    SaveBytecode = false,
-    SaveScriptCache = false,
-    SaveScriptCachePath = "FishilizerCache",
-    NilInstances = false,
-    RemovePlayerCharacters = true,
-    SavePlayers = false,
-    IsolateStarterPlayer = true,
-    IsolateLocalPlayer = false,
-    SavePlayerCharacters = false,
-    IncludeBackpack = true,
-    IgnoreDefaultProps = true,
-    IgnoreNotArchivable = true,
-    Binary = false,
-    ShowStatus = true,
-    ReadMe = true,
-    Mode = "full",
-    FilePath = false,
-    Callback = false,
-    Clipboard = false,
-    AvoidFileOverwrite = true,
-    SafeMode = false,
-    BoostFPS = false,
-    KillAllScripts = false,
-    AntiIdle = false,
-    Anonymous = false,
-    OUT = "Fishilizer",
-    Depth = 1000,
-    Terrain = true,
-    CSG = true,
-    Notify = true,
-    StripCharacters = true,
-    StripCoreScripts = true,
-    EmitTags = true,
-    EmitAttributes = true,
-    UseGetProperties = true,
-    FetchDocs = false,
-    APIDumpURL = "https://raw.githubusercontent.com/MaximumADHD/Roblox-Client-Tracker/roblox/API-Dump.json",
-}
 
 local HttpService = game:GetService("HttpService")
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 
 local function resolveIO(name)
     local g = (getgenv and getgenv()) or _G
@@ -88,498 +42,490 @@ local IO = {
     delfile = resolveIO("delfile"),
     setclipboard = resolveIO("setclipboard"),
     getproperties = resolveIO("getproperties"),
-    gethiddenproperty = resolveIO("gethiddenproperty"),
 }
 
 local function log(msg)
     pcall(function() print("[Fishilizer] " .. tostring(msg)) end)
-    pcall(function() warn("[Fishilizer] " .. tostring(msg)) end)
 end
 
-local _progressUI = nil
-local _progressEmitted = 0
-local _progressTotal = 0
-local BAR_TRACK_WIDTH = 304
-
-local function destroyProgressUI()
-    if _progressUI and _progressUI.gui then
-        pcall(function() _progressUI.gui:Destroy() end)
+local function resolveBytecode()
+    if type(getscriptbytecode) == "function" then return getscriptbytecode end
+    local g = (getgenv and getgenv()) or _G
+    if g then
+        for _, v in pairs(g) do
+            if type(v) == "table" and type(v.getscriptbytecode) == "function" then
+                return v.getscriptbytecode
+            end
+        end
     end
-    _progressUI = nil
-    _progressEmitted = 0
-    _progressTotal = 0
+    return nil
 end
 
-local function buildProgressUI()
-    if not Fish.Options.ShowStatus then return nil end
+--- a list of apis
+Fish.Options = {
+    Decompile = true,
+    MaxThreads = 3,
+    SaveBytecode = false,
+    RemovePlayerCharacters = true,
+    IncludeBackpack = true,
+    IgnoreDefaultProps = true,
+    IgnoreNotArchivable = true,
+    UseGetProperties = true,
+    FetchDocs = true,
+    APIProperties = true,
+    Mode = "full",
+    FilePath = false,
+    Callback = false,
+    Clipboard = false,
+    AvoidFileOverwrite = true,
+    KillAllScripts = false,
+    Anonymous = false,
+    EmitTags = true,
+    EmitAttributes = true,
+    StripCharacters = true,
+    StripCoreScripts = true,
+    TerrainResolution = 8,
+    TerrainCellCap = 4194304,
+    Depth = 100,
+    Notify = true,
+    ShowStatus = true,
+    ReadMe = true,
+    OUT = "Fishilizer",
+    DataAPIURL = "https://civilation.github.io/Fishilizer/",
+    APIDumpURL = "https://raw.githubusercontent.com/MaximumADHD/Roblox-Client-Tracker/roblox/API-Dump.json",
+    LunaUXURL = "https://lunaux-decompiler.dev/api/decompile",
+}
+
+local DATA = {
+    version = "0.0.0",
+    instance_specific = {},
+    critical_props = {},
+    binary_props = {},
+    real_content_props = {},
+    content_prop_exact = {},
+    core_script_names = {},
+    character_classes = {},
+    skip_svc = {},
+    skip_prop = {},
+    attr_type_ids = { string=0x02, boolean=0x03, number=0x04 },
+    ser_types = {},
+    server_script_placeholder = "-- Serverscripts are almost IMPOSSIBLE to save without additional requirements in every serverscript",
+    readme_template = "",
+    decompiler = nil,
+}
+
+local SKIP_SVC = {}
+local SKIP_PROP = {}
+local BINARY_PROPS = {}
+local CONTENT_PROP_EXACT = {}
+local REAL_CONTENT_PROPS = {}
+local CORE_SCRIPT_NAMES = {}
+local CHARACTER_CLASSES = {}
+local CRITICAL_PROPS = {}
+local CRITICAL_PROPS_SET = {}
+local INSTANCE_SPECIFIC = {}
+local ATTR_TYPE_IDS = { string=0x02, boolean=0x03, number=0x04 }
+local _dataLoaded = false
+
+local FALLBACK = {
+    meta = { version = "0.0.0" },
+    tables = {
+        instance_specific = {},
+        critical_props = {
+            "Name","Archivable","Source","Disabled","RunContext","Texture","TextureId","TextureID",
+            "Image","MeshId","SoundId","AnimationId","ShirtTemplate","PantsTemplate","Graphic","Decal",
+            "Size","CFrame","Anchored","CanCollide","CanTouch","Transparency","Reflectance","Material",
+            "Color","BrickColor","Value","Text","FontFace","BackgroundColor3","BackgroundTransparency",
+            "Visible","ZIndex","Ambient","Brightness","ClockTime","Part0","Part1","C0","C1",
+            "Attachment0","Attachment1","SmoothGrid","MaterialColors","ChildData","PhysicsData","PhysicalConfigData"
+        },
+        binary_props = {"SmoothGrid","ChildData","PhysicsData","PhysicalConfigData","MaterialColors"},
+        real_content_props = {"Texture","TextureId","TextureID","Image","MeshId","SoundId","AnimationId","Decal","ShirtTemplate","PantsTemplate","Graphic"},
+        content_prop_exact = {},
+        core_script_names = {},
+        character_classes = {"Humanoid","Head","Torso","HumanoidRootPart","UpperTorso","LowerTorso"},
+        skip_svc = {"CoreGui","CorePackages","CoreScripts","Chat","LogService"},
+        skip_prop = {"Parent","RobloxLocked","HistoryId","ClassName"},
+        attr_type_ids = {string=0x02,boolean=0x03,number=0x04,UDim=0x0D,UDim2=0x10,Vector2=0x12,Vector3=0x13,CFrame=0x10,Color3=0x1A,BrickColor=0x1E,NumberRange=0x1F,NumberSequence=0x20,ColorSequence=0x21,Rect=0x22,Font=0x1C},
+        ser_types = {},
+    },
+    templates = {
+        server_script_placeholder = "-- Serverscripts are almost IMPOSSIBLE to save without additional requirements in every serverscript",
+        readme = "",
+    },
+}
+
+local function toSet(arr)
+    local s = {}
+    if type(arr) == "table" then
+        for _, v in ipairs(arr) do
+            if type(v) == "string" then s[v] = true end
+        end
+    end
+    return s
+end
+
+local function shouldSkipProp(name)
+    if SKIP_PROP[name] then return true end
+    if CONTENT_PROP_EXACT[name] then return true end
+    return false
+end
+
+local function applyData(d)
+    local t = d.tables or d
+    if type(t.instance_specific) == "table" then INSTANCE_SPECIFIC = t.instance_specific end
+    if type(t.critical_props) == "table" then
+        CRITICAL_PROPS = t.critical_props
+        CRITICAL_PROPS_SET = toSet(t.critical_props)
+    end
+    if type(t.binary_props) == "table" then BINARY_PROPS = toSet(t.binary_props) end
+    if type(t.real_content_props) == "table" then REAL_CONTENT_PROPS = toSet(t.real_content_props) end
+    if type(t.content_prop_exact) == "table" then CONTENT_PROP_EXACT = toSet(t.content_prop_exact) end
+    if type(t.core_script_names) == "table" then CORE_SCRIPT_NAMES = toSet(t.core_script_names) end
+    if type(t.character_classes) == "table" then CHARACTER_CLASSES = toSet(t.character_classes) end
+    if type(t.skip_svc) == "table" then SKIP_SVC = toSet(t.skip_svc) end
+    if type(t.skip_prop) == "table" then SKIP_PROP = toSet(t.skip_prop) end
+    if type(t.attr_type_ids) == "table" then ATTR_TYPE_IDS = t.attr_type_ids end
+    if type(t.ser_types) == "table" then DATA.ser_types = t.ser_types end
+
+    local tmpl = d.templates or d
+    if type(tmpl.server_script_placeholder) == "string" and tmpl.server_script_placeholder ~= "" then
+        DATA.server_script_placeholder = tmpl.server_script_placeholder
+    end
+    if type(tmpl.readme) == "string" and tmpl.readme ~= "" then
+        DATA.readme_template = tmpl.readme
+    end
+
+    if type(d.decompiler) == "table" then
+        DATA.decompiler = d.decompiler
+    end
+
+    if type(d.options) == "table" then
+        for k, v in pairs(d.options) do
+            if Fish.Options[k] == nil then Fish.Options[k] = v end
+        end
+    end
+
+    if d.meta and type(d.meta.version) == "string" then
+        DATA.version = d.meta.version
+    end
+end
+
+local function loadFromAPI()
+    if _dataLoaded then return _dataLoaded end
+    local ok, html = pcall(function() return game:HttpGet(Fish.Options.DataAPIURL) end)
+    if ok and type(html) == "string" and #html > 0 then
+        local blob = html:match('<script[^>]*id="fish%-data"[^>]*>(.-)</script>')
+        if blob then
+            local okD, decoded = pcall(HttpService.JSONDecode, HttpService, blob)
+            if okD and type(decoded) == "table" then
+                applyData(decoded)
+                _dataLoaded = true
+                log("Data API loaded v" .. tostring(DATA.version or "?"))
+                return true
+            end
+        end
+    end
+    log("Data API unreachable, using fallback tables")
+    applyData(FALLBACK)
+    _dataLoaded = true
+    return false
+end
+
+local apiClassProps = {}
+
+local function buildApiClassProps(data)
+    if type(data) ~= "table" or type(data.Classes) ~= "table" then return end
+    local ownProps = {}
+    local superclass = {}
+    for _, class in ipairs(data.Classes) do
+        local cn = class.Name
+        if cn then
+            superclass[cn] = class.Superclass
+            local props = {}
+            if type(class.Members) == "table" then
+                for _, m in ipairs(class.Members) do
+                    if m.MemberType == "Property" and m.Name then
+                        props[m.Name] = true
+                    end
+                end
+            end
+            ownProps[cn] = props
+        end
+    end
+    local count = 0
+    for cn in pairs(ownProps) do
+        local combined = {}
+        local cur = cn
+        local guard = 0
+        while cur and guard < 50 do
+            local p = ownProps[cur]
+            if not p then break end
+            for k in pairs(p) do combined[k] = true end
+            cur = superclass[cur]
+            guard = guard + 1
+        end
+        apiClassProps[cn] = combined
+        count = count + 1
+    end
+    log("API dump: property cache built for " .. count .. " classes")
+end
+
+local function isPropValid(cls, propName)
+    if CRITICAL_PROPS_SET[propName] then return true end
+    local apiSet = apiClassProps[cls]
+    if not apiSet then return true end
+    return apiSet[propName] == true
+end
+
+local function httpPost(url, body, headers)
+    local g = (getgenv and getgenv()) or _G or {}
+    local sent = {}
+
+    local function tryCall(fn)
+        if type(fn) ~= "function" or sent[fn] then return nil end
+        sent[fn] = true
+        local ok, res = pcall(fn, { Url = url, Method = "POST", Body = body, Headers = headers or {} })
+        if not ok or res == nil then return nil end
+        if type(res) == "string" then return { status = 200, body = res } end
+        if type(res) ~= "table" then return nil end
+        local st = res.StatusCode or res.status or res.Status
+        local bd = res.Body or res.body or res.Response or res.Data
+        if type(bd) == "table" then
+            local okE, e = pcall(HttpService.JSONEncode, HttpService, bd)
+            if okE then bd = e end
+        end
+        if type(bd) == "string" then return { status = st, body = bd } end
+        return nil
+    end
+
+    local r = tryCall(g.request) if r then return r end
+    if type(g.http) == "table" then r = tryCall(g.http.request) if r then return r end end
+    if type(g.Http) == "table" then r = tryCall(g.Http.request) if r then return r end end
+    if type(g.HTTP) == "table" then r = tryCall(g.HTTP.request) if r then return r end end
+    r = tryCall(g.http_request) if r then return r end
+
+    for _, v in pairs(g) do
+        if type(v) == "table" then
+            local rf = v.request or v.http_request or v.Request
+            r = tryCall(rf)
+            if r then return r end
+        end
+    end
+
+    return nil
+end
+
+local b64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+
+local function b64(s)
+    if type(s) ~= "string" then return "" end
+    local res = {}
+    local i = 1
+    local len = #s
+    while i <= len do
+        local c1 = s:byte(i)
+        local c2 = s:byte(i + 1)
+        local c3 = s:byte(i + 2)
+        local b1 = math.floor(c1 / 4)
+        local b2 = (c1 % 4) * 16 + (c2 and math.floor(c2 / 16) or 0)
+        local b3 = c2 and ((c2 % 16) * 4 + (c3 and math.floor(c3 / 64) or 0)) or 0
+        local b4 = c3 and (c3 % 64) or 0
+        table.insert(res, b64chars:sub(b1 + 1, b1 + 1))
+        table.insert(res, b64chars:sub(b2 + 1, b2 + 1))
+        table.insert(res, c2 and b64chars:sub(b3 + 1, b3 + 1) or "=")
+        table.insert(res, c3 and b64chars:sub(b4 + 1, b4 + 1) or "=")
+        i = i + 3
+    end
+    return table.concat(res)
+end
+
+local function lunauxDecompile(inst)
+    local bytecodeFn = resolveBytecode()
+    if not bytecodeFn then return nil end
+    local ok, bytecode = pcall(bytecodeFn, inst)
+    if not ok or type(bytecode) ~= "string" or #bytecode == 0 then return nil end
+
+    local dc = DATA.decompiler or {}
+    local url = dc.url or Fish.Options.LunaUXURL
+    local headers = dc.headers or { ["Content-Type"] = "application/json" }
+    local reqOpts = (dc.body and dc.body.options) or {
+        transformCompoundAssignments = true,
+        virtualizeContinues = true,
+        showFunctionInfo = true,
+        upvalueComments = true,
+    }
+    local responseKeys = dc.responseKeys or { "source", "decompiled", "result", "code", "output" }
+
+    local payload = HttpService:JSONEncode({ script = b64(bytecode), options = reqOpts })
+    local res = httpPost(url, payload, headers)
+    if res and res.body then
+        local okD, data = pcall(HttpService.JSONDecode, HttpService, res.body)
+        if okD and type(data) == "table" then
+            for _, k in ipairs(responseKeys) do
+                if type(data[k]) == "string" and #data[k] > 0 then return data[k] end
+            end
+        elseif res.status and tonumber(res.status) and tonumber(res.status) >= 200 and tonumber(res.status) < 300 then
+            if type(res.body) == "string" and #res.body > 0 and res.body:sub(1, 1) ~= "<" then
+                return res.body
+            end
+        end
+    end
+    return nil
+end
+
+function Fish.FetchClasses(cacheFile)
+    cacheFile = cacheFile or "FishilizerAPIDump.json"
+    if IO.isfile and IO.readfile then
+        local okI, exists = pcall(IO.isfile, cacheFile)
+        if okI and exists then
+            local okR, cached = pcall(IO.readfile, cacheFile)
+            if okR and cached and #cached > 100 then
+                local okD, data = pcall(HttpService.JSONDecode, HttpService, cached)
+                if okD and data then
+                    Fish.ApplyAPIDump(data)
+                    log("Loaded cached API dump")
+                    return data
+                end
+            end
+        end
+    end
+    local okG, raw = pcall(function() return game:HttpGet(Fish.Options.APIDumpURL) end)
+    if not okG or not raw then log("Failed to fetch API dump") return nil end
+    if IO.writefile then pcall(IO.writefile, cacheFile, raw) end
+    local okD, data = pcall(HttpService.JSONDecode, HttpService, raw)
+    if not okD or not data then log("Failed to parse API dump") return nil end
+    Fish.ApplyAPIDump(data)
+    return data
+end
+
+function Fish.ApplyAPIDump(data)
+    if type(data) ~= "table" or type(data.Classes) ~= "table" then return end
+    local added = 0
+    for _, class in ipairs(data.Classes) do
+        local className = class.Name
+        if className and not INSTANCE_SPECIFIC[className] then
+            local props = {}
+            if type(class.Members) == "table" then
+                for _, member in ipairs(class.Members) do
+                    if member.MemberType == "Property" and member.Name and not shouldSkipProp(member.Name) then
+                        table.insert(props, member.Name)
+                    end
+                end
+            end
+            if class.Superclass and INSTANCE_SPECIFIC[class.Superclass] then
+                for _, p in ipairs(INSTANCE_SPECIFIC[class.Superclass]) do table.insert(props, p) end
+            end
+            if #props > 0 then
+                INSTANCE_SPECIFIC[className] = props
+                added = added + 1
+            end
+        end
+    end
+    log("API dump: added " .. added .. " classes to INSTANCE_SPECIFIC")
+    buildApiClassProps(data)
+end
+
+local _statusUI = nil
+local _statusAccum = 0
+
+local function setStatusText(text, color)
+    if not _statusUI or not _statusUI.label then return end
+    pcall(function()
+        _statusUI.label.Text = tostring(text)
+        if color then _statusUI.label.TextColor3 = color end
+    end)
+end
+
+local function fadeStatusAndDestroy()
+    if not _statusUI then return end
+    local ui = _statusUI
+    _statusUI = nil
+    local ti = TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    pcall(function()
+        TweenService:Create(ui.label, ti, {
+            TextTransparency = 1,
+            TextStrokeTransparency = 1,
+        }):Play()
+    end)
+    task.delay(0.9, function()
+        pcall(function() if ui.gui then ui.gui:Destroy() end end)
+    end)
+end
+
+local function getUIParent()
+    if type(gethui) == "function" then
+        local ok, hui = pcall(gethui)
+        if ok and hui then return hui end
+    end
+    local ok, cg = pcall(function() return game:GetService("CoreGui") end)
+    if ok and cg then return cg end
     local lp = Players.LocalPlayer
-    if not lp then return nil end
-    local pg = lp:FindFirstChildOfClass("PlayerGui")
-    if not pg then return nil end
+    if lp then
+        local ok2, pg = pcall(function() return lp:FindFirstChildOfClass("PlayerGui") end)
+        if ok2 and pg then return pg end
+    end
+    return nil
+end
+
+local function buildStatusUI()
+    if not Fish.Options.ShowStatus then return nil end
+    local parentGui = getUIParent()
+    if not parentGui then return nil end
 
     pcall(function()
-        local existing = pg:FindFirstChild("__FishilizerProgress__")
+        local existing = parentGui:FindFirstChild("__FishilizerStatus__")
         if existing then existing:Destroy() end
     end)
 
-
-
-    -- The progress bar we will use but if you really wanna fork this or edit this feel free to do so
     local gui = Instance.new("ScreenGui")
-    gui.Name = "__FishilizerProgress__"
+    gui.Name = "__FishilizerStatus__"
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.ResetOnSpawn = false
     gui.IgnoreGuiInset = true
     gui.DisplayOrder = 100
-    gui.Parent = pg
-
-    local contents = Instance.new("Frame")
-    contents.Name = "Contents"
-    contents.BorderSizePixel = 0
-    contents.BackgroundColor3 = Color3.fromRGB(32, 32, 32)
-    contents.Size = UDim2.new(0, 338, 0, 28)
-    contents.AnchorPoint = Vector2.new(1, 0)
-    contents.Position = UDim2.new(1, -20, 0, 20)
-    contents.Parent = gui
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 5)
-    corner.Parent = contents
-
-    local progress = Instance.new("Frame")
-    progress.Name = "Progress"
-    progress.BorderSizePixel = 0
-    progress.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
-    progress.Size = UDim2.new(0, 304, 0, 13)
-    progress.Position = UDim2.new(0.04712, 0, 0.23695, 0)
-    progress.Visible = false
-    progress.Parent = contents
-
-    local pcorner = Instance.new("UICorner")
-    pcorner.CornerRadius = UDim.new(0, 5)
-    pcorner.Parent = progress
-
-    local bar = Instance.new("Frame")
-    bar.Name = "Bar"
-    bar.BorderSizePixel = 0
-    bar.BackgroundColor3 = Color3.fromRGB(86, 86, 255)
-    bar.Size = UDim2.new(0, 1, 0, 13)
-    bar.Position = UDim2.new(-0.00222, 0, 0.00619, 0)
-    bar.Parent = progress
-
-    local bcorner = Instance.new("UICorner")
-    bcorner.CornerRadius = UDim.new(0, 5)
-    bcorner.Parent = bar
-
-    local textLabel = Instance.new("TextLabel")
-    textLabel.Name = "text"
-    textLabel.BorderSizePixel = 0
-    textLabel.TextSize = 14
-    textLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    textLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-    textLabel.TextColor3 = Color3.fromRGB(183, 183, 183)
-    textLabel.BackgroundTransparency = 1
-    textLabel.Size = UDim2.new(0, 338, 0, 28)
-    textLabel.Visible = true
-    textLabel.Text = "Saving game.. (this may take time depending on size)"
-    textLabel.Position = UDim2.new(0, 0, 0, 0)
-    textLabel.Parent = contents
-
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(255, 86, 128)
-    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    stroke.Parent = contents
-
-    return {
-        gui = gui,
-        contents = contents,
-        progress = progress,
-        bar = bar,
-        text = textLabel,
-    }
-end
-
-local function showTextStage()
-    if not _progressUI then return end
-    _progressUI.text.Visible = true
-    _progressUI.progress.Visible = false
-end
-
-local function showProgressStage()
-    if not _progressUI then return end
-    _progressUI.text.Visible = false
-    _progressUI.progress.Visible = true
-    if _progressUI.bar then
-        _progressUI.bar.Size = UDim2.new(0, 1, 0, 13)
-    end
-end
-
-local function updateBar(ratio)
-    if not _progressUI or not _progressUI.bar then return end
-    if ratio < 0 then ratio = 0 end
-    if ratio > 1 then ratio = 1 end
-    local w = math.floor(BAR_TRACK_WIDTH * ratio)
-    if w < 1 then w = 1 end
-    _progressUI.bar.Size = UDim2.new(0, w, 0, 13)
-end
-
-local function bumpProgress()
-    if not _progressUI then return end
-    _progressEmitted = _progressEmitted + 1
-    if _progressTotal > 0 then
-        if _progressEmitted % 25 == 0 then
-            updateBar(_progressEmitted / _progressTotal)
+    pcall(function() gui.Parent = parentGui end)
+    if gui.Parent ~= parentGui then
+        local lp = Players.LocalPlayer
+        if lp then
+            local pg = lp:FindFirstChildOfClass("PlayerGui")
+            if pg then pcall(function() gui.Parent = pg end) end
         end
     end
+    if not gui.Parent then return nil end
+
+    local label = Instance.new("TextLabel")
+    label.Name = "Status"
+    label.BackgroundTransparency = 1
+    label.BorderSizePixel = 0
+    label.Size = UDim2.new(0, 600, 0, 30)
+    label.AnchorPoint = Vector2.new(0.5, 0)
+    label.Position = UDim2.new(0.5, 0, 0, 24)
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 18
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    label.TextStrokeTransparency = 0
+    label.TextTransparency = 0
+    label.Text = "Saving game.."
+    label.RichText = false
+    label.Parent = gui
+
+    return { gui = gui, label = label }
 end
---[[
 
-TONS of instances to work from
-
-]]
-local SKIP_SVC = {
-    CoreGui=true,CorePackages=true,CoreScripts=true,Chat=true,LogService=true,
-    ContentProvider=true,ScriptContext=true,Selection=true,TestService=true,
-    PluginGuiService=true,PluginDebugService=true,SolidModelContentProvider=true,
-    Visit=true,Stats=true,Players=true,StarterPlayer=true,SoundService=true,
-    LocalizationService=true,MarketplaceService=true,AppStorageService=true,
-    AvatarEditorService=true,BadgeService=true,GamePassService=true,GroupService=true,
-    GuiService=true,HopperService=true,KeyframeSequenceProvider=true,
-    MemoryStoreService=true,MessagingService=true,PathfindingService=true,
-    PolicyService=true,ProximityPromptService=true,RobloxReplicatedStorage=true,
-    SessionService=true,SharedTableRegistry=true,TeleportService=true,
-    TextChatService=true,TrackerService=true,UserInputService=true,UserService=true,
-    VRService=true,VoiceChatService=true,AnalyticsService=true,
-    ContextActionService=true,ControllerService=true,DragDetectorService=true,
-    ExperienceNotificationService=true,FriendService=true,GamepadService=true,
-    GeometryService=true,GuidRegistryService=true,HapticService=true,
-    InsertService=true,JointsService=true,LuaWebService=true,MouseService=true,
-    NotificationService=true,PermissionsService=true,PhysicsService=true,
-    ReplicatedFirst=true,SocialService=true,TextService=true,TouchInputService=true,
-    VirtualInputManager=true,VirtualUser=true,ChatService=true,DataStoreService=true,
-    RunService=true,TweenService=true,HttpService=true,HTTPService=true,Debris=true,
-    AvatarCreationService=true,AccountService=true,AdService=true,AssetService=true,
-    AvatarImportService=true,BrowserService=true,BulkImportService=true,
-    CallbackService=true,ChangeHistoryService=true,CloudLocalizationTable=true,
-    ClusterPacketCache=true,CollaborationService=true,CommerceService=true,
-    ConfigureServerService=true,DeviceIdService=true,DraftsService=true,
-    FriendPagesService=true,GenericChallengeService=true,HomeService=true,
-    IXPService=true,InstanceFileService=true,LiveScriptingService=true,LodService=true,
-    LoginService=true,LuaChatService=true,MeshContentProvider=true,
-    MessageBusService=true,NetworkClient=true,NetworkServer=true,OpenCloudService=true,
-    PackageService=true,PatchBundlerService=true,PerformanceControlService=true,
-    PlayerEmulatorService=true,PluginPolicyService=true,ProcessInstancePhysicsService=true,
-    PublishService=true,ReflectionMetadataService=true,RemoteDebuggerServer=true,
-    RenderSettings=true,RobloxServerStorage=true,SafetyService=true,ScriptService=true,
-    StudioAssetService=true,StudioData=true,StudioService=true,StyleService=true,
-    TelemetryService=true,TracerService=true,UGCValidationService=true,
-    UpdateService=true,UserStorageService=true,VideoCaptureService=true,
-    VoiceChatInternal=true,WebViewService=true,
-}
-
-local SKIP_PROP = {
-    AttributesSerialize=true,
-    Tags=true,
-    Parent=true,RobloxLocked=true,HistoryId=true,DataCost=true,Game=true,Identity=true,
-    Verb=true,LocalLocation=true,PivotOffset=true,AbsoluteSize=true,AbsolutePosition=true,
-    AbsoluteContentSize=true,AbsoluteRotation=true,AbsoluteCanQuery=true,
-    AbsoluteOrientation=true,CrossPlatformAssetId=true,Autopilot=true,CameraSubject=true,
-    CurrentCamera=true,SelectionBox=true,SelectionSphere=true,DraggingV1=true,
-    Dragging=true,Archetype=true,NetworkOwner=true,RemoteEventsFolder=true,CameraType=true,
-    CameraMode=true,FieldOfViewMode=true,MaxAxisFieldOfView=true,RotVelocity=true,
-    OverlapParam=true,RootPriority=true,DebugId=true,JobId=true,IsGuest=true,
-    UsesAsset=true,UnfilteredPackages=true,SnippetKey=true,ReplicationEnabled=true,
-    NoCollisionConstraint=true,AccumulatedMouseDelta=true,AccumulatedTouchDelta=true,
-    MouseDeltaSensitivity=true,TouchDeltaSensitivity=true,LastInputType=true,
-    LastInputTypeChanged=true,Running=true,ElapsedTime=true,NetworkOwnershipAuto=true,
-    ReceiveAge=true,TotalRcvAge=true,TotalRcvTime=true,RcvAge=true,RcvTime=true,
-    CameraSubjectDistance=true,InputTypesChanged=true,Annotation=true,Annotations=true,
-    AnnotationService=true,PlaybackState=true,SecurityCapabilities=true,ClassName=true,
-}
-
-local BINARY_PROPS = {
-    SmoothGrid = true,
-    ChildData = true,
-    PhysicsData = true,
-    PhysicalConfigData = true,
-    MaterialColors = true,
-}
-
-local CONTENT_PROP_EXACT = {
-    MeshContent=true,ImageContent=true,SoundContent=true,AnimationContent=true,
-    TextureContent=true,ShirtTemplateContent=true,PantsTemplateContent=true,
-    GraphicContent=true,FaceContent=true,VideoContent=true,ColorMapContent=true,
-    NormalMapContent=true,RoughnessMapContent=true,MetalnessMapContent=true,
-    EmissiveMaskContent=true,SkyboxBkContent=true,SkyboxDnContent=true,
-    SkyboxFtContent=true,SkyboxLfContent=true,SkyboxRtContent=true,SkyboxUpContent=true,
-    SunTextureContent=true,MoonTextureContent=true,DecalContent=true,
-    ParticleTextureContent=true,ExplosionTextureContent=true,TrailTextureContent=true,
-    BeamTextureContent=true,SpecialMeshContent=true,CylinderMeshContent=true,
-    BlockMeshContent=true,WedgeMeshContent=true,LevelOfDetailContent=true,
-    ColorMapLookup=true,RoughnessMapLookup=true,NormalMapLookup=true,
-    MetalnessMapLookup=true,WrapLayerContent=true,WrapTargetContent=true,
-    CageMeshContent=true,ReferenceMeshContent=true,AlphaModeContent=true,
-    TexturePackContent=true,WireframeContent=true,
-}
-
-local REAL_CONTENT_PROPS = {
-    Texture=true,TextureId=true,TextureID=true,Image=true,MeshId=true,SoundId=true,
-    AnimationId=true,ShirtTemplate=true,PantsTemplate=true,Graphic=true,SkyboxBk=true,
-    SkyboxDn=true,SkyboxFt=true,SkyboxLf=true,SkyboxRt=true,SkyboxUp=true,
-    SunTextureId=true,MoonTextureId=true,ImageId=true,Video=true,Sound=true,Decal=true,
-    ColorMap=true,NormalMap=true,RoughnessMap=true,MetalnessMap=true,EmissiveMask=true,
-    CageMeshId=true,ReferenceMeshId=true,TexturePack=true,
-}
-
-local CORE_SCRIPT_NAMES = {
-    PlayerModule=true,CameraModule=true,ControlModule=true,Common=true,Utils=true,
-    RbxCharacterSounds=true,Animate=true,Health=true,RbxCamera=true,
-    RbxCharacterSoundsScript=true,RbxDefaultCharacter=true,TouchJump=true,
-    TouchControlFrame=true,ClickToMoveController=true,DynamicThumbstick=true,
-    LegacyThumbstick=true,Keyboard=true,Gamepad=true,Touch=true,VRNavigation=true,
-    CameraInput=true,CameraToggle=true,CameraUI=true,ZoomController=true,
-    MouseLockController=true,BaseCamera=true,ClassicCamera=true,
-    TransparencyController=true,Poppercam=true,Invisicam=true,OrbitalCamera=true,
-    ScriptableCamera=true,FollowCamera=true,VehicleCamera=true,LegacyCamera=true,
-    BaseCharacterController=true,UserInput=true,HumanoidController=true,
-    DefaultChatSystemChatEvents=true,ChatMain=true,BubbleChat=true,ChatWindow=true,
-    ChatBar=true,ChatTypes=true,ChatSettings=true,ChatCommands=true,ChatModules=true,
-}
-
-local CHARACTER_CLASSES = {
-    Humanoid=true,Head=true,Torso=true,HumanoidRootPart=true,LeftArm=true,RightArm=true,
-    LeftLeg=true,RightLeg=true,UpperTorso=true,LowerTorso=true,LeftUpperArm=true,
-    LeftLowerArm=true,RightUpperArm=true,RightLowerArm=true,LeftUpperLeg=true,
-    LeftLowerLeg=true,RightUpperLeg=true,RightLowerLeg=true,LeftFoot=true,RightFoot=true,
-    LeftHand=true,RightHand=true,BodyColors=true,CharacterMesh=true,Accessory=true,
-    Accoutrement=true,Hat=true,Shirt=true,Pants=true,ShirtGraphic=true,Face=true,
-    FaceControls=true,FaceInstance=true,HumanoidDescription=true,
-}
-
-local CRITICAL_PROPS = {
-    "Name","Archivable","SourceAssetId","PackageId","AttributesSerialize","Tags",
-    "TextureId","TextureID","Texture","Image","MeshId","SoundId","AnimationId",
-    "ShirtTemplate","PantsTemplate","Graphic","Decal",
-    "Shape","Size","Position","CFrame","Orientation","Rotation","Anchored","CanCollide",
-    "CanTouch","CanQuery","CanClimb","CanAutoCollide","Transparency","Reflectance",
-    "CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked",
-    "CollisionGroup","CollisionGroupId","TopSurface","BottomSurface","LeftSurface",
-    "RightSurface","FrontSurface","BackSurface","MeshType","Scale","Offset",
-    "VertexColor","LevelOfDetail","RenderFidelity","DoubleSided",
-    "CustomPhysicalProperties","FormFactor","RigType","WalkSpeed","JumpPower","JumpHeight",
-    "MaxHealth","Health","HipHeight","AutoRotate","AutoJumpEnabled","AutoScalingEnabled",
-    "DisplayDistanceType","HealthDisplayDistance","NameDisplayDistance","DisplayName",
-    "HeadScale","BodyTypeScale","BodyDepthScale","BodyWidthScale",
-    "BodyHeightScale","BodyProportionScale","UniformScale","OriginalSize","Value","Text",
-    "Font","FontFace","TextColor3","TextSize","TextScaled","TextWrapped","TextStrokeColor3",
-    "TextStrokeTransparency","TextTransparency","RichText","LineHeight","MaxVisibleGraphemes",
-    "TextXAlignment","TextYAlignment","TextTruncate","TextFits","PlaceholderText",
-    "PlaceholderColor3","ClearTextOnFocus","MultiLine","TextEditable","BackgroundColor3",
-    "BackgroundTransparency","BorderSizePixel","BorderColor3","BorderMode","AutomaticSize",
-    "ClipsDescendants","ImageColor3","ImageTransparency","ImageRectOffset","ImageRectSize",
-    "ResampleMode","ScaleType","SliceCenter","SliceScale","TileSize","Visible","Active",
-    "Selectable","AutoButtonColor","Modal","Style","ZIndex","LayoutOrder","SizeConstraint",
-    "AnchorPoint","Interactable","CanvasSize","CanvasPosition","ScrollBarThickness",
-    "ScrollBarImageColor3","ScrollBarImageTransparency","ElasticBehavior","ScrollingDirection",
-    "ScrollingEnabled","VerticalScrollBarInset","HorizontalScrollBarInset","AutomaticCanvasSize",
-    "MidImage","TopImage","BottomImage","CellPadding","CellSize","FillDirection",
-    "FillDirectionMaxCells","HorizontalAlignment","VerticalAlignment","SortOrder","StartCorner",
-    "PaddingTop","PaddingBottom","PaddingLeft","PaddingRight","Padding","Spacing","AspectRatio",
-    "AspectType","DominantAxis","MaxSize","MinSize","MaxTextSize","MinTextSize","Enabled",
-    "ResetOnSpawn","DisplayOrder","IgnoreGuiInset","ClipToDeviceSafeArea","SafeAreaCompatibility",
-    "ScreenInsets","SizingMode","PixelsPerStud","AlwaysOnTop","Adornee","Brightness","ZOffset",
-    "MaxDistance","DistanceLowerLimit","DistanceUpperLimit","ExtentsOffset",
-    "ExtentsOffsetWorldSpace","StudsOffset","StudsOffsetWorldSpace","SizeOffset","LightColor",
-    "LightDirection","Ambient","Range","Angle","Shadows","OutdoorAmbient","ColorShift_Top",
-    "ColorShift_Bottom","GeographicLatitude","ClockTime","TimeOfDay","FogColor","FogStart",
-    "FogEnd","GlobalShadows","EnvironmentDiffuseScale","EnvironmentSpecularScale",
-    "ExposureCompensation","Technology","ShadowSoftness","SkyboxBk","SkyboxDn","SkyboxFt",
-    "SkyboxLf","SkyboxRt","SkyboxUp","SkyboxOrientation","SunAngularSize","MoonAngularSize",
-    "SunTextureId","MoonTextureId","StarCount","CelestialBodiesShown","Outlines","Volume",
-    "Pitch","Looped","PlayOnRemove","TimePosition","PlaybackSpeed","Playing","RollOffMode",
-    "RollOffMinDistance","RollOffMaxDistance","EmitterSize","Source","Disabled","RunContext",
-    "LinkedSource","Lifetime","Rate","Speed","Drag","Acceleration","LockedToPart",
-    "VelocityInheritance","Squash","EmissionDirection","Sequence","TimeScale","TextureMode",
-    "RotSpeed","SpreadAngle","SpawnRadius","Width0","Width1","TextureLength","FaceCamera",
-    "Segments","CurveSize0","CurveSize1","Attachment0","Attachment1","AttachmentForward",
-    "AttachmentRight","AttachmentUp","HeadColor","TorsoColor","LeftArmColor","RightArmColor",
-    "LeftLegColor","RightLegColor","Number","TargetRadius","MinRadius","Radius","Gain",
-    "Diffuse","Specular","Velocity","Focus","FieldOfView","ReverbType","DistanceFactor",
-    "AngularSpeed","Facing","DesiredAngle","CurrentAngle","MotorType","MaxVelocity",
-    "MaxTorque","P","D","Coefficient","OuterConeAngle","InnerConeAngle","Depth","Height",
-    "Width","DepthMode","FaceMode","Animation","Weight","CollisionFidelity","ClusterId",
-    "PhysicalConfigData","PhysicsData","ChildData","MeshSize","InitialSize","InitialCFrame",
-    "UnscaledCframe","UnscaledSize","AssetId","SmoothGrid","MaterialColors","WaterColor",
-    "WaterWaveSize","WaterWaveSpeed","WaterReflectance","WaterTransparency","Decoration",
-    "LeftParamA","LeftParamB","RightParamA","RightParamB","TopParamA","TopParamB",
-    "BottomParamA","BottomParamB","FrontParamA","FrontParamB","BackParamA","BackParamB",
-    "PrimaryPart","ModelInPrimary","Loop","IsPlaying","Priority","Time","EasingStyle",
-    "EasingDirection","Pose","Mode","Grip","GripForward","GripPos","GripRight","GripUp",
-    "ToolTip","CanBeDropped","RequiresHandle","ManualActivationOnly","BinType","Whitelist",
-    "Blacklist","AutoAssignable","TeamColor","Gravity","FallHeightEnabled",
-    "FallenPartsDestroyHeight","StreamingEnabled","StreamingIntegrityMode","StreamingMinRadius",
-    "StreamingTargetRadius","TerrainWeldsFixed","DistributedGameTime","AllowThirdPartySales",
-    "ResetPlayerGuiOnSpawn","LoadCharacterAppearance","LoadCharacterLayeredClothing",
-    "UserEmotesEnabled","CameraMaxZoomDistance","CameraMinZoomDistance","CageMeshId",
-    "ReferenceMeshId","AutoSkin","ShrinkFactor","Stiffness","Order","DebugMode","ColorMap",
-    "NormalMap","RoughnessMap","MetalnessMap","EmissiveMask","AlphaMode","Metalness",
-    "Roughness","TexturePack","OffsetStudsU","OffsetStudsV","StudsPerTileU","StudsPerTileV",
-    "BasePartMaterial","Use2022Materials","MaxActivationDistance","HoldDuration","ActionText",
-    "ObjectText","KeyboardKeyCode","GamepadKeyCode","RequiresLineOfSight","ClickablePrompt",
-    "Exclusivity","UIOffset","FillColor","FillTransparency","OutlineColor",
-    "OutlineTransparency","GroupColor3","GroupTransparency","CornerRadius","ApplyStrokeMode",
-    "LineJoinMode","LimitsEnabled","UpperAngle","LowerAngle","TwistLimitsEnabled",
-    "TwistLowerAngle","TwistUpperAngle","Restitution","Length","Thickness","LimitAngle0",
-    "LimitAngle1","FreeLength","Coils","Damping","MaxLength","MinLength",
-    "MotorMaxAcceleration","MotorMaxTorque","MotorSpeed","ServoMaxTorque","TargetAngle",
-    "Part0","Part1","C0","C1","Axis","SecondaryAxis","LocalTransparencyModifier","Transform",
-    "AutoLocalize","RootLocalizationTable","UsePartColor","ScaleTo","AutoResume",
-    "PlaybackRegion","RegionDirection","LoopRegion","SoundGroup","AudioEqualizer","AudioFilter",
-    "StyleRule","StyleSheet","StyleLink","AdShape","Puffiness","ReferenceOrigin","BindOffset",
-    "WorldCageMeshId","Bevel","BevelRoundness","BevelType","PassThrough","Label","ModifierId",
-    "LineThickness","SurfaceColor3","SurfaceTransparency","LineColor3","TextureSpeed",
-    "LightEmission","LightInfluence","Density","Decay","Glare","Haze","Cover","CloudsEnabled",
-    "ForceLimitMode","ForceLimitsEnabled","LineDirection","LineVelocity","MaxForce",
-    "MaxAxesForce","PlaneVelocity","PrimaryTangentAxis","RelativeTo","SecondaryTangentAxis",
-    "VectorVelocity","VelocityConstraintMode","AngularVelocity","ReactionTorqueEnabled",
-    "ApplyAtCenterOfMass","Force","ReactionForceEnabled","Responsiveness","RigidityEnabled",
-    "WorldCFrame","WorldPosition","WorldOrientation","WorldAxis","WorldSecondaryAxis",
-    "WorldBasis","TransformedCFrame","TransformedWorldCFrame","RenderMesh","CollisionMesh",
-}
-
-local INSTANCE_SPECIFIC = {
-    Tool={"TextureId","ToolTip","CanBeDropped","RequiresHandle","ManualActivationOnly","Enabled","Grip","GripForward","GripPos","GripRight","GripUp"},
-    Part={"Shape","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","TopSurface","BottomSurface","LeftSurface","RightSurface","FrontSurface","BackSurface","CustomPhysicalProperties","FormFactor","Velocity"},
-    WedgePart={"Shape","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","CustomPhysicalProperties"},
-    CornerWedgePart={"Shape","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","CustomPhysicalProperties"},
-    TrussPart={"Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","Style"},
-    Platform={"Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup"},
-    SpawnLocation={"Size","CFrame","Anchored","CanCollide","Transparency","Material","MaterialVariant","BrickColor","Color","Enabled","Duration","Neutral","TeamColor","AllowTeamChangeOnTouch"},
-    Seat={"Size","CFrame","Anchored","CanCollide","Material","MaterialVariant","BrickColor","Color","Disabled"},
-    VehicleSeat={"Size","CFrame","Anchored","CanCollide","Material","MaterialVariant","BrickColor","Color","MaxSpeed","Torque","TurnSpeed","HeadsUpDisplay","Disabled"},
-    MeshPart={"MeshId","TextureID","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","RenderFidelity","CollisionFidelity","DoubleSided","LevelOfDetail","MeshSize","InitialSize","Texture","CustomPhysicalProperties","RenderMesh"},
-    UnionOperation={"AssetId","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","RenderFidelity","CollisionFidelity","ChildData","PhysicsData","PhysicalConfigData","InitialSize","InitialCFrame","MeshSize","CustomPhysicalProperties"},
-    IntersectOperation={"AssetId","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","RenderFidelity","CollisionFidelity","ChildData","PhysicsData","PhysicalConfigData","InitialSize","InitialCFrame","MeshSize","CustomPhysicalProperties"},
-    NegateOperation={"AssetId","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","ChildData","PhysicsData","PhysicalConfigData","InitialSize","InitialCFrame","MeshSize","CustomPhysicalProperties"},
-    PartOperation={"AssetId","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","RenderFidelity","CollisionFidelity","ChildData","PhysicsData","PhysicalConfigData","InitialSize","InitialCFrame","MeshSize","CustomPhysicalProperties"},
-    SpecialMesh={"MeshId","MeshType","Scale","Offset","VertexColor","TextureId","Texture"},
-    CylinderMesh={"Scale","Offset","VertexColor"},
-    BlockMesh={"Scale","Offset","VertexColor"},
-    WedgeMesh={"Scale","Offset","VertexColor"},
-    SphereMesh={"Scale","Offset","VertexColor"},
-    BevelMesh={"Scale","Offset","VertexColor","Bevel","BevelRoundness","BevelType"},
-    FileMesh={"MeshId","TextureId","Scale","Offset","VertexColor"},
-    Decal={"Face","Texture","Color3","Transparency","ZIndex","LocalTransparencyModifier"},
-    Texture={"Face","Texture","Color3","Transparency","ZIndex","OffsetStudsU","OffsetStudsV","StudsPerTileU","StudsPerTileV","LocalTransparencyModifier"},
-    SurfaceAppearance={"ColorMap","NormalMap","RoughnessMap","MetalnessMap","EmissiveMask","AlphaMode","Color3","Metalness","Roughness","TexturePack"},
-    Terrain={"SmoothGrid","MaterialColors","WaterColor","WaterWaveSize","WaterWaveSpeed","WaterReflectance","WaterTransparency","Decoration"},
-    Lighting={"Ambient","OutdoorAmbient","ColorShift_Top","ColorShift_Bottom","Brightness","ClockTime","TimeOfDay","GeographicLatitude","FogColor","FogStart","FogEnd","GlobalShadows","ShadowSoftness","EnvironmentDiffuseScale","EnvironmentSpecularScale","ExposureCompensation","Technology","SkyboxBk","SkyboxDn","SkyboxFt","SkyboxLf","SkyboxRt","SkyboxUp","SkyboxOrientation","SunAngularSize","MoonAngularSize","SunTextureId","MoonTextureId","StarCount","CelestialBodiesShown","Outlines","CloudsEnabled"},
-    Atmosphere={"Density","Offset","Color","Decay","Glare","Haze"},
-    Clouds={"Cover","Density","Color","Enabled"},
-    Sky={"SkyboxBk","SkyboxDn","SkyboxFt","SkyboxLf","SkyboxRt","SkyboxUp","SkyboxOrientation","SunAngularSize","MoonAngularSize","SunTextureId","MoonTextureId","StarCount","CelestialBodiesShown"},
-    BloomEffect={"Enabled","Intensity","Size","Threshold"},
-    BlurEffect={"Enabled","Size"},
-    ColorCorrectionEffect={"Enabled","Brightness","Contrast","Saturation","TintColor"},
-    DepthOfFieldEffect={"Enabled","FarIntensity","FocusDistance","InFocusRadius","NearIntensity"},
-    SunRaysEffect={"Enabled","Intensity","Spread"},
-    PointLight={"Enabled","Brightness","Color","Range","Shadows"},
-    SpotLight={"Enabled","Brightness","Color","Range","Angle","Face","Shadows"},
-    SurfaceLight={"Enabled","Brightness","Color","Range","Angle","Face","Shadows"},
-    Sound={"SoundId","Volume","Pitch","Looped","Playing","PlayOnRemove","PlaybackSpeed","TimePosition","RollOffMode","RollOffMinDistance","RollOffMaxDistance","EmitterSize","SoundGroup","ReverbType","DistanceFactor","MaxDistance","PlaybackRegion","LoopRegion","TimeLength","AudioEqualizer","AudioFilter"},
-    SoundGroup={"Volume"},
-    Animation={"AnimationId"},
-    KeyframeSequence={"Loop","Priority"},
-    Keyframe={"Time"},
-    Pose={"CFrame","Weight","EasingStyle","EasingDirection"},
-    Humanoid={"Health","MaxHealth","WalkSpeed","JumpPower","JumpHeight","HipHeight","AutoRotate","AutoJumpEnabled","AutoScalingEnabled","DisplayDistanceType","HealthDisplayDistance","NameDisplayDistance","DisplayName","RigType","BodyTypeScale","BodyDepthScale","BodyWidthScale","BodyHeightScale","HeadScale","BodyProportionScale","UniformScale","OriginalSize","AnimationId"},
-    BodyColors={"HeadColor","TorsoColor","LeftArmColor","RightArmColor","LeftLegColor","RightLegColor"},
-    CharacterMesh={"BasePart","MeshId","Overlay","BodyPart","TextureId"},
-    Attachment={"CFrame","Position","Orientation","Axis","SecondaryAxis","Visible","WorldCFrame","WorldPosition","WorldOrientation","WorldAxis","WorldSecondaryAxis"},
-    Bone={"CFrame","Position","Orientation","Transform","TransformedCFrame","TransformedWorldCFrame"},
-    Motor6D={"Part0","Part1","C0","C1","CurrentAngle","DesiredAngle","MaxVelocity","Transform"},
-    Motor={"Part0","Part1","C0","C1","CurrentAngle","DesiredAngle","MaxVelocity"},
-    Weld={"Part0","Part1","C0","C1"},
-    WeldConstraint={"Part0","Part1","Enabled"},
-    Snap={"Part0","Part1","C0","C1"},
-    Rotate={"Part0","Part1","C0","C1"},
-    RotateP={"Part0","Part1","C0","C1"},
-    RotateV={"Part0","Part1","C0","C1"},
-    Glue={"Part0","Part1","C0","C1","F0","F1"},
-    HingeConstraint={"Attachment0","Attachment1","MotorMaxAcceleration","MotorMaxTorque","MotorSpeed","ServoMaxTorque","TargetAngle","AngularVelocity","AngularSpeed","ActuatorType","LimitsEnabled","LowerAngle","UpperAngle","Radius","Visible","Enabled"},
-    BallSocketConstraint={"Attachment0","Attachment1","LimitsEnabled","UpperAngle","TwistLimitsEnabled","TwistLowerAngle","TwistUpperAngle","Restitution","Radius","Visible","Enabled"},
-    RodConstraint={"Attachment0","Attachment1","Length","Thickness","LimitsEnabled","LimitAngle0","LimitAngle1","Visible","Enabled"},
-    RopeConstraint={"Attachment0","Attachment1","Length","Thickness","Restitution","Visible","Enabled"},
-    SpringConstraint={"Attachment0","Attachment1","FreeLength","Coils","Damping","Stiffness","MaxForce","MaxLength","MinLength","Thickness","Visible","Enabled"},
-    TorsionSpringConstraint={"Attachment0","Attachment1","Coils","Damping","MaxAngle","MaxTorque","Radius","Restitution","Stiffness","Visible","Enabled"},
-    UniversalConstraint={"Attachment0","Attachment1","LimitsEnabled","MaxAngle","Radius","Restitution","Visible","Enabled"},
-    CylindricalConstraint={"Attachment0","Attachment1","AngularActuatorType","AngularLimitsEnabled","AngularRestitution","AngularSpeed","AngularVelocity","InclinationAngle","LinearActuatorType","LinearLimitsEnabled","LinearRestitution","LinearVelocity","LowerAngle","LowerLimit","MotorMaxAcceleration","MotorMaxForce","Radius","ServoMaxForce","UpperAngle","UpperLimit","Visible","Enabled"},
-    PrismaticConstraint={"Attachment0","Attachment1","ActuatorType","LimitsEnabled","LowerLimit","UpperLimit","MotorMaxAcceleration","MotorMaxForce","Restitution","ServoMaxForce","Speed","Velocity","Visible","Enabled"},
-    PlaneConstraint={"Attachment0","Attachment1","Visible","Enabled"},
-    AlignPosition={"Attachment0","Attachment1","ApplyAtCenterOfMass","MaxForce","MaxVelocity","Position","ReactionForceEnabled","Responsiveness","RigidityEnabled","Mode","Enabled"},
-    AlignOrientation={"Attachment0","Attachment1","AlignType","CFrame","MaxAngularVelocity","MaxTorque","Mode","PrimaryAxisOnly","ReactionTorqueEnabled","Responsiveness","RigidityEnabled","Enabled"},
-    LinearVelocity={"Attachment0","ForceLimitMode","ForceLimitsEnabled","LineDirection","LineVelocity","MaxForce","MaxAxesForce","PlaneVelocity","PrimaryTangentAxis","RelativeTo","SecondaryTangentAxis","VectorVelocity","VelocityConstraintMode","Visible","Enabled"},
-    AngularVelocity={"Attachment0","AngularVelocity","MaxTorque","ReactionTorqueEnabled","RelativeTo","Visible","Enabled"},
-    VectorForce={"Attachment0","ApplyAtCenterOfMass","Force","RelativeTo","Visible","Enabled"},
-    Torque={"Attachment0","RelativeTo","Torque","Visible","Enabled"},
-    ParticleEmitter={"Acceleration","Brightness","Color","ColorShift","Drag","EmissionDirection","EmitterSize","Enabled","FlipbookFramerate","FlipbookLayout","FlipbookMode","FlipbookStartRandom","Lifetime","LightEmission","LightInfluence","LockedToPart","Orientation","Rate","RotSpeed","Rotation","Shape","ShapeInOut","ShapePartial","ShapeStyle","Size","Size2","SoftParticlesEnabled","SoftParticlesFar","SoftParticlesNear","Speed","SpreadAngle","Squash","Texture","TimeScale","Transparency","VelocityInheritance","WindAffectsDrag","ZOffset"},
-    Beam={"Attachment0","Attachment1","Brightness","Color","CurveSize0","CurveSize1","Enabled","FaceCamera","LightEmission","LightInfluence","Segments","Texture","TextureLength","TextureMode","TextureSpeed","Transparency","Width0","Width1","ZOffset"},
-    Trail={"Attachment0","Attachment1","Brightness","Color","Enabled","FaceCamera","Lifetime","LightEmission","LightInfluence","MaxLength","MinLength","Texture","TextureLength","TextureMode","Transparency","WidthScale"},
-    Fire={"Enabled","Color","SecondaryColor","Heat","Size"},
-    Smoke={"Enabled","Color","Opacity","RiseVelocity","Size"},
-    Sparkles={"Enabled","Color","SparkleColor","TimeScale"},
-    ScreenGui={"DisplayOrder","Enabled","IgnoreGuiInset","ResetOnSpawn","ScreenInsets","ClipToDeviceSafeArea","SafeAreaCompatibility","ZIndexBehavior"},
-    SurfaceGui={"Adornee","AlwaysOnTop","Brightness","CanvasSize","ClipsDescendants","Enabled","Face","LightInfluence","MaxDistance","PixelsPerStud","ResetOnSpawn","SizingMode","ToolPunchThroughDistance","ZOffset","ZIndexBehavior"},
-    BillboardGui={"Adornee","AlwaysOnTop","Brightness","ClipsDescendants","DistanceLowerLimit","DistanceUpperLimit","Enabled","ExtentsOffset","ExtentsOffsetWorldSpace","LightInfluence","MaxDistance","ResetOnSpawn","Size","SizeOffset","StudsOffset","StudsOffsetWorldSpace","ZIndexBehavior"},
-    Frame={"BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","ClipsDescendants","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","Style","AutomaticSize"},
-    ScrollingFrame={"BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","CanvasSize","CanvasPosition","ScrollBarThickness","ScrollBarImageColor3","ScrollBarImageTransparency","ElasticBehavior","ScrollingDirection","ScrollingEnabled","VerticalScrollBarInset","HorizontalScrollBarInset","AutomaticCanvasSize","ClipsDescendants","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","Style"},
-    CanvasGroup={"GroupColor3","GroupTransparency","BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","ClipsDescendants","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutomaticSize"},
-    ViewportFrame={"CurrentCamera","Ambient","LightColor","LightDirection","ImageColor3","ImageTransparency","BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active"},
-    VideoFrame={"Video","Playing","Looped","TimePosition","Volume","PlaybackSpeed","BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active"},
-    TextLabel={"BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Text","TextColor3","TextSize","TextScaled","TextWrapped","TextStrokeColor3","TextStrokeTransparency","TextTransparency","RichText","Font","FontFace","LineHeight","MaxVisibleGraphemes","TextXAlignment","TextYAlignment","TextTruncate","TextFits","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutoLocalize","AutomaticSize"},
-    TextButton={"BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Text","TextColor3","TextSize","TextScaled","TextWrapped","TextStrokeColor3","TextStrokeTransparency","TextTransparency","RichText","Font","FontFace","LineHeight","MaxVisibleGraphemes","TextXAlignment","TextYAlignment","TextTruncate","TextFits","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutoButtonColor","Modal","Style","AutoLocalize","AutomaticSize"},
-    TextBox={"BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Text","TextColor3","TextSize","TextScaled","TextWrapped","TextStrokeColor3","TextStrokeTransparency","TextTransparency","RichText","Font","FontFace","LineHeight","MaxVisibleGraphemes","TextXAlignment","TextYAlignment","TextTruncate","TextFits","PlaceholderText","PlaceholderColor3","ClearTextOnFocus","MultiLine","TextEditable","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutoLocalize","AutomaticSize"},
-    ImageLabel={"BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Image","ImageColor3","ImageRectOffset","ImageRectSize","ImageTransparency","ResampleMode","ScaleType","SliceCenter","SliceScale","TileSize","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutomaticSize"},
-    ImageButton={"BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Image","ImageColor3","ImageRectOffset","ImageRectSize","ImageTransparency","ResampleMode","ScaleType","SliceCenter","SliceScale","TileSize","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutoButtonColor","Modal","Style","AutomaticSize"},
-    UIListLayout={"Padding","FillDirection","HorizontalAlignment","VerticalAlignment","SortOrder","HorizontalFlex","VerticalFlex","Wraps"},
-    UIGridLayout={"CellPadding","CellSize","FillDirection","FillDirectionMaxCells","HorizontalAlignment","VerticalAlignment","SortOrder","StartCorner"},
-    UITableLayout={"FillDirection","FillEmptySpaceColumns","FillEmptySpaceRows","HorizontalAlignment","MajorAxis","Padding","SortOrder","VerticalAlignment"},
-    UIPageLayout={"Animated","Circular","EasingDirection","EasingStyle","FillDirection","GamepadInputEnabled","HorizontalAlignment","Padding","ScrollWheelInputEnabled","SortOrder","TouchInputEnabled","TweenTime","VerticalAlignment"},
-    UIPadding={"PaddingTop","PaddingBottom","PaddingLeft","PaddingRight"},
-    UICorner={"CornerRadius"},
-    UIStroke={"ApplyStrokeMode","Color","Enabled","LineJoinMode","Thickness","Transparency"},
-    UIGradient={"Color","Enabled","Offset","Rotation","Transparency"},
-    UIScale={"Scale"},
-    UIAspectRatioConstraint={"AspectRatio","AspectType","DominantAxis"},
-    UISizeConstraint={"MaxSize","MinSize"},
-    UITextSizeConstraint={"MaxTextSize","MinTextSize"},
-    Highlight={"Adornee","DepthMode","Enabled","FillColor","FillTransparency","OutlineColor","OutlineTransparency"},
-    ClickDetector={"MaxActivationDistance","CursorIcon"},
-    ProximityPrompt={"ActionText","ObjectText","HoldDuration","MaxActivationDistance","RequiresLineOfSight","KeyboardKeyCode","GamepadKeyCode","ClickablePrompt","Exclusivity","UIOffset","Style","Enabled","AutoLocalize"},
-    Team={"TeamColor","AutoAssignable"},
-    Camera={"CameraType","CameraSubject","CFrame","Focus","FieldOfView","CameraMode","FieldOfViewMode","MaxAxisFieldOfView","DiagonalFieldOfView"},
-    Model={"PrimaryPart","WorldPivot","ModelInPrimary"},
-    Folder={}, Configuration={},
-    NumberValue={"Value"}, StringValue={"Value"}, BoolValue={"Value"}, IntValue={"Value"},
-    ObjectValue={"Value"}, Vector3Value={"Value"}, CFrameValue={"Value"}, Color3Value={"Value"},
-    BrickColorValue={"Value"}, RayValue={"Value"},
-    RemoteEvent={}, RemoteFunction={}, BindableEvent={}, BindableFunction={},
-    Script={"Source","Disabled","RunContext","LinkedSource"},
-    LocalScript={"Source","Disabled","RunContext","LinkedSource"},
-    ModuleScript={"Source","Disabled","RunContext","LinkedSource"},
-    WrapLayer={"AutoSkin","BindOffset","CageMeshId","ColorMap","Enabled","Order","Puffiness","ReferenceMeshId","ReferenceOrigin","ShrinkFactor","Stiffness"},
-    WrapTarget={"AutoSkin","CageMeshId","ColorMap","Depth","Height","ReferenceMeshId","Stiffness","Width"},
-    PathfindingModifier={"PassThrough","Label","ModifierId"},
-    PathfindingLink={"Attachment0","Attachment1"},
-    Actor={"Enabled"},
-    StyleRule={"Selector","Properties","Priority"},
-    StyleSheet={"Source"},
-    StyleLink={"StyleSheet"},
-    AudioPlayer={"AssetId","Volume","PlaybackSpeed","Looped","Playing","TimePosition"},
-    AudioDeviceOutput={"Player"},
-    AudioDeviceInput={"Player"},
-}
-
-local ATTR_TYPE_IDS = {string=0x02,boolean=0x03,number=0x04,UDim=0x0D,UDim2=0x10,Vector2=0x12,Vector3=0x13,CFrame=0x10,Color3=0x1A,BrickColor=0x1E,NumberRange=0x1F,NumberSequence=0x20,ColorSequence=0x21,Rect=0x22,Font=0x1C}
+local function bumpStatus(prefix, current, total)
+    _statusAccum = _statusAccum + 1
+    if not _statusUI then return end
+    if _statusAccum % 25 ~= 0 then return end
+    local pct = 0
+    if total and total > 0 then
+        pct = math.floor((current / total) * 100)
+        if pct > 100 then pct = 100 end
+    end
+    setStatusText(prefix .. " " .. current .. "/" .. total .. " (" .. pct .. "%)")
+    task.wait()
+end
 
 local function u32(n) return string.pack("<I4", n) end
 local function f32(n) return string.pack("<f", n) end
@@ -668,12 +614,6 @@ end
 
 local function isRealContent(name) return REAL_CONTENT_PROPS[name] == true end
 
-local function shouldSkipProp(name)
-    if SKIP_PROP[name] then return true end
-    if CONTENT_PROP_EXACT[name] then return true end
-    return false
-end
-
 local function extractUri(v)
     if v == nil then return nil end
     local tv = type(v)
@@ -733,32 +673,6 @@ local function extractUri(v)
         if inner and inner ~= "" and inner ~= s then return extractUri(inner) end
     end
     return nil
-end
-
-local b64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-local function b64(s)
-    if type(s) ~= "string" then return "" end
-    local res = {}
-    local i = 1
-    local len = #s
-    while i <= len do
-        local c1 = s:byte(i)
-        local c2 = s:byte(i + 1)
-        local c3 = s:byte(i + 2)
-        
-        local b1 = math.floor(c1 / 4)
-        local b2 = (c1 % 4) * 16 + (c2 and math.floor(c2 / 16) or 0)
-        local b3 = c2 and ((c2 % 16) * 4 + (c3 and math.floor(c3 / 64) or 0)) or 0
-        local b4 = c3 and (c3 % 64) or 0
-        
-        table.insert(res, b64chars:sub(b1 + 1, b1 + 1))
-        table.insert(res, b64chars:sub(b2 + 1, b2 + 1))
-        table.insert(res, c2 and b64chars:sub(b3 + 1, b3 + 1) or "=")
-        table.insert(res, c3 and b64chars:sub(b4 + 1, b4 + 1) or "=")
-        
-        i = i + 3
-    end
-    return table.concat(res)
 end
 
 local function notify(title, text, dur)
@@ -878,11 +792,9 @@ local specialPropHandlers = { Shape = serTokenNumber, Face = serTokenNumber, Mat
 local function serializeProp(name, v)
     if v == nil then return nil end
     if shouldSkipProp(name) then return nil end
-    
     if BINARY_PROPS[name] and type(v) == "string" then
         return '<BinaryString name="' .. clean(name) .. '">' .. b64(v) .. '</BinaryString>'
     end
-
     if type(v) == "boolean" then return serBool(name, v) end
     local special = specialPropHandlers[name]
     if special then local s = special(name, v) if s then return s end end
@@ -902,7 +814,9 @@ local function propsViaGetProperties(inst)
     if not ok or type(list) ~= "table" then return nil end
     local out = {}
     for _, k in ipairs(list) do
-        if type(k) == "string" and not shouldSkipProp(k) then table.insert(out, k) end
+        if type(k) == "string" and not shouldSkipProp(k) and isPropValid(inst.ClassName, k) then
+            table.insert(out, k)
+        end
     end
     return out
 end
@@ -929,13 +843,14 @@ local function valuesEqual(a, b)
 end
 
 local function modelIsCharacter(m)
-    local ok, h = pcall(function() return m:FindFirstChildOfClass("Humanoid") end)
-    if not ok or not h then return false end
-    local ok2, hrp = pcall(function() return m:FindFirstChild("HumanoidRootPart") end)
-    if ok2 and hrp then return true end
-    local ok3, head = pcall(function() return m:FindFirstChild("Head") end)
-    local ok4, torso = pcall(function() return m:FindFirstChild("Torso") or m:FindFirstChild("UpperTorso") or m:FindFirstChild("LowerTorso") end)
-    if ok3 and head and ok4 and torso then return true end
+    if not m then return false end
+    local ok, player = pcall(function() return Players:GetPlayerFromCharacter(m) end)
+    if ok and player then return true end
+    local ok2, hum = pcall(function() return m:FindFirstChildOfClass("Humanoid") end)
+    if ok2 and hum then
+        local ok3, hrp = pcall(function() return m:FindFirstChild("HumanoidRootPart") end)
+        if ok3 and hrp then return true end
+    end
     return false
 end
 
@@ -943,20 +858,26 @@ local function isCharacter(inst, opts, charRefs)
     if not opts.StripCharacters then return false end
     if not inst then return false end
     if charRefs[inst] then return true end
-    local cls = inst.ClassName
-    if cls == "Model" then
-        if modelIsCharacter(inst) then
+    if not inst:IsA("Model") then
+        local okp, charModel = pcall(function() return inst:FindFirstAncestorWhichIsA("Model") end)
+        if okp and charModel and charRefs[charModel] then
             charRefs[inst] = true
-            local okd, desc = pcall(function() return inst:GetDescendants() end)
-            if okd and desc then for _, d in ipairs(desc) do charRefs[d] = true end end
             return true
+        end
+        if CHARACTER_CLASSES[inst.ClassName] then
+            local okp2, parent = pcall(function() return inst.Parent end)
+            if okp2 and parent and parent:IsA("Model") and modelIsCharacter(parent) then
+                charRefs[inst] = true
+                return true
+            end
         end
         return false
     end
-    if cls == "Humanoid" then charRefs[inst] = true return true end
-    if CHARACTER_CLASSES[cls] then
-        local p = inst.Parent
-        if p and p.ClassName == "Model" and modelIsCharacter(p) then charRefs[inst] = true return true end
+    if modelIsCharacter(inst) then
+        charRefs[inst] = true
+        local okd, desc = pcall(function() return inst:GetDescendants() end)
+        if okd and desc then for _, d in ipairs(desc) do charRefs[d] = true end end
+        return true
     end
     return false
 end
@@ -971,13 +892,18 @@ end
 
 local function ancestorIsCore(inst, opts, coreRefs)
     if not opts.StripCoreScripts then return false end
-    local p = inst
+    local okA, ancestor = pcall(function()
+        return inst:FindFirstAncestorOfClass("PlayerScripts")
+            or inst:FindFirstAncestorOfClass("PlayerGui")
+            or inst:FindFirstAncestorOfClass("StarterPlayer")
+    end)
+    if okA and ancestor then return true end
+    local cur = inst.Parent
     for _ = 1, 30 do
-        p = p.Parent
-        if not p then return false end
-        if coreRefs[p] then return true end
-        if p.ClassName == "PlayerScripts" or p.ClassName == "PlayerGui" or p == Players or p == game:GetService("StarterPlayer") then return true end
-        if p == game then return false end
+        if not cur then return false end
+        if coreRefs[cur] then return true end
+        if cur == Players or cur == game then return false end
+        cur = cur.Parent
     end
     return false
 end
@@ -986,6 +912,7 @@ local function keepInst(inst, opts, charRefs, coreRefs)
     if isCharacter(inst, opts, charRefs) then return false end
     if nameIsCore(inst, opts, coreRefs) then return false end
     if ancestorIsCore(inst, opts, coreRefs) then return false end
+    if inst:IsA("Lighting") then return true end
     if opts.IgnoreNotArchivable then
         local ok, ar = pcall(function() return inst.Archivable end)
         if ok and ar == false then return false end
@@ -993,8 +920,7 @@ local function keepInst(inst, opts, charRefs, coreRefs)
     local parent = inst.Parent
     if parent and charRefs[parent] then return false end
     if parent and coreRefs[parent] then return false end
-    local cls = inst.ClassName
-    if SKIP_SVC[cls] and parent == game then return false end
+    if parent == game and SKIP_SVC[inst.ClassName] then return false end
     return true
 end
 
@@ -1003,6 +929,10 @@ local function walkRef(root, d, opts, refs, charRefs, coreRefs)
     if refs[root] then return end
     Walker.refCount = Walker.refCount + 1
     refs[root] = "RBX" .. Walker.refCount
+    if Walker.refCount % 500 == 0 then
+        setStatusText("Saving game.. scanning " .. Walker.refCount)
+        task.wait()
+    end
     local ok, kids = pcall(function() return root:GetChildren() end)
     if not ok or not kids then return end
     for _, c in ipairs(kids) do
@@ -1011,13 +941,89 @@ local function walkRef(root, d, opts, refs, charRefs, coreRefs)
 end
 
 local function readProp(inst, name)
-    if IO.gethiddenproperty then
-        local ok2, v2 = pcall(IO.gethiddenproperty, inst, name)
-        if ok2 and v2 ~= nil then return v2 end
-    end
     local ok, v = pcall(function() return inst[name] end)
     if ok and v ~= nil then return v end
     return nil
+end
+
+local function readTerrainVoxels(terrain, res)
+    if not terrain then return nil end
+    res = res or Fish.Options.TerrainResolution or 8
+    local ok_size, size = pcall(function() return terrain.Size end)
+    if not ok_size or not size then return nil end
+    local cap = Fish.Options.TerrainCellCap or 4194304
+    local adjRes = res
+    local cellsX, cellsY, cellsZ
+    while true do
+        cellsX = math.max(1, math.floor(size.X / adjRes + 0.5))
+        cellsY = math.max(1, math.floor(size.Y / adjRes + 0.5))
+        cellsZ = math.max(1, math.floor(size.Z / adjRes + 0.5))
+        if cellsX * cellsY * cellsZ <= cap then break end
+        adjRes = adjRes * 2
+        if adjRes > 1024 then
+            log("Terrain too large to capture even at res 1024, skipping.")
+            return nil
+        end
+    end
+    if adjRes ~= res then
+        log("Terrain resolution auto-raised from " .. res .. " to " .. adjRes .. " to stay under cell cap.")
+        setStatusText("Saving game.. terrain downsampled to res " .. adjRes)
+        task.wait()
+    end
+    local half = size * 0.5
+    local CHUNK = 32
+    local out = {}
+    out[#out+1] = string.pack("<I4", 4)
+    out[#out+1] = string.pack("<I4", 0)
+    out[#out+1] = string.pack("<I4", cellsX)
+    out[#out+1] = string.pack("<I4", cellsY)
+    out[#out+1] = string.pack("<I4", cellsZ)
+    local matParts = {}
+    local occParts = {}
+    local chunkIdx = 0
+    for cx = 0, cellsX - 1, CHUNK do
+        for cy = 0, cellsY - 1, CHUNK do
+            for cz = 0, cellsZ - 1, CHUNK do
+                local ex = math.min(cx + CHUNK, cellsX)
+                local ey = math.min(cy + CHUNK, cellsY)
+                local ez = math.min(cz + CHUNK, cellsZ)
+                local minV = Vector3.new(-half.X + cx * adjRes, -half.Y + cy * adjRes, -half.Z + cz * adjRes)
+                local maxV = Vector3.new(-half.X + ex * adjRes, -half.Y + ey * adjRes, -half.Z + ez * adjRes)
+                local region = Region3.new(minV, maxV)
+                local ok, m, o = pcall(function()
+                    return terrain:ReadVoxels(region, adjRes)
+                end)
+                if ok and m and o then
+                    for x = 1, #m do
+                        local mx = m[x]
+                        local ox = o[x]
+                        local xm = {}
+                        local xo = {}
+                        for y = 1, #mx do
+                            local mxy = mx[y]
+                            local oxy = ox[y]
+                            for z = 1, #mxy do
+                                local mv = mxy[z]
+                                local ov = oxy[z]
+                                xm[#xm+1] = string.char(mv.Value)
+                                xo[#xo+1] = string.char(math.floor(ov * 255 + 0.5))
+                            end
+                        end
+                        matParts[#matParts+1] = table.concat(xm)
+                        occParts[#occParts+1] = table.concat(xo)
+                    end
+                end
+                chunkIdx = chunkIdx + 1
+                if chunkIdx % 8 == 0 then
+                    setStatusText("Saving game.. terrain chunk " .. chunkIdx)
+                    task.wait()
+                end
+            end
+        end
+    end
+    out[#out+1] = table.concat(matParts)
+    out[#out+1] = table.concat(occParts)
+    return table.concat(out)
 end
 
 local function emitContentProp(buf, inst, pad, propName)
@@ -1030,6 +1036,7 @@ end
 
 local function emitSingleProp(buf, inst, pad, seen, k, opts, defaultInst)
     if seen[k] or shouldSkipProp(k) then return end
+    if Fish.Options.APIProperties and not isPropValid(inst.ClassName, k) then return end
     if isRealContent(k) then
         seen[k] = true
         emitContentProp(buf, inst, pad, k)
@@ -1083,7 +1090,7 @@ local function shouldEmitInMode(cls, mode)
     return true
 end
 
-local function emitInst(buf, inst, d, opts, decompileCache, refs)
+local function emitInst(buf, inst, d, opts, decompileCache, refs, totalRefs)
     local ref = refs[inst]
     if not ref then return end
     local pad = string.rep("  ", d)
@@ -1091,12 +1098,12 @@ local function emitInst(buf, inst, d, opts, decompileCache, refs)
 
     if not shouldEmitInMode(cls, opts.Mode) then
         local okc, kids = pcall(function() return inst:GetChildren() end)
-        if okc and kids then for _, c in ipairs(kids) do if refs[c] then emitInst(buf, c, d, opts, decompileCache, refs) end end end
+        if okc and kids then for _, c in ipairs(kids) do if refs[c] then emitInst(buf, c, d, opts, decompileCache, refs, totalRefs) end end end
         return
     end
 
     Walker.totalInst = Walker.totalInst + 1
-    bumpProgress()
+    bumpStatus("Saving", Walker.totalInst, totalRefs)
 
     table.insert(buf, pad .. '<Item class="' .. clean(cls) .. '" referent="' .. ref .. '">')
     table.insert(buf, pad .. '  <Properties>')
@@ -1127,7 +1134,10 @@ local function emitInst(buf, inst, d, opts, decompileCache, refs)
 
     emitAttributesAndTags(buf, inst, pad, opts)
 
-    if cls == "LocalScript" or cls == "ModuleScript" or cls == "Script" then
+    if cls == "Script" then
+        local src = tostring(DATA.server_script_placeholder or "")
+        table.insert(buf, pad .. '    <ProtectedString name="Source">' .. clean(src) .. '</ProtectedString>')
+    elseif cls == "LocalScript" or cls == "ModuleScript" then
         local src = readProp(inst, "Source")
         if decompileCache and decompileCache[inst] then src = decompileCache[inst] end
         if (not src or src == "") and opts.Decompile and opts._decompileFn then
@@ -1138,7 +1148,10 @@ local function emitInst(buf, inst, d, opts, decompileCache, refs)
             local okb, bc = pcall(opts._bytecodeFn, inst)
             if okb and type(bc) == "string" and bc ~= "" then src = b64(bc) end
         end
-        table.insert(buf, pad .. '    <ProtectedString name="Source">' .. clean(src or "") .. '</ProtectedString>')
+        if not src or src == "" then
+            src = "-- [Fishilizer] No source recovered for " .. tostring(cls) .. " \"" .. tostring(inst.Name) .. "\""
+        end
+        table.insert(buf, pad .. '    <ProtectedString name="Source">' .. clean(src) .. '</ProtectedString>')
     end
 
     if cls == "UnionOperation" or cls == "IntersectOperation" or cls == "NegateOperation" or cls == "PartOperation" then
@@ -1154,48 +1167,25 @@ local function emitInst(buf, inst, d, opts, decompileCache, refs)
 
     if cls == "Terrain" then
         if not seen.SmoothGrid then
-            local sg = readProp(inst, "SmoothGrid")
-            if sg and type(sg) == "string" and #sg > 0 then
+            local sg = readTerrainVoxels(inst, opts.TerrainResolution)
+            if sg and #sg > 0 then
                 table.insert(buf, pad .. '    <BinaryString name="SmoothGrid">' .. b64(sg) .. '</BinaryString>')
             else
-                log("Failed to read SmoothGrid. Terrain will be missing in the save. Ensure gethiddenproperty is supported.")
+                log("Terrain voxel capture returned nothing.")
             end
+        end
+        local mc = readProp(inst, "MaterialColors")
+        if mc and type(mc) == "string" and #mc > 0 and not seen.MaterialColors then
+            table.insert(buf, pad .. '    <BinaryString name="MaterialColors">' .. b64(mc) .. '</BinaryString>')
         end
     end
 
     table.insert(buf, pad .. '  </Properties>')
 
     local okc, kids = pcall(function() return inst:GetChildren() end)
-    if okc and kids then for _, c in ipairs(kids) do if refs[c] then emitInst(buf, c, d + 1, opts, decompileCache, refs) end end end
+    if okc and kids then for _, c in ipairs(kids) do if refs[c] then emitInst(buf, c, d + 1, opts, decompileCache, refs, totalRefs) end end end
+
     table.insert(buf, pad .. '</Item>')
-end
-
-local function resolveDecompile()
-    if type(decompile) == "function" then return decompile end
-    if type(decompile_script) == "function" then return decompile_script end
-    local g = (getgenv and getgenv()) or _G
-    if g then
-        for _, v in pairs(g) do
-            if type(v) == "table" then
-                if type(v.decompile) == "function" then return v.decompile end
-                if type(v.decompile_script) == "function" then return v.decompile_script end
-            end
-        end
-    end
-    return nil
-end
-
-local function resolveBytecode()
-    if type(getscriptbytecode) == "function" then return getscriptbytecode end
-    local g = (getgenv and getgenv()) or _G
-    if g then
-        for _, v in pairs(g) do
-            if type(v) == "table" and type(v.getscriptbytecode) == "function" then
-                return v.getscriptbytecode
-            end
-        end
-    end
-    return nil
 end
 
 local function placeName()
@@ -1214,12 +1204,50 @@ local function placeName()
     return name
 end
 
+local function buildReadmeSource()
+    local tpl = DATA.readme_template
+    if type(tpl) ~= "string" or tpl == "" then
+        tpl = "-- Fishilizer v" .. Fish.VERSION .. "\nGame saved with Fishilizer\n"
+    end
+    local subs = {
+        VERSION = Fish.VERSION,
+        PLACE_NAME = placeName(),
+        PLACE_ID = tostring(game.PlaceId),
+        JOB_ID = tostring(game.JobId or "N/A"),
+        MODE = tostring(Fish.Options.Mode),
+        DECOMPILE = tostring(Fish.Options.Decompile),
+        TERRAIN_RESOLUTION = tostring(Fish.Options.TerrainResolution),
+        DEPTH = tostring(Fish.Options.Depth),
+        TIMESTAMP = os.date("!%Y-%m-%d %H:%M:%S"),
+    }
+    return (tpl:gsub("{{(%w+)}}", function(k) return subs[k] or "" end))
+end
+
+local function buildReadmeXML(depth)
+    local pad = string.rep("  ", depth)
+    local src = buildReadmeSource()
+    return table.concat({
+        pad .. '<Item class="Script" referent="RBX_README">',
+        pad .. '  <Properties>',
+        pad .. '    <string name="Name">README</string>',
+        pad .. '    <bool name="Disabled">false</bool>',
+        pad .. '    <ProtectedString name="Source">' .. clean(src) .. '</ProtectedString>',
+        pad .. '  </Properties>',
+        pad .. '</Item>',
+    }, "\n")
+end
+
 local function mergeOptions(userOpts)
     local merged = {}
     for k, v in pairs(Fish.Options) do merged[k] = v end
     if userOpts then for k, v in pairs(userOpts) do merged[k] = v end end
     merged._decompileFn = Fish._decompileFn
     merged._bytecodeFn = Fish._bytecodeFn
+    if merged.ReadMe then
+        merged._readmeXMLFn = buildReadmeXML
+    else
+        merged._readmeXMLFn = nil
+    end
     return merged
 end
 
@@ -1260,65 +1288,19 @@ local function restoreBackpack()
     _pendingRestore = {}
 end
 
-function Fish.FetchClasses(cacheFile)
-    cacheFile = cacheFile or "FishilizerAPIDump.json"
-    if IO.isfile and IO.readfile then
-        local okI, exists = pcall(IO.isfile, cacheFile)
-        if okI and exists then
-            local okR, cached = pcall(IO.readfile, cacheFile)
-            if okR and cached and #cached > 100 then
-                local okD, data = pcall(HttpService.JSONDecode, HttpService, cached)
-                if okD and data then
-                    Fish.ApplyAPIDump(data)
-                    log("Loaded cached API dump")
-                    return data
-                end
-            end
-        end
-    end
-    local okG, raw = pcall(function() return game:HttpGet(Fish.Options.APIDumpURL) end)
-    if not okG or not raw then log("Failed to fetch API dump") return nil end
-    if IO.writefile then pcall(IO.writefile, cacheFile, raw) end
-    local okD, data = pcall(HttpService.JSONDecode, HttpService, raw)
-    if not okD or not data then log("Failed to parse API dump") return nil end
-    Fish.ApplyAPIDump(data)
-    return data
-end
-
-function Fish.ApplyAPIDump(data)
-    if type(data) ~= "table" or type(data.Classes) ~= "table" then return end
-    local added = 0
-    for _, class in ipairs(data.Classes) do
-        local className = class.Name
-        if className and not INSTANCE_SPECIFIC[className] then
-            local props = {}
-            if type(class.Members) == "table" then
-                for _, member in ipairs(class.Members) do
-                    if member.MemberType == "Property" and member.Name and not shouldSkipProp(member.Name) then
-                        table.insert(props, member.Name)
-                    end
-                end
-            end
-            if class.Superclass and INSTANCE_SPECIFIC[class.Superclass] then
-                for _, p in ipairs(INSTANCE_SPECIFIC[class.Superclass]) do table.insert(props, p) end
-            end
-            if #props > 0 then
-                INSTANCE_SPECIFIC[className] = props
-                added = added + 1
-            end
-        end
-    end
-    log("API dump: added " .. added .. " classes")
-end
-
 function Fish.Init()
-    Fish._decompileFn = resolveDecompile()
+    loadFromAPI()
+    Fish._decompileFn = lunauxDecompile
     Fish._bytecodeFn = resolveBytecode()
-    if Fish.Options.FetchDocs then pcall(Fish.FetchClasses) end
+    if Fish.Options.FetchDocs or Fish.Options.APIProperties then
+        local ok, data = pcall(Fish.FetchClasses)
+        if not ok then log("API dump fetch failed: " .. tostring(data)) end
+    end
     return Fish
 end
 
 function Fish.Save(instance, name, userOpts)
+    if not _dataLoaded then loadFromAPI() end
     local opts = mergeOptions(userOpts)
     IO.writefile = IO.writefile or resolveIO("writefile")
     IO.makefolder = IO.makefolder or resolveIO("makefolder")
@@ -1326,7 +1308,6 @@ function Fish.Save(instance, name, userOpts)
     IO.isfile = IO.isfile or resolveIO("isfile")
     IO.delfile = IO.delfile or resolveIO("delfile")
     IO.getproperties = IO.getproperties or resolveIO("getproperties")
-    IO.gethiddenproperty = IO.gethiddenproperty or resolveIO("gethiddenproperty")
 
     if not opts.Callback and not opts.Clipboard and not IO.writefile then
         log("writefile unavailable")
@@ -1334,8 +1315,9 @@ function Fish.Save(instance, name, userOpts)
         return nil
     end
 
-    _progressUI = buildProgressUI()
-    showTextStage()
+    _statusUI = buildStatusUI()
+    _statusAccum = 0
+    setStatusText("Saving game..")
 
     if opts.KillAllScripts then
         pcall(function()
@@ -1347,15 +1329,13 @@ function Fish.Save(instance, name, userOpts)
         end)
     end
 
-    if opts.Notify then notify("Fishilizer v" .. Fish.VERSION, "Serializing...", 4) end
     log("Serializing...")
+    task.wait()
 
     local t0 = tick()
     Walker.refs = {}
     Walker.refCount = 0
     Walker.totalInst = 0
-    _progressEmitted = 0
-    _progressTotal = 0
 
     local charRefs = {}
     local coreRefs = {}
@@ -1384,7 +1364,7 @@ function Fish.Save(instance, name, userOpts)
     end
 
     if #roots == 0 then
-        destroyProgressUI()
+        fadeStatusAndDestroy()
         notify("Fishilizer: FAILED", "No valid root instance", 10)
         return nil
     end
@@ -1393,9 +1373,6 @@ function Fish.Save(instance, name, userOpts)
     if opts.IncludeBackpack then
         local okM = pcall(moveBackpackToStarter)
         didMoveBackpack = okM
-        if okM and #_pendingRestore > 0 then
-            log("Moved " .. #_pendingRestore .. " backpack tool(s) into StarterPack for save")
-        end
     end
 
     local okSave, result = pcall(function()
@@ -1413,46 +1390,77 @@ function Fish.Save(instance, name, userOpts)
         end
 
         log("Walked " .. Walker.refCount .. " instances")
-
-        _progressTotal = Walker.refCount
-        showProgressStage()
+        setStatusText("Saving game.. decompiling")
+        task.wait()
 
         local buf = {}
         local decompileCache = {}
 
         if opts.Decompile and Fish._decompileFn then
+            local scriptTotal = 0
             for inst in pairs(refs) do
                 local cls = inst.ClassName
-                if cls == "Script" or cls == "LocalScript" or cls == "ModuleScript" then
-                    local ok, res = pcall(Fish._decompileFn, inst)
-                    if ok and type(res) == "string" and res ~= "" then decompileCache[inst] = res end
+                if cls == "LocalScript" or cls == "ModuleScript" then
+                    local existing = readProp(inst, "Source")
+                    if not existing or existing == "" then scriptTotal = scriptTotal + 1 end
                 end
             end
+            local scriptCount = 0
+            local iterCount = 0
+            for inst in pairs(refs) do
+                iterCount = iterCount + 1
+                local cls = inst.ClassName
+                if cls == "LocalScript" or cls == "ModuleScript" then
+                    local existing = readProp(inst, "Source")
+                    if not existing or existing == "" then
+                        scriptCount = scriptCount + 1
+                        setStatusText("Decompiling " .. scriptCount .. "/" .. scriptTotal)
+                        local ok, res = pcall(Fish._decompileFn, inst)
+                        if ok and type(res) == "string" and res ~= "" then decompileCache[inst] = res end
+                        task.wait()
+                    end
+                end
+                if iterCount % 100 == 0 then task.wait() end
+            end
         end
+
+        setStatusText("Saving game.. writing")
 
         table.insert(buf, '<?xml version="1.0" encoding="utf-8"?>')
         table.insert(buf, '<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">')
 
+        local readmeEmitted = false
         for _, root in ipairs(roots) do
             if root == game then
                 local ok0, kids0 = pcall(function() return game:GetChildren() end)
                 if ok0 and kids0 then
                     for _, svc in ipairs(kids0) do
-                        if refs[svc] then emitInst(buf, svc, 1, opts, decompileCache, refs) end
+                        if refs[svc] then
+                            emitInst(buf, svc, 1, opts, decompileCache, refs, Walker.refCount)
+                            if opts._readmeXMLFn and not readmeEmitted and svc:IsA("Lighting") then
+                                local readmeXml = opts._readmeXMLFn(1)
+                                if readmeXml then
+                                    table.insert(buf, readmeXml)
+                                    readmeEmitted = true
+                                end
+                            end
+                        end
                     end
                 end
             else
-                if refs[root] then emitInst(buf, root, 1, opts, decompileCache, refs) end
+                if refs[root] then emitInst(buf, root, 1, opts, decompileCache, refs, Walker.refCount) end
+            end
+        end
+
+        if opts._readmeXMLFn and not readmeEmitted then
+            local readmeXml = opts._readmeXMLFn(1)
+            if readmeXml then
+                table.insert(buf, readmeXml)
+                readmeEmitted = true
             end
         end
 
         table.insert(buf, '</roblox>')
-
-        if opts.ReadMe then
-            table.insert(buf, #buf, '<!-- Serialized by Fishilizer v' .. Fish.VERSION .. ' -->')
-        end
-
-        updateBar(1)
 
         local xml = table.concat(buf, "\n")
         local finalName = name or placeName()
@@ -1463,13 +1471,15 @@ function Fish.Save(instance, name, userOpts)
 
         if opts.Callback and type(opts.Callback) == "function" then
             pcall(opts.Callback, xml)
-            if opts.Notify then notify("Fishilizer: DONE", tostring(Walker.totalInst) .. " inst | " .. math.floor(#xml / 1024) .. "kb", 12) end
+            setStatusText("Saved!", Color3.fromRGB(86, 255, 128))
+            fadeStatusAndDestroy()
             return xml
         end
 
         if opts.Clipboard then
             pcall(function() if IO.setclipboard then IO.setclipboard(xml) end end)
-            if opts.Notify then notify("Fishilizer", "Copied to clipboard", 6) end
+            setStatusText("Saved!", Color3.fromRGB(86, 255, 128))
+            fadeStatusAndDestroy()
             return xml
         end
 
@@ -1500,31 +1510,25 @@ function Fish.Save(instance, name, userOpts)
         end
 
         if not wrote then
-            notify("Fishilizer: FAILED", "writefile failed", 10)
+            setStatusText("Save failed (writefile)", Color3.fromRGB(255, 86, 86))
+            task.delay(2, fadeStatusAndDestroy)
             return xml
         end
 
-        if opts.Notify then
-            notify("Fishilizer: DONE in " .. string.format("%.1fs", elapsed), fname .. "\n" .. Walker.totalInst .. " inst | " .. math.floor(#xml / 1024) .. "kb", 12)
-        end
-
+        setStatusText("Saved!", Color3.fromRGB(86, 255, 128))
+        task.wait(0.4)
+        fadeStatusAndDestroy()
         return xml
     end)
 
     if didMoveBackpack then
         restoreBackpack()
-        log("Restored backpack tools")
     end
-
-    destroyProgressUI()
 
     if not okSave then
         log("Save error: " .. tostring(result))
-        pcall(function()
-            game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = "Fishilizer: FAILED", Text = tostring(result):sub(1, 100), Duration = 12,
-            })
-        end)
+        setStatusText("Save failed: " .. tostring(result):sub(1, 60), Color3.fromRGB(255, 86, 86))
+        task.delay(2, fadeStatusAndDestroy)
         return nil
     end
 
@@ -1555,11 +1559,17 @@ function Fish.SaveModels(instance, name, userOpts)
     return Fish.Save(instance, name, merged)
 end
 
+Fish.LoadData = loadFromAPI
+Fish.Data = DATA
+Fish.ValidPropsForClass = apiClassProps
 Fish.EncodeBase64 = b64
 Fish.ExtractUri = extractUri
 Fish.SerializeProp = serializeProp
 Fish.EncodeAttributes = encodeAttributes
 Fish.EncodeTags = encodeTags
+Fish.DecompileScript = lunauxDecompile
+Fish.HttpPost = httpPost
+Fish.ReadTerrainVoxels = readTerrainVoxels
 Fish.DeepClone = function(t)
     if type(t) ~= "table" then return t end
     local n = {}
@@ -1579,9 +1589,9 @@ genv.savegame = function(name, opts)
     return Fish.Save(game, name, opts)
 end
 
-genv.saveinstance = function(name, opts)
+genv.saveinstance = function(inst, name, opts)
     Fish.Init()
-    return Fish.Save(game, name, opts)
+    return Fish.Save(inst, name, opts)
 end
 
 local SESSION_KEY = "__FISHILIZER_SESSION_" .. tostring(game.PlaceId)
@@ -1600,11 +1610,10 @@ if genv and not genv[SESSION_KEY] and not genv.FISHILIZER_NO_AUTORUN then
     end)
     if not ok then
         log("Auto-run failed: " .. tostring(err))
-        pcall(function()
-            game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = "Fishilizer: FAILED", Text = tostring(err):sub(1, 100), Duration = 12,
-            })
-        end)
+        if _statusUI then
+            setStatusText("Save failed: " .. tostring(err):sub(1, 60), Color3.fromRGB(255, 86, 86))
+            task.delay(2, fadeStatusAndDestroy)
+        end
     end
 end
 
