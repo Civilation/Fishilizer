@@ -1,4 +1,12 @@
+--[[
 
+Fishilizer is now open-sourced.
+
+A gift from SourceKids. Eventually, once Fishilizer reaches its full capabilities, it will no longer be open-sourced.
+
+Enjoy this special gift <3
+
+]]
 
 
 
@@ -113,6 +121,9 @@ local function buildProgressUI()
         if existing then existing:Destroy() end
     end)
 
+
+
+    -- The progress bar we will use but if you really wanna fork this or edit this feel free to do so
     local gui = Instance.new("ScreenGui")
     gui.Name = "__FishilizerProgress__"
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -220,7 +231,11 @@ local function bumpProgress()
         end
     end
 end
+--[[
 
+TONS of instances to work from
+
+]]
 local SKIP_SVC = {
     CoreGui=true,CorePackages=true,CoreScripts=true,Chat=true,LogService=true,
     ContentProvider=true,ScriptContext=true,Selection=true,TestService=true,
