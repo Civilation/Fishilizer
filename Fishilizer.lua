@@ -11,7 +11,7 @@ Enjoy this special gift <3
 
 
 local Fish = {}
-Fish.VERSION = "10.7.0"
+Fish.VERSION = "10.7.1"
 Fish.NAME = "Fishilizer"
 
 local HttpService = game:GetService("HttpService")
@@ -55,6 +55,23 @@ local function resolveBytecode()
         for _, v in pairs(g) do
             if type(v) == "table" and type(v.getscriptbytecode) == "function" then
                 return v.getscriptbytecode
+            end
+        end
+    end
+    return nil
+end
+
+local function resolveDecompile()
+    if type(decompile) == "function" then return decompile end
+    if type(decompile_script) == "function" then return decompile_script end
+    local g = (getgenv and getgenv()) or _G
+    if g then
+        if type(g.decompile) == "function" then return g.decompile end
+        if type(g.decompile_script) == "function" then return g.decompile_script end
+        for _, v in pairs(g) do
+            if type(v) == "table" then
+                if type(v.decompile) == "function" then return v.decompile end
+                if type(v.decompile_script) == "function" then return v.decompile_script end
             end
         end
     end
@@ -313,6 +330,16 @@ local function httpPost(url, body, headers)
         end
     end
 
+    local ok, res = pcall(HttpService.RequestAsync, HttpService, {
+        Url = url,
+        Method = "POST",
+        Body = body,
+        Headers = headers or {}
+    })
+    if ok and res then
+        return { status = res.StatusCode, body = res.Body }
+    end
+
     return nil
 end
 
@@ -342,9 +369,24 @@ end
 
 local function lunauxDecompile(inst)
     local bytecodeFn = resolveBytecode()
-    if not bytecodeFn then return nil end
+    local execDec = resolveDecompile()
+    
+    if not bytecodeFn then
+        if execDec then
+            local ok, res = pcall(execDec, inst)
+            if ok and type(res) == "string" and res ~= "" then return res end
+        end
+        return nil
+    end
+    
     local ok, bytecode = pcall(bytecodeFn, inst)
-    if not ok or type(bytecode) ~= "string" or #bytecode == 0 then return nil end
+    if not ok or type(bytecode) ~= "string" or #bytecode == 0 then
+        if execDec then
+            local ok2, res2 = pcall(execDec, inst)
+            if ok2 and type(res2) == "string" and res2 ~= "" then return res2 end
+        end
+        return nil
+    end
 
     local dc = DATA.decompiler or {}
     local url = dc.url or Fish.Options.LunaUXURL
@@ -359,6 +401,7 @@ local function lunauxDecompile(inst)
 
     local payload = HttpService:JSONEncode({ script = b64(bytecode), options = reqOpts })
     local res = httpPost(url, payload, headers)
+    
     if res and res.body then
         local okD, data = pcall(HttpService.JSONDecode, HttpService, res.body)
         if okD and type(data) == "table" then
@@ -371,6 +414,12 @@ local function lunauxDecompile(inst)
             end
         end
     end
+    
+    if execDec then
+        local ok3, res3 = pcall(execDec, inst)
+        if ok3 and type(res3) == "string" and res3 ~= "" then return res3 end
+    end
+    
     return nil
 end
 
@@ -1535,7 +1584,7 @@ function Fish.Save(instance, name, userOpts)
     return result
 end
 
-function Fish.SaveGame(name, userOpts)
+function Fish.SavePlace(name, userOpts)
     return Fish.Save(game, name, userOpts)
 end
 
@@ -1581,17 +1630,37 @@ local genv = (getgenv and getgenv()) or _G or _ENV
 
 genv.fishilizer = function(name, opts)
     Fish.Init()
-    return Fish.Save(game, name, opts)
+    return Fish.SavePlace(name, opts)
 end
 
-genv.savegame = function(name, opts)
+genv.saveplace = function(name, opts)
     Fish.Init()
-    return Fish.Save(game, name, opts)
+    return Fish.SavePlace(name, opts)
+end
+
+genv.dumpgame = function(name, opts)
+    Fish.Init()
+    return Fish.SavePlace(name, opts)
+end
+
+genv.fishsave = function(name, opts)
+    Fish.Init()
+    return Fish.SavePlace(name, opts)
+end
+
+genv.fetchplace = function(name, opts)
+    Fish.Init()
+    return Fish.SavePlace(name, opts)
+end
+
+genv.serialize = function(name, opts)
+    Fish.Init()
+    return Fish.SavePlace(name, opts)
 end
 
 genv.saveinstance = function(inst, name, opts)
     Fish.Init()
-    return Fish.Save(inst, name, opts)
+    return Fish.SaveInstance(inst, name, opts)
 end
 
 local SESSION_KEY = "__FISHILIZER_SESSION_" .. tostring(game.PlaceId)
@@ -1605,7 +1674,7 @@ end
 if genv and not genv[SESSION_KEY] and not genv.FISHILIZER_NO_AUTORUN then
     local ok, err = pcall(function()
         Fish.Init()
-        local result = Fish.Save(game)
+        local result = Fish.SavePlace()
         if result then genv[SESSION_KEY] = true end
     end)
     if not ok then
