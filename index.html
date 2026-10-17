@@ -1,8 +1,13 @@
 <!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://files.catbox.moe data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline';">
 <title>Fishilizer</title>
 <meta name="description" content="Fishilizer, Roblox place serializer."/>
+<link rel="icon" type="image/png" href="https://files.catbox.moe/5uumgz.png">
 <style>
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Open+Sans:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap");
 
@@ -10,7 +15,7 @@
   --bg: #eeeeee;
   --bg-alt: #e4e4e4;
   --bg-panel: #f5f5f5;
-  --bg-code: #1a1a1a;
+  --bg-code: #121212;
   --fg: #1f1f1f;
   --fg-2: #565656;
   --fg-3: #8a8a8a;
@@ -34,7 +39,7 @@ html[data-theme="dark"] {
   --bg: #141414;
   --bg-alt: #1d1d1d;
   --bg-panel: #1a1a1a;
-  --bg-code: #0d0d0d;
+  --bg-code: #121212;
   --fg: #e0e0e0;
   --fg-2: #9a9a9a;
   --fg-3: #656565;
@@ -65,6 +70,13 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.2s, color 0.2s;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+pre, code, textarea, input {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 a { color: var(--accent); text-decoration: none; }
@@ -291,8 +303,14 @@ pre .c-fn { color: var(--c-fn); }
   color: var(--fg);
   max-width: 640px;
   width: 100%;
-  cursor: default;
-  user-select: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.discord-widget:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  text-decoration: none;
 }
 .discord-widget img {
   width: 42px;
@@ -471,6 +489,8 @@ footer {
   background: var(--bg);
 }
 </style>
+</head>
+<body>
 
 <header>
   <div class="header-inner">
@@ -501,13 +521,13 @@ footer {
       <h1>Serialize <span class="accent-blue">any Roblox place</span></h1>
       <p class="lead">Ever wanted to save a ROBLOX game 1-1 but it failed to save terrain or other contents? <span class="accent-yellow">Fishilizer</span> fixes that.</p>
 
-      <div class="discord-widget">
+      <a class="discord-widget" href="https://discord.gg/GZDXBMjndT" target="_blank" rel="noopener noreferrer">
         <img src="https://files.catbox.moe/sep6km.png" alt="SourceKids">
         <div class="discord-widget-text">
           <div class="discord-widget-title">Join SourceKids</div>
           <div class="discord-widget-sub">And achieve almighty power from the all knowing book of TXT</div>
         </div>
-      </div>
+      </a>
     </div>
 
     <h2>Quick start</h2>
@@ -666,6 +686,16 @@ local xml = Fish.Save(game, "Preview", {
 
 <script>
 (function(){
+  document.addEventListener('contextmenu', event => event.preventDefault());
+  document.addEventListener('dragstart', event => event.preventDefault());
+  document.addEventListener('keydown', function(e) {
+      if (e.key === 'F12' || 
+         (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || 
+         (e.ctrlKey && e.key === 'U')) {
+          e.preventDefault();
+      }
+  });
+
   var root = document.documentElement;
   var saved = null;
   try { saved = localStorage.getItem("fish-theme"); } catch(e){}
