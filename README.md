@@ -20,6 +20,10 @@ Fishilizer extracts the entire DataModel from a running Roblox instance and writ
 
 Unlike basic dumpers, Fishilizer reads the engine directly through reflection (`getproperties`) when available, falling back to an extensive hardcoded property map for older environments. It serializes attributes and tags as native `rbx-dom` binary payloads, ensuring a byte-identical reconstruction when the file is opened in Roblox Studio.
 
+## Preview
+
+![Fishilizer decompiled game open in Studio](https://files.catbox.moe/vaj6vt.PNG)
+
 ## Features
 
 - **Total Property Coverage:** Calls `getproperties()` to enumerate everything the engine exposes.
