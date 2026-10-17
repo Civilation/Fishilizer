@@ -724,7 +724,31 @@ local function extractUri(v)
     return nil
 end
 
-local function b64(s) return HttpService:Base64Encode(s) end
+local b64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+local function b64(s)
+    if type(s) ~= "string" then return "" end
+    local res = {}
+    local i = 1
+    local len = #s
+    while i <= len do
+        local c1 = s:byte(i)
+        local c2 = s:byte(i + 1)
+        local c3 = s:byte(i + 2)
+        
+        local b1 = math.floor(c1 / 4)
+        local b2 = (c1 % 4) * 16 + (c2 and math.floor(c2 / 16) or 0)
+        local b3 = c2 and ((c2 % 16) * 4 + (c3 and math.floor(c3 / 64) or 0)) or 0
+        local b4 = c3 and (c3 % 64) or 0
+        
+        table.insert(res, b64chars:sub(b1 + 1, b1 + 1))
+        table.insert(res, b64chars:sub(b2 + 1, b2 + 1))
+        table.insert(res, c2 and b64chars:sub(b3 + 1, b3 + 1) or "=")
+        table.insert(res, c3 and b64chars:sub(b4 + 1, b4 + 1) or "=")
+        
+        i = i + 3
+    end
+    return table.concat(res)
+end
 
 local function notify(title, text, dur)
     if not Fish.Options.Notify then return end
@@ -1507,6 +1531,18 @@ function Fish.SaveModels(instance, name, userOpts)
     merged.Mode = "models"
     merged.Decompile = false
     return Fish.Save(instance, name, merged)
+end
+
+Fish.EncodeBase64 = b64
+Fish.ExtractUri = extractUri
+Fish.SerializeProp = serializeProp
+Fish.EncodeAttributes = encodeAttributes
+Fish.EncodeTags = encodeTags
+Fish.DeepClone = function(t)
+    if type(t) ~= "table" then return t end
+    local n = {}
+    for k, v in pairs(t) do n[k] = Fish.DeepClone(v) end
+    return n
 end
 
 local genv = (getgenv and getgenv()) or _G or _ENV
