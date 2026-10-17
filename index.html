@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<title>Fishilizer</title>
+<meta name="description" content="Fishilizer, Roblox place serializer."/>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Open+Sans:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap");
+
+:root {
+  --bg: #eeeeee;
+  --bg-alt: #e4e4e4;
+  --bg-panel: #f5f5f5;
+  --bg-code: #1a1a1a;
+  --fg: #1f1f1f;
+  --fg-2: #565656;
+  --fg-3: #8a8a8a;
+  --border: #cacaca;
+  --border-2: #aeaeae;
+  --line: #d5d5d5;
+  --accent: #2563eb;
+  --accent-glow: rgba(37, 99, 235, 0.35);
+  --yellow: #b8860b;
+  --yellow-glow: rgba(184, 134, 11, 0.35);
+  --code-fg: #d4d4d4;
+  --c-com: #6a9955;
+  --c-str: #ce9178;
+  --c-num: #b5cea8;
+  --c-kw: #569cd6;
+  --c-fn: #dcdcaa;
+  --pattern: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'><g fill='none' stroke='%23d5d5d5' stroke-width='1'><path d='M0,30 L30,0 L60,30 L30,60 Z'/><path d='M0,30 L60,30'/><path d='M30,0 L30,60'/><path d='M15,15 L45,45'/><path d='M45,15 L15,45'/></g></svg>");
+}
+
+html[data-theme="dark"] {
+  --bg: #141414;
+  --bg-alt: #1d1d1d;
+  --bg-panel: #1a1a1a;
+  --bg-code: #0d0d0d;
+  --fg: #e0e0e0;
+  --fg-2: #9a9a9a;
+  --fg-3: #656565;
+  --border: #2a2a2a;
+  --border-2: #383838;
+  --line: #262626;
+  --accent: #6ea8fe;
+  --accent-glow: rgba(110, 168, 254, 0.5);
+  --yellow: #e5c07b;
+  --yellow-glow: rgba(229, 192, 123, 0.5);
+  --code-fg: #d4d4d4;
+  --pattern: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'><g fill='none' stroke='%23262626' stroke-width='1'><path d='M0,30 L30,0 L60,30 L30,60 Z'/><path d='M0,30 L60,30'/><path d='M30,0 L30,60'/><path d='M15,15 L45,45'/><path d='M45,15 L15,45'/></g></svg>");
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; }
+
+body {
+  background-color: var(--bg);
+  background-image: var(--pattern);
+  background-size: 60px 60px;
+  background-attachment: fixed;
+  color: var(--fg);
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-size: 0.94rem;
+  line-height: 1.65;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+header {
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.header-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 28px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 36px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+.brand:hover { text-decoration: none; }
+
+.brand img {
+  height: 38px;
+  width: 38px;
+  object-fit: contain;
+  display: block;
+}
+
+.brand-name {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  color: var(--fg);
+}
+
+nav.top { display: flex; gap: 4px; flex: 1; }
+
+nav.top a {
+  position: relative;
+  padding: 8px 14px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--fg-2);
+  cursor: pointer;
+  border-radius: 3px;
+  transition: color 0.2s, background 0.2s;
+  overflow: hidden;
+}
+nav.top a:hover {
+  color: var(--fg);
+  background: var(--bg-alt);
+  text-decoration: none;
+}
+nav.top a::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  transition: width 0.25s ease, left 0.25s ease;
+}
+nav.top a.on {
+  color: var(--accent);
+}
+nav.top a.on::after {
+  width: calc(100% - 20px);
+  left: 10px;
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg);
+  cursor: pointer;
+  color: var(--fg-2);
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.theme-toggle:hover {
+  border-color: var(--border-2);
+  color: var(--fg);
+  transform: rotate(15deg);
+}
+
+.container {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 56px 28px 96px;
+}
+
+.panel { display: none; }
+.panel.on {
+  display: block;
+  animation: panel-in 0.3s ease;
+}
+@keyframes panel-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 2rem;
+  letter-spacing: -0.015em;
+  color: var(--fg);
+  margin-bottom: 12px;
+  line-height: 1.25;
+}
+
+h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  margin: 44px 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+p {
+  color: var(--fg-2);
+  margin-bottom: 14px;
+  max-width: 780px;
+}
+
+.lead {
+  font-size: 1.05rem;
+  color: var(--fg-2);
+  max-width: 720px;
+  margin-bottom: 8px;
+}
+
+.accent-blue { color: var(--accent); text-shadow: 0 0 10px var(--accent-glow); font-weight: 500; }
+.accent-yellow { color: var(--yellow); text-shadow: 0 0 10px var(--yellow-glow); font-weight: 500; }
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  color: var(--accent);
+  text-shadow: 0 0 6px var(--accent-glow);
+}
+
+pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 16px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  line-height: 1.65;
+  color: var(--code-fg);
+  overflow-x: auto;
+  margin: 12px 0 20px;
+  position: relative;
+}
+pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+  text-shadow: none;
+}
+
+pre .c-com { color: var(--c-com); font-style: italic; }
+pre .c-str { color: var(--c-str); }
+pre .c-num { color: var(--c-num); }
+pre .c-kw { color: var(--c-kw); }
+pre .c-fn { color: var(--c-fn); }
+
+.copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--fg-3);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-2);
+  border-radius: 3px;
+  padding: 4px 10px;
+  cursor: pointer;
+  z-index: 2;
+  transition: all 0.15s;
+}
+.copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+.copy-btn.done { color: var(--yellow); border-color: var(--yellow); }
+
+.hero { padding: 24px 0 8px; text-align: center; }
+.hero h1 { margin-bottom: 16px; }
+.hero .lead { margin: 0 auto 24px; }
+
+.discord-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 22px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin: 12px 0 28px;
+  color: var(--fg);
+  max-width: 640px;
+  width: 100%;
+  cursor: default;
+  user-select: none;
+}
+.discord-widget img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.discord-widget-text {
+  flex: 1;
+  text-align: left;
+}
+.discord-widget-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--fg);
+  margin-bottom: 2px;
+}
+.discord-widget-sub {
+  font-size: 0.82rem;
+  color: var(--fg-2);
+  line-height: 1.4;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 28px;
+  font-size: 0.87rem;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+th, td {
+  padding: 11px 16px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+  color: var(--fg-2);
+}
+tr:last-child td { border-bottom: 0; }
+th {
+  background: var(--bg-alt);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+td.n { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--fg-3); }
+
+.builder {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  margin: 20px 0;
+}
+@media (max-width: 760px) { .builder { grid-template-columns: 1fr; } }
+
+.builder-opts {
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 18px 20px;
+  background: var(--bg-alt);
+}
+
+.modes {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  margin-bottom: 18px;
+  background: var(--bg);
+  overflow: hidden;
+}
+.modes button {
+  flex: 1;
+  padding: 8px 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: none;
+  border: 0;
+  color: var(--fg-3);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+.modes button + button { border-left: 1px solid var(--border); }
+.modes button:hover { color: var(--fg-2); background: var(--bg-alt); }
+.modes button.on {
+  color: var(--accent);
+  background: var(--bg-alt);
+}
+
+.opt {
+  display: block;
+  font-size: 0.87rem;
+  color: var(--fg-2);
+  padding: 7px 0;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+.opt:hover { color: var(--fg); }
+.opt input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--border-2);
+  border-radius: 4px;
+  background: var(--bg);
+  margin-right: 10px;
+  vertical-align: -3px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+.opt input:hover { border-color: var(--accent); }
+.opt input:active { transform: scale(0.9); }
+.opt input:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.opt input:checked::after {
+  content: "";
+  position: absolute;
+  left: 4.5px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  animation: check-pop 0.2s cubic-bezier(0.5, 1.6, 0.5, 1) forwards;
+}
+@keyframes check-pop {
+  from { transform: rotate(45deg) scale(0); }
+  to   { transform: rotate(45deg) scale(1); }
+}
+
+.builder-out {
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  position: relative;
+  background: var(--bg-code);
+  min-width: 0;
+}
+.builder-out pre {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  min-height: 320px;
+}
+
+.note {
+  border-left: 3px solid var(--yellow);
+  background: var(--bg-alt);
+  padding: 12px 18px;
+  margin: 16px 0;
+  font-size: 0.88rem;
+  color: var(--fg-2);
+  max-width: 780px;
+}
+.note b { color: var(--yellow); }
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 28px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--fg-3);
+  background: var(--bg);
+}
+</style>
+
+<header>
+  <div class="header-inner">
+    <a class="brand" href="#" data-jump="home">
+      <img src="https://files.catbox.moe/5uumgz.png" alt="Fishilizer">
+      <span class="brand-name">Fishilizer</span>
+    </a>
+
+    <nav class="top">
+      <a data-tab="home" class="on">Home</a>
+      <a data-tab="builder">Builder</a>
+      <a data-tab="api">API</a>
+      <a data-tab="options">Options</a>
+    </nav>
+
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+      <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<div class="container">
+
+  <section id="tab-home" class="panel on">
+    <div class="hero">
+      <h1>Serialize <span class="accent-blue">any Roblox place</span></h1>
+      <p class="lead">Ever wanted to save a ROBLOX game 1-1 but it failed to save terrain or other contents? <span class="accent-yellow">Fishilizer</span> fixes that.</p>
+
+      <div class="discord-widget">
+        <img src="https://files.catbox.moe/sep6km.png" alt="SourceKids">
+        <div class="discord-widget-text">
+          <div class="discord-widget-title">Join SourceKids</div>
+          <div class="discord-widget-sub">And achieve almighty power from the all knowing book of TXT</div>
+        </div>
+      </div>
+    </div>
+
+    <h2>Quick start</h2>
+    <div style="position:relative">
+      <button class="copy-btn" data-t="qs">copy</button>
+<pre id="qs">loadstring(game:HttpGetAsync(
+    "https://civilation.github.io/Fishilizer/Fishilizer.lua"
+))()</pre>
+    </div>
+
+    <div class="note">
+      <b>Tip</b> Open the <a href="#" data-jump="builder">Builder</a> tab to bake your own settings into the loadstring.
+    </div>
+  </section>
+
+  <section id="tab-builder" class="panel">
+    <h1>Builder</h1>
+    <p class="lead">Pick a mode, toggle what you want, copy the loadstring.</p>
+
+    <div class="builder">
+      <div class="builder-opts">
+        <div class="modes" id="modes">
+          <button data-m="full" class="on">full</button>
+          <button data-m="scripts">scripts</button>
+          <button data-m="models">models</button>
+        </div>
+
+        <label class="opt"><input type="checkbox" data-k="Decompile"> Decompile scripts</label>
+        <label class="opt"><input type="checkbox" data-k="SaveBytecode"> Bytecode fallback</label>
+        <label class="opt"><input type="checkbox" data-k="UseGetProperties" checked> Use getproperties()</label>
+        <label class="opt"><input type="checkbox" data-k="IncludeBackpack" checked> Include backpack tools</label>
+        <label class="opt"><input type="checkbox" data-k="EmitAttributes" checked> Attributes and tags</label>
+        <label class="opt"><input type="checkbox" data-k="StripCharacters" checked> Strip characters</label>
+        <label class="opt"><input type="checkbox" data-k="StripCoreScripts" checked> Strip core scripts</label>
+        <label class="opt"><input type="checkbox" data-k="IgnoreDefaultProps" checked> Skip default props</label>
+        <label class="opt"><input type="checkbox" data-k="FetchDocs"> Fetch API dump</label>
+        <label class="opt"><input type="checkbox" data-k="SafeMode"> Safe mode</label>
+        <label class="opt"><input type="checkbox" data-k="BoostFPS"> Boost FPS</label>
+        <label class="opt"><input type="checkbox" data-k="Notify" checked> Notifications</label>
+      </div>
+
+      <div class="builder-out">
+        <button class="copy-btn" data-t="out">copy</button>
+        <pre id="out"></pre>
+      </div>
+    </div>
+
+    <h2>Manual control</h2>
+    <div style="position:relative">
+      <button class="copy-btn" data-t="manual">copy</button>
+<pre id="manual">getgenv().FISHILIZER_NO_AUTORUN = true
+local Fish = loadstring(game:HttpGetAsync(
+    "https://civilation.github.io/Fishilizer/Fishilizer.lua"
+))()
+Fish.Init()
+
+Fish.SaveGame("MyPlace")
+Fish.SaveScripts(game, "ScriptsOnly")
+Fish.SaveModels(game, "ModelsOnly")
+Fish.Save(workspace.MyModel, "SingleModel")</pre>
+    </div>
+
+    <h2>Multiple hosts</h2>
+    <div style="position:relative">
+      <button class="copy-btn" data-t="mirror">copy</button>
+<pre id="mirror">local HOSTS = {
+    "https://civilation.github.io/Fishilizer/Fishilizer.lua",
+    "https://raw.githubusercontent.com/Civilation/Fishilizer/main/Fishilizer.lua",
+}
+
+local src
+for _, url in ipairs(HOSTS) do
+    local ok, body = pcall(game.HttpGetAsync, game, url)
+    if ok and body and body:find("return", 1, true) then
+        src = body
+        break
+    end
+end
+assert(src, "all hosts failed")
+loadstring(src)()</pre>
+    </div>
+  </section>
+
+  <section id="tab-api" class="panel">
+    <h1>API</h1>
+
+    <h2>Methods</h2>
+    <table>
+      <tr><th style="width:42%">Signature</th><th>What it does</th></tr>
+      <tr><td><code>Fish.Init()</code></td><td>Resolves decompile and bytecode functions.</td></tr>
+      <tr><td><code>Fish.Save(inst, name?, opts?)</code></td><td>Main entry. Accepts game, a single instance, or an array. Returns the XML string.</td></tr>
+      <tr><td><code>Fish.SaveGame(name?, opts?)</code></td><td>Shorthand for Save(game, ...).</td></tr>
+      <tr><td><code>Fish.SaveInstance(inst, name?, opts?)</code></td><td>Forces Mode = "full".</td></tr>
+      <tr><td><code>Fish.SaveScripts(inst, name?, opts?)</code></td><td>Forces Mode = "scripts" and enables decompile.</td></tr>
+      <tr><td><code>Fish.SaveModels(inst, name?, opts?)</code></td><td>Forces Mode = "models" and skips decompile.</td></tr>
+      <tr><td><code>Fish.FetchClasses(cacheFile?)</code></td><td>Downloads the API dump and merges class property maps.</td></tr>
+    </table>
+
+    <h2>Grab the XML directly</h2>
+    <div style="position:relative">
+      <button class="copy-btn" data-t="cb">copy</button>
+<pre id="cb">getgenv().FISHILIZER_NO_AUTORUN = true
+local Fish = loadstring(game:HttpGetAsync(
+    "https://civilation.github.io/Fishilizer/Fishilizer.lua"
+))()
+Fish.Init()
+
+local xml = Fish.Save(game, "Preview", {
+    Callback = function(data)
+        print("bytes: " .. #data)
+    end,
+})</pre>
+    </div>
+  </section>
+
+  <section id="tab-options" class="panel">
+    <h1>Options</h1>
+
+    <table>
+      <tr><th style="width:28%">Key</th><th style="width:16%">Default</th><th>What it does</th></tr>
+      <tr><td><code>Decompile</code></td><td class="n">false</td><td>Decompile every script during the save.</td></tr>
+      <tr><td><code>DecompileTimeout</code></td><td class="n">10</td><td>Seconds before giving up on a script.</td></tr>
+      <tr><td><code>MaxThreads</code></td><td class="n">3</td><td>Parallel decompile workers.</td></tr>
+      <tr><td><code>SaveBytecode</code></td><td class="n">false</td><td>Base64 bytecode when source is empty.</td></tr>
+      <tr><td><code>RemovePlayerCharacters</code></td><td class="n">true</td><td>Strip every player character model.</td></tr>
+      <tr><td><code>IncludeBackpack</code></td><td class="n">true</td><td>Preserve runtime tools via StarterPack.</td></tr>
+      <tr><td><code>IgnoreDefaultProps</code></td><td class="n">true</td><td>Skip properties matching a fresh Instance.new().</td></tr>
+      <tr><td><code>IgnoreNotArchivable</code></td><td class="n">true</td><td>Skip Archivable = false.</td></tr>
+      <tr><td><code>UseGetProperties</code></td><td class="n">true</td><td>Call getproperties when supported.</td></tr>
+      <tr><td><code>FetchDocs</code></td><td class="n">false</td><td>Pull the API dump on Init.</td></tr>
+      <tr><td><code>Mode</code></td><td class="n">"full"</td><td>full, scripts, or models.</td></tr>
+      <tr><td><code>FilePath</code></td><td class="n">false</td><td>Absolute output path. Overrides OUT.</td></tr>
+      <tr><td><code>OUT</code></td><td class="n">"Fishilizer"</td><td>Folder name when no FilePath.</td></tr>
+      <tr><td><code>Callback</code></td><td class="n">false</td><td>function(xml) instead of writing to disk.</td></tr>
+      <tr><td><code>Clipboard</code></td><td class="n">false</td><td>Copy XML to clipboard instead of writing.</td></tr>
+      <tr><td><code>AvoidFileOverwrite</code></td><td class="n">true</td><td>Do not delete existing files.</td></tr>
+      <tr><td><code>SafeMode</code></td><td class="n">false</td><td>Kick before saving. Use an alt.</td></tr>
+      <tr><td><code>BoostFPS</code></td><td class="n">false</td><td>Lower render quality during save.</td></tr>
+      <tr><td><code>KillAllScripts</code></td><td class="n">false</td><td>Disable scripts before saving.</td></tr>
+      <tr><td><code>Anonymous</code></td><td class="n">false</td><td>Replace player names.</td></tr>
+      <tr><td><code>EmitTags</code></td><td class="n">true</td><td>Serialize CollectionService tags.</td></tr>
+      <tr><td><code>EmitAttributes</code></td><td class="n">true</td><td>Serialize GetAttributes.</td></tr>
+      <tr><td><code>StripCharacters</code></td><td class="n">true</td><td>Auto remove character models.</td></tr>
+      <tr><td><code>StripCoreScripts</code></td><td class="n">true</td><td>Auto remove Roblox modules.</td></tr>
+      <tr><td><code>Depth</code></td><td class="n">1000</td><td>Max recursion depth.</td></tr>
+      <tr><td><code>Notify</code></td><td class="n">true</td><td>Toasts on start, finish, fail.</td></tr>
+      <tr><td><code>ShowStatus</code></td><td class="n">true</td><td>On screen status panel.</td></tr>
+    </table>
+  </section>
+
+</div>
+
+<footer>
+  <p>Fishilizer</p>
+</footer>
+
+<script>
+(function(){
+  var root = document.documentElement;
+  var saved = null;
+  try { saved = localStorage.getItem("fish-theme"); } catch(e){}
+  var initial = saved || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  root.setAttribute("data-theme", initial);
+
+  var toggle = document.getElementById("themeToggle");
+  var icon = document.getElementById("themeIcon");
+
+  function updateIcon(){
+    var isDark = root.getAttribute("data-theme") === "dark";
+    icon.innerHTML = isDark
+      ? '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>'
+      : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+  }
+  updateIcon();
+
+  toggle.addEventListener("click", function(){
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("fish-theme", next); } catch(e){}
+    updateIcon();
+  });
+
+  var tabs = document.querySelectorAll("nav.top a");
+  var panels = document.querySelectorAll(".panel");
+
+  function show(name){
+    tabs.forEach(function(t){ t.classList.toggle("on", t.dataset.tab === name); });
+    panels.forEach(function(p){ p.classList.toggle("on", p.id === "tab-" + name); });
+    window.scrollTo(0, 0);
+  }
+
+  tabs.forEach(function(t){
+    t.addEventListener("click", function(e){
+      e.preventDefault();
+      show(t.dataset.tab);
+    });
+  });
+
+  document.querySelectorAll("[data-jump]").forEach(function(el){
+    el.addEventListener("click", function(e){
+      e.preventDefault();
+      show(el.dataset.jump);
+    });
+  });
+
+  function highlight(src){
+    src = src.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    var rx = /(--\[\[[\s\S]*?\]\]|--[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')|(\b0x[0-9a-fA-F]+\b|\b\d+(?:\.\d+)?\b)|(\b(?:local|function|end|if|then|else|elseif|for|while|do|return|break|in|repeat|until|and|or|not|nil|true|false|self)\b)|(\b(?:print|pairs|ipairs|tostring|tonumber|type|typeof|pcall|xpcall|error|assert|require|select|unpack|setmetatable|getmetatable|rawget|rawset|loadstring|next|game|workspace|script|Instance|Enum|task|wait|getgenv|writefile|readfile|isfile|isfolder|makefolder|delfile|HttpGet|HttpGetAsync|Save|SaveGame|SaveScripts|SaveModels|Init)\b)/g;
+    return src.replace(rx, function(m, com, str, num, kw, fn){
+      if (com) return '<span class="c-com">'+com+'</span>';
+      if (str) return '<span class="c-str">'+str+'</span>';
+      if (num) return '<span class="c-num">'+num+'</span>';
+      if (kw)  return '<span class="c-kw">'+kw+'</span>';
+      if (fn)  return '<span class="c-fn">'+fn+'</span>';
+      return m;
+    });
+  }
+
+  document.querySelectorAll("pre").forEach(function(pre){
+    if (pre.id === "out") return;
+    var raw = pre.textContent;
+    pre.dataset.raw = raw;
+    pre.innerHTML = highlight(raw);
+  });
+
+  var mode = "full";
+  var out = document.getElementById("out");
+  var URL = "https://civilation.github.io/Fishilizer/Fishilizer.lua";
+  var desc = {
+    full:    "-- full: everything",
+    scripts: "-- scripts: only Script, LocalScript, ModuleScript",
+    models:  "-- models: everything except scripts"
+  };
+
+  function render(){
+    var lines = [];
+    lines.push(desc[mode]);
+    lines.push("getgenv().FISHILIZER_CONFIG = {");
+    document.querySelectorAll("input[data-k]").forEach(function(cb){
+      lines.push("    " + cb.dataset.k + " = " + (cb.checked ? "true" : "false") + ",");
+    });
+    lines.push('    Mode = "' + mode + '",');
+    lines.push("}");
+    lines.push("");
+    lines.push("loadstring(game:HttpGetAsync(");
+    lines.push('    "' + URL + '"');
+    lines.push("))()");
+    var raw = lines.join("\n");
+    out.dataset.raw = raw;
+    out.innerHTML = highlight(raw);
+  }
+
+  document.querySelectorAll("input[data-k]").forEach(function(cb){
+    cb.addEventListener("change", render);
+  });
+
+  document.querySelectorAll("#modes button").forEach(function(b){
+    b.addEventListener("click", function(){
+      document.querySelectorAll("#modes button").forEach(function(x){ x.classList.remove("on"); });
+      b.classList.add("on");
+      mode = b.dataset.m;
+      render();
+    });
+  });
+
+  document.querySelectorAll(".copy-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var el = document.getElementById(btn.dataset.t);
+      if (!el) return;
+      var txt = el.dataset.raw || el.textContent;
+      function done(){
+        var old = btn.textContent;
+        btn.textContent = "copied";
+        btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = old; btn.classList.remove("done"); }, 1200);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(done).catch(function(){ fallback(txt, done); });
+      } else {
+        fallback(txt, done);
+      }
+    });
+  });
+
+  function fallback(txt, done){
+    var ta = document.createElement("textarea");
+    ta.value = txt;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); done(); } catch(e){}
+    document.body.removeChild(ta);
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
