@@ -88,6 +88,7 @@ local IO = {
     delfile = resolveIO("delfile"),
     setclipboard = resolveIO("setclipboard"),
     getproperties = resolveIO("getproperties"),
+    gethiddenproperty = resolveIO("gethiddenproperty"),
 }
 
 local function log(msg)
@@ -277,6 +278,8 @@ local SKIP_SVC = {
 }
 
 local SKIP_PROP = {
+    AttributesSerialize=true,
+    Tags=true,
     Parent=true,RobloxLocked=true,HistoryId=true,DataCost=true,Game=true,Identity=true,
     Verb=true,LocalLocation=true,PivotOffset=true,AbsoluteSize=true,AbsolutePosition=true,
     AbsoluteContentSize=true,AbsoluteRotation=true,AbsoluteCanQuery=true,
@@ -292,6 +295,14 @@ local SKIP_PROP = {
     ReceiveAge=true,TotalRcvAge=true,TotalRcvTime=true,RcvAge=true,RcvTime=true,
     CameraSubjectDistance=true,InputTypesChanged=true,Annotation=true,Annotations=true,
     AnnotationService=true,PlaybackState=true,SecurityCapabilities=true,ClassName=true,
+}
+
+local BINARY_PROPS = {
+    SmoothGrid = true,
+    ChildData = true,
+    PhysicsData = true,
+    PhysicalConfigData = true,
+    MaterialColors = true,
 }
 
 local CONTENT_PROP_EXACT = {
@@ -834,9 +845,7 @@ local function serPhysicalProps(name, v)
 end
 local function serBinaryString(name, v)
     if type(v) ~= "string" then return nil end
-    local ok, s = pcall(b64, v)
-    if ok and s then return '<BinaryString name="' .. clean(name) .. '">' .. s .. '</BinaryString>' end
-    return nil
+    return '<BinaryString name="' .. clean(name) .. '">' .. b64(v) .. '</BinaryString>'
 end
 local function serRay(name, v)
     local ok, o, d = pcall(function() return v.Origin, v.Direction end)
@@ -869,6 +878,11 @@ local specialPropHandlers = { Shape = serTokenNumber, Face = serTokenNumber, Mat
 local function serializeProp(name, v)
     if v == nil then return nil end
     if shouldSkipProp(name) then return nil end
+    
+    if BINARY_PROPS[name] and type(v) == "string" then
+        return '<BinaryString name="' .. clean(name) .. '">' .. b64(v) .. '</BinaryString>'
+    end
+
     if type(v) == "boolean" then return serBool(name, v) end
     local special = specialPropHandlers[name]
     if special then local s = special(name, v) if s then return s end end
@@ -997,6 +1011,10 @@ local function walkRef(root, d, opts, refs, charRefs, coreRefs)
 end
 
 local function readProp(inst, name)
+    if IO.gethiddenproperty then
+        local ok2, v2 = pcall(IO.gethiddenproperty, inst, name)
+        if ok2 and v2 ~= nil then return v2 end
+    end
     local ok, v = pcall(function() return inst[name] end)
     if ok and v ~= nil then return v end
     return nil
@@ -1012,12 +1030,13 @@ end
 
 local function emitSingleProp(buf, inst, pad, seen, k, opts, defaultInst)
     if seen[k] or shouldSkipProp(k) then return end
-    seen[k] = true
     if isRealContent(k) then
+        seen[k] = true
         emitContentProp(buf, inst, pad, k)
     else
         local v = readProp(inst, k)
         if v ~= nil then
+            seen[k] = true
             local skip = false
             if defaultInst then
                 local okd, dv = pcall(function() return defaultInst[k] end)
@@ -1127,18 +1146,20 @@ local function emitInst(buf, inst, d, opts, decompileCache, refs)
             if not seen[bp] then
                 local raw = readProp(inst, bp)
                 if raw and type(raw) == "string" then
-                    local okc, c = pcall(b64, raw)
-                    if okc and c then table.insert(buf, pad .. '    <BinaryString name="' .. bp .. '">' .. c .. '</BinaryString>') end
+                    table.insert(buf, pad .. '    <BinaryString name="' .. bp .. '">' .. b64(raw) .. '</BinaryString>')
                 end
             end
         end
     end
 
-    if cls == "Terrain" and not seen.SmoothGrid then
-        local sg = readProp(inst, "SmoothGrid")
-        if sg and type(sg) == "string" then
-            local oks, b = pcall(b64, sg)
-            if oks and b then table.insert(buf, pad .. '    <BinaryString name="SmoothGrid">' .. b .. '</BinaryString>') end
+    if cls == "Terrain" then
+        if not seen.SmoothGrid then
+            local sg = readProp(inst, "SmoothGrid")
+            if sg and type(sg) == "string" and #sg > 0 then
+                table.insert(buf, pad .. '    <BinaryString name="SmoothGrid">' .. b64(sg) .. '</BinaryString>')
+            else
+                log("Failed to read SmoothGrid. Terrain will be missing in the save. Ensure gethiddenproperty is supported.")
+            end
         end
     end
 
@@ -1305,6 +1326,7 @@ function Fish.Save(instance, name, userOpts)
     IO.isfile = IO.isfile or resolveIO("isfile")
     IO.delfile = IO.delfile or resolveIO("delfile")
     IO.getproperties = IO.getproperties or resolveIO("getproperties")
+    IO.gethiddenproperty = IO.gethiddenproperty or resolveIO("gethiddenproperty")
 
     if not opts.Callback and not opts.Clipboard and not IO.writefile then
         log("writefile unavailable")
@@ -1546,6 +1568,22 @@ Fish.DeepClone = function(t)
 end
 
 local genv = (getgenv and getgenv()) or _G or _ENV
+
+genv.fishilizer = function(name, opts)
+    Fish.Init()
+    return Fish.Save(game, name, opts)
+end
+
+genv.savegame = function(name, opts)
+    Fish.Init()
+    return Fish.Save(game, name, opts)
+end
+
+genv.saveinstance = function(name, opts)
+    Fish.Init()
+    return Fish.Save(game, name, opts)
+end
+
 local SESSION_KEY = "__FISHILIZER_SESSION_" .. tostring(game.PlaceId)
 
 if genv and type(genv.FISHILIZER_CONFIG) == "table" then
