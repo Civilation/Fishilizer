@@ -82,11 +82,7 @@ body {
   -webkit-user-select: none;
 }
 
-pre, code, textarea, input {
-  user-select: text;
-  -webkit-user-select: text;
-}
-
+pre, code, textarea, input { user-select: text; -webkit-user-select: text; }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
@@ -109,23 +105,11 @@ header {
   gap: 36px;
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-  text-decoration: none;
-}
+.brand { display: flex; align-items: center; gap: 12px; flex-shrink: 0; text-decoration: none; }
 .brand:hover { text-decoration: none; }
 .brand img { height: 38px; width: 38px; object-fit: contain; display: block; }
 html[data-theme="light"] .brand img { filter: brightness(0); }
-.brand-name {
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 600;
-  font-size: 1.05rem;
-  letter-spacing: 0.02em;
-  color: var(--fg);
-}
+.brand-name { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 1.05rem; letter-spacing: 0.02em; color: var(--fg); }
 
 nav.top { display: flex; gap: 4px; flex: 1; }
 nav.top a {
@@ -140,90 +124,29 @@ nav.top a {
   overflow: hidden;
 }
 nav.top a:hover { color: var(--fg); background: var(--bg-alt); text-decoration: none; }
-nav.top a::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 2px;
-  width: 0;
-  height: 2px;
-  background: var(--accent);
-  transition: width 0.25s ease, left 0.25s ease;
-}
+nav.top a::after { content: ""; position: absolute; left: 50%; bottom: 2px; width: 0; height: 2px; background: var(--accent); transition: width 0.25s ease, left 0.25s ease; }
 nav.top a.on { color: var(--accent); }
 nav.top a.on::after { width: calc(100% - 20px); left: 10px; }
 
-.theme-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  background: var(--bg);
-  cursor: pointer;
-  color: var(--fg-2);
-  flex-shrink: 0;
-  transition: all 0.2s;
-}
+.theme-toggle { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid var(--border); border-radius: 3px; background: var(--bg); cursor: pointer; color: var(--fg-2); flex-shrink: 0; transition: all 0.2s; }
 .theme-toggle:hover { border-color: var(--border-2); color: var(--fg); transform: rotate(15deg); }
 
 .container { max-width: 1120px; margin: 0 auto; padding: 56px 28px 96px; }
 
 .panel { display: none; }
 .panel.on { display: block; animation: panel-in 0.3s ease; }
-@keyframes panel-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+@keyframes panel-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-h1 {
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 600;
-  font-size: 2rem;
-  letter-spacing: -0.015em;
-  color: var(--fg);
-  margin-bottom: 12px;
-  line-height: 1.25;
-}
-
-h2 {
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 600;
-  font-size: 1.25rem;
-  letter-spacing: -0.01em;
-  color: var(--fg);
-  margin: 44px 0 16px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border);
-}
-
+h1 { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 2rem; letter-spacing: -0.015em; color: var(--fg); margin-bottom: 12px; line-height: 1.25; }
+h2 { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 1.25rem; letter-spacing: -0.01em; color: var(--fg); margin: 44px 0 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
 p { color: var(--fg-2); margin-bottom: 14px; max-width: 780px; }
 .lead { font-size: 1.05rem; color: var(--fg-2); max-width: 720px; margin-bottom: 8px; }
 .accent-blue { color: var(--accent); text-shadow: 0 0 10px var(--accent-glow); font-weight: 500; }
 .accent-yellow { color: var(--yellow); text-shadow: 0 0 10px var(--yellow-glow); font-weight: 500; }
 
-code {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.82rem;
-  color: var(--accent);
-  text-shadow: 0 0 6px var(--accent-glow);
-}
+code { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: var(--accent); text-shadow: 0 0 6px var(--accent-glow); }
 
-pre {
-  background: var(--bg-code);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 16px 20px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8rem;
-  line-height: 1.65;
-  color: var(--code-fg);
-  overflow-x: auto;
-  margin: 12px 0 20px;
-  position: relative;
-}
+pre { background: var(--bg-code); border: 1px solid var(--border); border-radius: 3px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.65; color: var(--code-fg); overflow-x: auto; margin: 12px 0 20px; position: relative; }
 pre code { background: none; border: 0; padding: 0; color: inherit; font-size: inherit; text-shadow: none; }
 pre .c-com { color: var(--c-com); font-style: italic; }
 pre .c-str { color: var(--c-str); }
@@ -231,21 +154,7 @@ pre .c-num { color: var(--c-num); }
 pre .c-kw { color: var(--c-kw); }
 pre .c-fn { color: var(--c-fn); }
 
-.copy-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
-  color: var(--fg-3);
-  background: rgba(255,255,255,0.06);
-  border: 1px solid var(--border-2);
-  border-radius: 3px;
-  padding: 4px 10px;
-  cursor: pointer;
-  z-index: 2;
-  transition: all 0.15s;
-}
+.copy-btn { position: absolute; top: 10px; right: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--fg-3); background: rgba(255,255,255,0.06); border: 1px solid var(--border-2); border-radius: 3px; padding: 4px 10px; cursor: pointer; z-index: 2; transition: all 0.15s; }
 .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
 .copy-btn.done { color: var(--yellow); border-color: var(--yellow); }
 
@@ -253,183 +162,55 @@ pre .c-fn { color: var(--c-fn); }
 .hero h1 { margin-bottom: 16px; }
 .hero .lead { margin: 0 auto 24px; }
 
-.discord-widget {
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 22px;
-  background: var(--bg-alt);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  margin: 12px 0 28px;
-  color: var(--fg);
-  max-width: 640px;
-  width: 100%;
-  cursor: pointer;
-  text-decoration: none;
-  transition: transform 0.2s, border-color 0.2s;
-}
+.discord-widget { display: inline-flex; align-items: center; gap: 14px; padding: 14px 22px; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 4px; margin: 12px 0 28px; color: var(--fg); max-width: 640px; width: 100%; cursor: pointer; text-decoration: none; transition: transform 0.2s, border-color 0.2s; }
 .discord-widget:hover { border-color: var(--accent); transform: translateY(-2px); text-decoration: none; }
 .discord-widget img { width: 42px; height: 42px; object-fit: cover; flex-shrink: 0; border-radius: 8px; }
 .discord-widget-text { flex: 1; text-align: left; }
 .discord-widget-title { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 0.92rem; color: var(--fg); }
-.discord-widget-sub { font-size: 0.82rem; color: var(--fg-2); line-height: 1.4; }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 12px 0 28px;
-  font-size: 0.87rem;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  overflow: hidden;
-}
-th, td {
-  padding: 11px 16px;
-  text-align: left;
-  vertical-align: top;
-  border-bottom: 1px solid var(--border);
-  color: var(--fg-2);
-}
+table { width: 100%; border-collapse: collapse; margin: 12px 0 28px; font-size: 0.87rem; border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+th, td { padding: 11px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); color: var(--fg-2); }
 tr:last-child td { border-bottom: 0; }
-th {
-  background: var(--bg-alt);
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 600;
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--fg-3);
-}
+th { background: var(--bg-alt); font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); }
 td.n { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--fg-3); }
 
 .builder { display: grid; grid-template-columns: 280px 1fr; gap: 24px; margin: 20px 0; }
 @media (max-width: 760px) { .builder { grid-template-columns: 1fr; } }
-
 .builder-opts { border: 1px solid var(--border); border-radius: 3px; padding: 18px 20px; background: var(--bg-alt); }
 
-.modes {
-  display: flex;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  margin-bottom: 18px;
-  background: var(--bg);
-  overflow: hidden;
-}
-.modes button {
-  flex: 1;
-  padding: 8px 10px;
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 500;
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  background: none;
-  border: 0;
-  color: var(--fg-3);
-  cursor: pointer;
-  transition: color 0.2s, background 0.2s;
-}
+.modes { display: flex; border: 1px solid var(--border); border-radius: 3px; margin-bottom: 18px; background: var(--bg); overflow: hidden; }
+.modes button { flex: 1; padding: 8px 10px; font-family: 'Montserrat', sans-serif; font-weight: 500; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; background: none; border: 0; color: var(--fg-3); cursor: pointer; transition: color 0.2s, background 0.2s; }
 .modes button + button { border-left: 1px solid var(--border); }
 .modes button:hover { color: var(--fg-2); background: var(--bg-alt); }
 .modes button.on { color: var(--accent); background: var(--bg-alt); }
 
-.opt {
-  display: block;
-  font-size: 0.87rem;
-  color: var(--fg-2);
-  padding: 7px 0;
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.15s;
-}
+.opt { display: block; font-size: 0.87rem; color: var(--fg-2); padding: 7px 0; cursor: pointer; user-select: none; transition: color 0.15s; }
 .opt:hover { color: var(--fg); }
-.opt input {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  border: 1px solid var(--border-2);
-  border-radius: 4px;
-  background: var(--bg);
-  margin-right: 10px;
-  vertical-align: -3px;
-  cursor: pointer;
-  position: relative;
-  transition: background 0.2s, border-color 0.2s, transform 0.15s;
-}
+.opt input { appearance: none; -webkit-appearance: none; width: 16px; height: 16px; border: 1px solid var(--border-2); border-radius: 4px; background: var(--bg); margin-right: 10px; vertical-align: -3px; cursor: pointer; position: relative; transition: background 0.2s, border-color 0.2s, transform 0.15s; }
 .opt input:hover { border-color: var(--accent); }
 .opt input:active { transform: scale(0.9); }
 .opt input:checked { background: var(--accent); border-color: var(--accent); }
-.opt input:checked::after {
-  content: "";
-  position: absolute;
-  left: 4.5px;
-  top: 1px;
-  width: 4px;
-  height: 8px;
-  border: solid #fff;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg) scale(0);
-  animation: check-pop 0.2s cubic-bezier(0.5, 1.6, 0.5, 1) forwards;
-}
-@keyframes check-pop {
-  from { transform: rotate(45deg) scale(0); }
-  to   { transform: rotate(45deg) scale(1); }
-}
+.opt input:checked::after { content: ""; position: absolute; left: 4.5px; top: 1px; width: 4px; height: 8px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg) scale(0); animation: check-pop 0.2s cubic-bezier(0.5, 1.6, 0.5, 1) forwards; }
+@keyframes check-pop { from { transform: rotate(45deg) scale(0); } to { transform: rotate(45deg) scale(1); } }
 
 .builder-out { border: 1px solid var(--border); border-radius: 3px; position: relative; background: var(--bg-code); min-width: 0; }
 .builder-out pre { margin: 0; border: 0; border-radius: 0; background: transparent; min-height: 320px; }
 
-.note {
-  border-left: 3px solid var(--yellow);
-  background: var(--bg-alt);
-  padding: 12px 18px;
-  margin: 16px 0;
-  font-size: 0.88rem;
-  color: var(--fg-2);
-  max-width: 780px;
-}
+.note { border-left: 3px solid var(--yellow); background: var(--bg-alt); padding: 12px 18px; margin: 16px 0; font-size: 0.88rem; color: var(--fg-2); max-width: 780px; }
 .note b { color: var(--yellow); }
 
-.data-layout { display: grid; grid-template-columns: 320px 1fr; gap: 24px; margin: 20px 0; }
+.data-layout { display: grid; grid-template-columns: 340px 1fr; gap: 24px; margin: 20px 0; }
 @media (max-width: 860px) { .data-layout { grid-template-columns: 1fr; } }
-
 .data-side { border: 1px solid var(--border); border-radius: 3px; background: var(--bg-alt); overflow: hidden; display: flex; flex-direction: column; max-height: 720px; }
-
-.data-search {
-  width: 100%;
-  padding: 10px 14px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.82rem;
-  background: var(--bg);
-  border: 0;
-  border-bottom: 1px solid var(--border);
-  color: var(--fg);
-  outline: none;
-}
+.data-search { width: 100%; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; background: var(--bg); border: 0; border-bottom: 1px solid var(--border); color: var(--fg); outline: none; }
 .data-search::placeholder { color: var(--fg-3); }
-
 .data-list { overflow-y: auto; flex: 1; }
-.data-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 14px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.78rem;
-  color: var(--fg-2);
-  cursor: pointer;
-  border-bottom: 1px solid var(--border);
-  transition: background 0.12s, color 0.12s;
-}
+.data-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 14px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--fg-2); cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.12s, color 0.12s; }
 .data-item:last-child { border-bottom: 0; }
 .data-item:hover { background: var(--bg); color: var(--fg); }
 .data-item.on { background: var(--bg); color: var(--accent); }
 .data-item .ep-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .data-item .ep-size { color: var(--fg-3); font-size: 0.72rem; flex-shrink: 0; }
-
 .data-out { border: 1px solid var(--border); border-radius: 3px; position: relative; background: var(--bg-code); min-width: 0; display: flex; flex-direction: column; }
 .data-out pre { margin: 0; border: 0; border-radius: 0; background: transparent; flex: 1; min-height: 500px; max-height: 720px; overflow-y: auto; }
 .data-actions { display: flex; gap: 6px; position: absolute; top: 10px; right: 10px; z-index: 2; }
@@ -444,7 +225,6 @@ td.n { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(-
       <img src="https://files.catbox.moe/5uumgz.png" alt="Fishilizer">
       <span class="brand-name">Garfield Cat Presents</span>
     </a>
-
     <nav class="top">
       <a data-tab="home" class="on">Home</a>
       <a data-tab="builder">Builder</a>
@@ -452,7 +232,6 @@ td.n { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(-
       <a data-tab="options">Options</a>
       <a data-tab="data">Data</a>
     </nav>
-
     <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
       <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
@@ -467,7 +246,6 @@ td.n { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(-
     <div class="hero">
       <h1>Serialize <span class="accent-blue">any Roblox place</span></h1>
       <p class="lead">Ever wanted to save a ROBLOX game 1-1 but it failed to save terrain or other contents? <span class="accent-yellow">Fishilizer</span> fixes that.</p>
-
       <a class="discord-widget" href="https://discord.gg/GZDXBMjndT" target="_blank" rel="noopener noreferrer">
         <img src="https://files.catbox.moe/6x81k8.jfif" alt="Garfield Cat Presents">
         <div class="discord-widget-text">
@@ -475,7 +253,6 @@ td.n { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(-
         </div>
       </a>
     </div>
-
     <h2>Quick start</h2>
     <div style="position:relative">
       <button class="copy-btn" data-t="qs">copy</button>
@@ -483,16 +260,14 @@ td.n { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(-
     "https://civilation.github.io/Fishilizer/Fishilizer.lua"
 ))()</pre>
     </div>
-
     <div class="note">
-      <b>Tip</b> Open the <a href="#" data-jump="builder">Builder</a> tab to bake your own settings into the loadstring, or the <a href="#" data-jump="data">Data</a> tab to browse every internal class map the serializer uses.
+      <b>Tip</b> Open the <a href="#" data-jump="data">Data</a> tab to browse every class map and config the serializer pulls at runtime.
     </div>
   </section>
 
   <section id="tab-builder" class="panel">
     <h1>Builder</h1>
     <p class="lead">Pick a mode, toggle what you want, copy the loadstring.</p>
-
     <div class="builder">
       <div class="builder-opts">
         <div class="modes" id="modes">
@@ -500,8 +275,7 @@ td.n { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(-
           <button data-m="scripts">scripts</button>
           <button data-m="models">models</button>
         </div>
-
-        <label class="opt"><input type="checkbox" data-k="Decompile"> Decompile scripts</label>
+        <label class="opt"><input type="checkbox" data-k="Decompile" checked> Decompile scripts</label>
         <label class="opt"><input type="checkbox" data-k="SaveBytecode"> Bytecode fallback</label>
         <label class="opt"><input type="checkbox" data-k="UseGetProperties" checked> Use getproperties()</label>
         <label class="opt"><input type="checkbox" data-k="IncludeBackpack" checked> Include backpack tools</label>
@@ -509,18 +283,16 @@ td.n { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(-
         <label class="opt"><input type="checkbox" data-k="StripCharacters" checked> Strip characters</label>
         <label class="opt"><input type="checkbox" data-k="StripCoreScripts" checked> Strip core scripts</label>
         <label class="opt"><input type="checkbox" data-k="IgnoreDefaultProps" checked> Skip default props</label>
-        <label class="opt"><input type="checkbox" data-k="FetchDocs"> Fetch API dump</label>
-        <label class="opt"><input type="checkbox" data-k="SafeMode"> Safe mode</label>
-        <label class="opt"><input type="checkbox" data-k="BoostFPS"> Boost FPS</label>
+        <label class="opt"><input type="checkbox" data-k="FetchDocs" checked> Fetch API dump</label>
+        <label class="opt"><input type="checkbox" data-k="APIProperties" checked> Gate props via API</label>
+        <label class="opt"><input type="checkbox" data-k="KillAllScripts"> Kill scripts</label>
         <label class="opt"><input type="checkbox" data-k="Notify" checked> Notifications</label>
       </div>
-
       <div class="builder-out">
         <button class="copy-btn" data-t="out">copy</button>
         <pre id="out"></pre>
       </div>
     </div>
-
     <h2>Manual control</h2>
     <div style="position:relative">
       <button class="copy-btn" data-t="manual">copy</button>
@@ -535,7 +307,6 @@ Fish.SaveScripts(game, "ScriptsOnly")
 Fish.SaveModels(game, "ModelsOnly")
 Fish.Save(workspace.MyModel, "SingleModel")</pre>
     </div>
-
     <h2>Multiple hosts</h2>
     <div style="position:relative">
       <button class="copy-btn" data-t="mirror">copy</button>
@@ -559,22 +330,21 @@ loadstring(src)()</pre>
 
   <section id="tab-api" class="panel">
     <h1>API Reference</h1>
-    <p class="lead">Fishilizer is designed to be highly modular and can be dropped into any internal script. All methods are exposed on the returned table.</p>
-
+    <p class="lead">Fishilizer is a thin serializer. It fetches every class map, option default, and decompiler config from this site at runtime via the <code>&lt;script id="fish-data"&gt;</code> block, so the Lua file stays tiny.</p>
     <h2>Core Methods</h2>
     <table>
       <tr><th style="width:40%">Signature</th><th>Description</th></tr>
-      <tr><td><code>Fish.Init()</code></td><td>Initializes the environment. Loads the data API and prepares the decompiler. Returns the Fish table.</td></tr>
+      <tr><td><code>Fish.Init()</code></td><td>Fetches the data API, builds the property cache from the Roblox API dump, prepares the LunaUX decompiler. Returns the Fish table.</td></tr>
       <tr><td><code>Fish.Save(instance, name?, opts?)</code></td><td>Main entry point. Accepts <code>game</code>, a single Instance, or an array of Instances. Returns the serialized XML string.</td></tr>
       <tr><td><code>Fish.SaveGame(name?, opts?)</code></td><td>Shorthand for <code>Fish.Save(game, ...)</code>.</td></tr>
-      <tr><td><code>Fish.SaveInstance(inst, name?, opts?)</code></td><td>Forces <code>Mode = "full"</code>. Useful for isolating a single model.</td></tr>
+      <tr><td><code>Fish.SaveInstance(inst, name?, opts?)</code></td><td>Forces <code>Mode = "full"</code>.</td></tr>
       <tr><td><code>Fish.SaveScripts(inst, name?, opts?)</code></td><td>Forces <code>Mode = "scripts"</code> and enables <code>Decompile = true</code>.</td></tr>
       <tr><td><code>Fish.SaveModels(inst, name?, opts?)</code></td><td>Forces <code>Mode = "models"</code> and forces <code>Decompile = false</code>.</td></tr>
-      <tr><td><code>Fish.FetchClasses(cacheFile?)</code></td><td>Fetches the official Roblox API Dump and merges new class property maps into memory.</td></tr>
+      <tr><td><code>Fish.FetchClasses(cacheFile?)</code></td><td>Fetches the official Roblox API Dump to enable property gating.</td></tr>
+      <tr><td><code>Fish.LoadData()</code></td><td>Re-fetches the data API without touching the API dump. Useful if the site updates.</td></tr>
+      <tr><td><code>Fish.Data</code></td><td>The full parsed data object: <code>tables</code>, <code>options</code>, <code>decompiler</code>, <code>templates</code>.</td></tr>
     </table>
-
     <h2>Callbacks &amp; Interception</h2>
-    <p>Instead of writing directly to disk, you can intercept the XML string by passing a <code>Callback</code> function in the options table.</p>
     <div style="position:relative">
       <button class="copy-btn" data-t="cb">copy</button>
 <pre id="cb">getgenv().FISHILIZER_NO_AUTORUN = true
@@ -589,7 +359,6 @@ local xml = Fish.Save(game, "Preview", {
     end,
 })</pre>
     </div>
-
     <h2>Advanced Injection</h2>
     <div style="position:relative">
       <button class="copy-btn" data-t="adv">copy</button>
@@ -612,46 +381,19 @@ Fish.Save({
 
   <section id="tab-options" class="panel">
     <h1>Options</h1>
-    <p class="lead">Every configuration key, its default, and what it does.</p>
-
-    <table>
+    <p class="lead">Every configuration key, its default, and what it does. Defaults are also exposed via <code>FishAPI.get("/api/options")</code> so a fresh serializer pulls them from here rather than hardcoding.</p>
+    <table id="optionsTable">
       <tr><th style="width:28%">Key</th><th style="width:16%">Default</th><th>Description</th></tr>
-      <tr><td><code>Decompile</code></td><td class="n">true</td><td>Runs the LunaUX decompiler on every LocalScript and ModuleScript.</td></tr>
-      <tr><td><code>MaxThreads</code></td><td class="n">3</td><td>Number of parallel decompile workers.</td></tr>
-      <tr><td><code>SaveBytecode</code></td><td class="n">false</td><td>If decompilation fails or source is empty, saves base64 bytecode instead.</td></tr>
-      <tr><td><code>RemovePlayerCharacters</code></td><td class="n">true</td><td>Strips every player character model from the save.</td></tr>
-      <tr><td><code>IncludeBackpack</code></td><td class="n">true</td><td>Temporarily moves runtime tools to StarterPack to preserve hotbar icons.</td></tr>
-      <tr><td><code>IgnoreDefaultProps</code></td><td class="n">true</td><td>Compares properties to a fresh Instance.new() and skips them.</td></tr>
-      <tr><td><code>IgnoreNotArchivable</code></td><td class="n">true</td><td>Skips any instance where <code>Archivable = false</code>.</td></tr>
-      <tr><td><code>UseGetProperties</code></td><td class="n">true</td><td>Calls <code>getproperties(inst)</code> to enumerate every engine property.</td></tr>
-      <tr><td><code>FetchDocs</code></td><td class="n">true</td><td>Pulls the MaximumADHD API dump on Init to generate live class maps.</td></tr>
-      <tr><td><code>APIProperties</code></td><td class="n">true</td><td>Gates every emitted property against the API dump for maximum stability.</td></tr>
-      <tr><td><code>Mode</code></td><td class="n">"full"</td><td>Accepts <code>"full"</code>, <code>"scripts"</code>, or <code>"models"</code>.</td></tr>
-      <tr><td><code>FilePath</code></td><td class="n">false</td><td>Absolute output path. Overrides <code>OUT</code>.</td></tr>
-      <tr><td><code>OUT</code></td><td class="n">"Fishilizer"</td><td>Folder name when no FilePath is specified.</td></tr>
-      <tr><td><code>Callback</code></td><td class="n">false</td><td><code>function(xml)</code> instead of writing to disk.</td></tr>
-      <tr><td><code>Clipboard</code></td><td class="n">false</td><td>Copies the XML to the clipboard instead of writing a file.</td></tr>
-      <tr><td><code>AvoidFileOverwrite</code></td><td class="n">true</td><td>Does not delete existing files at the target path.</td></tr>
-      <tr><td><code>KillAllScripts</code></td><td class="n">false</td><td>Disables all running scripts before saving.</td></tr>
-      <tr><td><code>Anonymous</code></td><td class="n">false</td><td>Replaces player names with <code>Player_UserId</code>.</td></tr>
-      <tr><td><code>EmitTags</code></td><td class="n">true</td><td>Serializes CollectionService tags.</td></tr>
-      <tr><td><code>EmitAttributes</code></td><td class="n">true</td><td>Serializes <code>GetAttributes()</code> into binary blobs.</td></tr>
-      <tr><td><code>StripCharacters</code></td><td class="n">true</td><td>Automatically removes character models.</td></tr>
-      <tr><td><code>StripCoreScripts</code></td><td class="n">true</td><td>Automatically removes Roblox internal modules.</td></tr>
-      <tr><td><code>TerrainResolution</code></td><td class="n">8</td><td>Voxel resolution for <code>Terrain:ReadVoxels()</code> capture.</td></tr>
-      <tr><td><code>TerrainCellCap</code></td><td class="n">4194304</td><td>Max voxel count before resolution auto-raises.</td></tr>
-      <tr><td><code>Depth</code></td><td class="n">100</td><td>Maximum recursion depth.</td></tr>
-      <tr><td><code>Notify</code></td><td class="n">true</td><td>Toasts on start, finish, and fail.</td></tr>
-      <tr><td><code>ShowStatus</code></td><td class="n">true</td><td>Shows the fading status text in CoreGui.</td></tr>
     </table>
+    <p style="margin-top:20px;font-size:0.85rem;color:var(--fg-3)">Descriptions live in the Options tab of this page. Defaults come from the data block. Any key can be overridden via <code>getgenv().FISHILIZER_CONFIG</code> or the <code>opts</code> table.</p>
   </section>
 
   <section id="tab-data" class="panel">
     <h1>Data API</h1>
-    <p class="lead">Every internal map the serializer uses is exposed here as a JSON endpoint. The whole object is embedded at <code>&lt;script id="fish-data"&gt;</code> for the serializer to fetch and parse directly.</p>
+    <p class="lead">Every map the serializer needs lives in this page. The full object is embedded at <code>&lt;script id="fish-data"&gt;</code> as one JSON blob. Fetch the page, extract the block, decode, done.</p>
 
     <div class="note">
-      <b>Fetch from a Roblox executor</b> The serializer pulls this page, extracts the JSON block, and merges it into its own tables. All endpoints below are subsets of that same object.
+      <b>Fetch from a Roblox executor</b>
     </div>
 
     <div style="position:relative">
@@ -660,8 +402,9 @@ Fish.Save({
 local html = game:HttpGet("https://civilation.github.io/Fishilizer/")
 local blob = html:match('<script[^>]*id="fish%-data"[^>]*>(.-)</script>')
 local data = HttpService:JSONDecode(blob)
-print(data.version)
-print(#data.classes .. " classes indexed")</pre>
+print(data.meta.version)
+print(#data.tables.classes .. " classes indexed")
+print(data.decompiler.url)</pre>
     </div>
 
     <div class="data-layout">
@@ -683,8 +426,11 @@ print(#data.classes .. " classes indexed")</pre>
       <tr><th style="width:42%">Path</th><th>Description</th></tr>
       <tr><td><code>/api/version</code></td><td>Serializer version string.</td></tr>
       <tr><td><code>/api/options</code></td><td>Default Fish.Options table.</td></tr>
+      <tr><td><code>/api/decompiler</code></td><td>LunaUX endpoint, request shape, options, and response keys.</td></tr>
+      <tr><td><code>/api/tables</code></td><td>All support tables grouped (instance_specific, critical_props, etc).</td></tr>
       <tr><td><code>/api/instance-specific</code></td><td>Class → property list map for every supported Instance.</td></tr>
-      <tr><td><code>/api/classes</code></td><td>Flat array of all class names in instance-specific.</td></tr>
+      <tr><td><code>/api/instance-specific/{Class}</code></td><td>Properties for a single class.</td></tr>
+      <tr><td><code>/api/classes</code></td><td>Flat array of all indexed class names.</td></tr>
       <tr><td><code>/api/critical-props</code></td><td>Properties always emitted regardless of API dump.</td></tr>
       <tr><td><code>/api/binary-props</code></td><td>Properties serialized as base64 BinaryString.</td></tr>
       <tr><td><code>/api/real-content-props</code></td><td>Properties treated as Content URIs.</td></tr>
@@ -695,241 +441,42 @@ print(#data.classes .. " classes indexed")</pre>
       <tr><td><code>/api/skip-prop</code></td><td>Properties never serialized.</td></tr>
       <tr><td><code>/api/attr-type-ids</code></td><td>Attribute type → byte tag map for AttributesSerialize encoding.</td></tr>
       <tr><td><code>/api/ser-types</code></td><td>All property type names the serializer can emit.</td></tr>
-      <tr><td><code>/api/server-script-placeholder</code></td><td>Comment left in place of server Script sources.</td></tr>
-      <tr><td><code>/api/readme-template</code></td><td>README source with <code>{{PLACEHOLDER}}</code> markers.</td></tr>
+      <tr><td><code>/api/templates</code></td><td>README template and server script placeholder.</td></tr>
       <tr><td><code>/api/all</code></td><td>Everything above in one object.</td></tr>
     </table>
   </section>
 
 </div>
 
-<script type="application/json" id="fish-data">{
-"version": "10.5.0",
-"server_script_placeholder": "-- Serverscripts are almost IMPOSSIBLE to save without additional requirements in every serverscript",
-"options": {
-"Decompile": true,
-"MaxThreads": 3,
-"SaveBytecode": false,
-"RemovePlayerCharacters": true,
-"IncludeBackpack": true,
-"IgnoreDefaultProps": true,
-"IgnoreNotArchivable": true,
-"UseGetProperties": true,
-"FetchDocs": true,
-"APIProperties": true,
-"Mode": "full",
-"FilePath": false,
-"Callback": false,
-"Clipboard": false,
-"AvoidFileOverwrite": true,
-"KillAllScripts": false,
-"Anonymous": false,
-"EmitTags": true,
-"EmitAttributes": true,
-"StripCharacters": true,
-"StripCoreScripts": true,
-"TerrainResolution": 8,
-"TerrainCellCap": 4194304,
-"Depth": 100,
-"Notify": true,
-"ShowStatus": true,
-"OUT": "Fishilizer"
-},
-"attr_type_ids": {
-"string": 2,
-"boolean": 3,
-"number": 4,
-"UDim": 13,
-"UDim2": 16,
-"Vector2": 18,
-"Vector3": 19,
-"CFrame": 16,
-"Color3": 26,
-"BrickColor": 30,
-"NumberRange": 31,
-"NumberSequence": 32,
-"ColorSequence": 33,
-"Rect": 34,
-"Font": 28
-},
-"ser_types": ["string","ProtectedString","SharedString","boolean","bool","number","int","int64","float","double","Vector2","Vector3","CFrame","Color3","BrickColor","UDim","UDim2","Rect","NumberRange","NumberSequence","ColorSequence","EnumItem","Faces","Axes","Instance","PhysicalProperties","BinaryString","Ray","Font","FontFace"],
-"binary_props": ["SmoothGrid","ChildData","PhysicsData","PhysicalConfigData","MaterialColors"],
-"real_content_props": ["Texture","TextureId","TextureID","Image","MeshId","SoundId","AnimationId","ShirtTemplate","PantsTemplate","Graphic","SkyboxBk","SkyboxDn","SkyboxFt","SkyboxLf","SkyboxRt","SkyboxUp","SunTextureId","MoonTextureId","ImageId","Video","Sound","Decal","ColorMap","NormalMap","RoughnessMap","MetalnessMap","EmissiveMask","CageMeshId","ReferenceMeshId","TexturePack"],
-"content_prop_exact": ["MeshContent","ImageContent","SoundContent","AnimationContent","TextureContent","ShirtTemplateContent","PantsTemplateContent","GraphicContent","FaceContent","VideoContent","ColorMapContent","NormalMapContent","RoughnessMapContent","MetalnessMapContent","EmissiveMaskContent","SkyboxBkContent","SkyboxDnContent","SkyboxFtContent","SkyboxLfContent","SkyboxRtContent","SkyboxUpContent","SunTextureContent","MoonTextureContent","DecalContent","ParticleTextureContent","ExplosionTextureContent","TrailTextureContent","BeamTextureContent","SpecialMeshContent","CylinderMeshContent","BlockMeshContent","WedgeMeshContent","LevelOfDetailContent","ColorMapLookup","RoughnessMapLookup","NormalMapLookup","MetalnessMapLookup","WrapLayerContent","WrapTargetContent","CageMeshContent","ReferenceMeshContent","AlphaModeContent","TexturePackContent","WireframeContent"],
-"core_script_names": ["PlayerModule","CameraModule","ControlModule","Common","Utils","RbxCharacterSounds","Animate","Health","RbxCamera","RbxCharacterSoundsScript","RbxDefaultCharacter","TouchJump","TouchControlFrame","ClickToMoveController","DynamicThumbstick","LegacyThumbstick","Keyboard","Gamepad","Touch","VRNavigation","CameraInput","CameraToggle","CameraUI","ZoomController","MouseLockController","BaseCamera","ClassicCamera","TransparencyController","Poppercam","Invisicam","OrbitalCamera","ScriptableCamera","FollowCamera","VehicleCamera","LegacyCamera","BaseCharacterController","UserInput","HumanoidController","DefaultChatSystemChatEvents","ChatMain","BubbleChat","ChatWindow","ChatBar","ChatTypes","ChatSettings","ChatCommands","ChatModules"],
-"character_classes": ["Humanoid","Head","Torso","HumanoidRootPart","LeftArm","RightArm","LeftLeg","RightLeg","UpperTorso","LowerTorso","LeftUpperArm","LeftLowerArm","RightUpperArm","RightLowerArm","LeftUpperLeg","LeftLowerLeg","RightUpperLeg","RightLowerLeg","LeftFoot","RightFoot","LeftHand","RightHand","BodyColors","CharacterMesh","Accessory","Accoutrement","Hat","Shirt","Pants","ShirtGraphic","Face","FaceControls","FaceInstance","HumanoidDescription"],
-"skip_svc": ["CoreGui","CorePackages","CoreScripts","Chat","LogService","ContentProvider","ScriptContext","Selection","TestService","PluginGuiService","PluginDebugService","SolidModelContentProvider","Visit","Stats","Players","StarterPlayer","SoundService","LocalizationService","MarketplaceService","AppStorageService","AvatarEditorService","BadgeService","GamePassService","GroupService","GuiService","HopperService","KeyframeSequenceProvider","MemoryStoreService","MessagingService","PathfindingService","PolicyService","ProximityPromptService","RobloxReplicatedStorage","SessionService","SharedTableRegistry","TeleportService","TextChatService","TrackerService","UserInputService","UserService","VRService","VoiceChatService","AnalyticsService","ContextActionService","ControllerService","DragDetectorService","ExperienceNotificationService","FriendService","GamepadService","GeometryService","GuidRegistryService","HapticService","InsertService","JointsService","LuaWebService","MouseService","NotificationService","PermissionsService","PhysicsService","ReplicatedFirst","SocialService","TextService","TouchInputService","VirtualInputManager","VirtualUser","ChatService","DataStoreService","RunService","TweenService","HttpService","HTTPService","Debris","AvatarCreationService","AccountService","AdService","AssetService","AvatarImportService","BrowserService","BulkImportService","CallbackService","ChangeHistoryService","CloudLocalizationTable","ClusterPacketCache","CollaborationService","CommerceService","ConfigureServerService","DeviceIdService","DraftsService","FriendPagesService","GenericChallengeService","HomeService","IXPService","InstanceFileService","LiveScriptingService","LodService","LoginService","LuaChatService","MeshContentProvider","MessageBusService","NetworkClient","NetworkServer","OpenCloudService","PackageService","PatchBundlerService","PerformanceControlService","PlayerEmulatorService","PluginPolicyService","ProcessInstancePhysicsService","PublishService","ReflectionMetadataService","RemoteDebuggerServer","RenderSettings","RobloxServerStorage","SafetyService","ScriptService","StudioAssetService","StudioData","StudioService","StyleService","TelemetryService","TracerService","UGCValidationService","UpdateService","UserStorageService","VideoCaptureService","VoiceChatInternal","WebViewService"],
-"skip_prop": ["AttributesSerialize","Tags","Parent","RobloxLocked","HistoryId","DataCost","Game","Identity","Verb","LocalLocation","PivotOffset","AbsoluteSize","AbsolutePosition","AbsoluteContentSize","AbsoluteRotation","AbsoluteCanQuery","AbsoluteOrientation","CrossPlatformAssetId","Autopilot","CameraSubject","CurrentCamera","SelectionBox","SelectionSphere","DraggingV1","Dragging","Archetype","NetworkOwner","RemoteEventsFolder","CameraType","CameraMode","FieldOfViewMode","MaxAxisFieldOfView","RotVelocity","OverlapParam","RootPriority","DebugId","JobId","IsGuest","UsesAsset","UnfilteredPackages","SnippetKey","ReplicationEnabled","NoCollisionConstraint","AccumulatedMouseDelta","AccumulatedTouchDelta","MouseDeltaSensitivity","TouchDeltaSensitivity","LastInputType","LastInputTypeChanged","Running","ElapsedTime","NetworkOwnershipAuto","ReceiveAge","TotalRcvAge","TotalRcvTime","RcvAge","RcvTime","CameraSubjectDistance","InputTypesChanged","Annotation","Annotations","AnnotationService","PlaybackState","SecurityCapabilities","ClassName"],
-"critical_props": ["Name","Archivable","SourceAssetId","PackageId","AttributesSerialize","Tags","TextureId","TextureID","Texture","Image","MeshId","SoundId","AnimationId","ShirtTemplate","PantsTemplate","Graphic","Decal","Shape","Size","Position","CFrame","Orientation","Rotation","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","CanAutoCollide","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","CollisionGroupId","TopSurface","BottomSurface","LeftSurface","RightSurface","FrontSurface","BackSurface","MeshType","Scale","Offset","VertexColor","LevelOfDetail","RenderFidelity","DoubleSided","CustomPhysicalProperties","FormFactor","RigType","WalkSpeed","JumpPower","JumpHeight","MaxHealth","Health","HipHeight","AutoRotate","AutoJumpEnabled","AutoScalingEnabled","DisplayDistanceType","HealthDisplayDistance","NameDisplayDistance","DisplayName","HeadScale","BodyTypeScale","BodyDepthScale","BodyWidthScale","BodyHeightScale","BodyProportionScale","UniformScale","OriginalSize","Value","Text","Font","FontFace","TextColor3","TextSize","TextScaled","TextWrapped","TextStrokeColor3","TextStrokeTransparency","TextTransparency","RichText","LineHeight","MaxVisibleGraphemes","TextXAlignment","TextYAlignment","TextTruncate","TextFits","PlaceholderText","PlaceholderColor3","ClearTextOnFocus","MultiLine","TextEditable","BackgroundColor3","BackgroundTransparency","BorderSizePixel","BorderColor3","BorderMode","AutomaticSize","ClipsDescendants","ImageColor3","ImageTransparency","ImageRectOffset","ImageRectSize","ResampleMode","ScaleType","SliceCenter","SliceScale","TileSize","Visible","Active","Selectable","AutoButtonColor","Modal","Style","ZIndex","LayoutOrder","SizeConstraint","AnchorPoint","Interactable","CanvasSize","CanvasPosition","ScrollBarThickness","ScrollBarImageColor3","ScrollBarImageTransparency","ElasticBehavior","ScrollingDirection","ScrollingEnabled","VerticalScrollBarInset","HorizontalScrollBarInset","AutomaticCanvasSize","MidImage","TopImage","BottomImage","CellPadding","CellSize","FillDirection","FillDirectionMaxCells","HorizontalAlignment","VerticalAlignment","SortOrder","StartCorner","PaddingTop","PaddingBottom","PaddingLeft","PaddingRight","Padding","Spacing","AspectRatio","AspectType","DominantAxis","MaxSize","MinSize","MaxTextSize","MinTextSize","Enabled","ResetOnSpawn","DisplayOrder","IgnoreGuiInset","ClipToDeviceSafeArea","SafeAreaCompatibility","ScreenInsets","SizingMode","PixelsPerStud","AlwaysOnTop","Adornee","Brightness","ZOffset","MaxDistance","DistanceLowerLimit","DistanceUpperLimit","ExtentsOffset","ExtentsOffsetWorldSpace","StudsOffset","StudsOffsetWorldSpace","SizeOffset","LightColor","LightDirection","Ambient","Range","Angle","Shadows","OutdoorAmbient","ColorShift_Top","ColorShift_Bottom","GeographicLatitude","ClockTime","TimeOfDay","FogColor","FogStart","FogEnd","GlobalShadows","EnvironmentDiffuseScale","EnvironmentSpecularScale","ExposureCompensation","Technology","ShadowSoftness","SkyboxBk","SkyboxDn","SkyboxFt","SkyboxLf","SkyboxRt","SkyboxUp","SkyboxOrientation","SunAngularSize","MoonAngularSize","SunTextureId","MoonTextureId","StarCount","CelestialBodiesShown","Outlines","Volume","Pitch","Looped","PlayOnRemove","TimePosition","PlaybackSpeed","Playing","RollOffMode","RollOffMinDistance","RollOffMaxDistance","EmitterSize","Source","Disabled","RunContext","LinkedSource","Lifetime","Rate","Speed","Drag","Acceleration","LockedToPart","VelocityInheritance","Squash","EmissionDirection","Sequence","TimeScale","TextureMode","RotSpeed","SpreadAngle","SpawnRadius","Width0","Width1","TextureLength","FaceCamera","Segments","CurveSize0","CurveSize1","Attachment0","Attachment1","AttachmentForward","AttachmentRight","AttachmentUp","HeadColor","TorsoColor","LeftArmColor","RightArmColor","LeftLegColor","RightLegColor","Number","TargetRadius","MinRadius","Radius","Gain","Diffuse","Specular","Velocity","Focus","FieldOfView","ReverbType","DistanceFactor","AngularSpeed","Facing","DesiredAngle","CurrentAngle","MotorType","MaxVelocity","MaxTorque","P","D","Coefficient","OuterConeAngle","InnerConeAngle","Depth","Height","Width","DepthMode","FaceMode","Animation","Weight","CollisionFidelity","ClusterId","PhysicalConfigData","PhysicsData","ChildData","MeshSize","InitialSize","InitialCFrame","UnscaledCframe","UnscaledSize","AssetId","SmoothGrid","MaterialColors","WaterColor","WaterWaveSize","WaterWaveSpeed","WaterReflectance","WaterTransparency","Decoration","LeftParamA","LeftParamB","RightParamA","RightParamB","TopParamA","TopParamB","BottomParamA","BottomParamB","FrontParamA","FrontParamB","BackParamA","BackParamB","PrimaryPart","ModelInPrimary","Loop","IsPlaying","Priority","Time","EasingStyle","EasingDirection","Pose","Mode","Grip","GripForward","GripPos","GripRight","GripUp","ToolTip","CanBeDropped","RequiresHandle","ManualActivationOnly","BinType","Whitelist","Blacklist","AutoAssignable","TeamColor","Gravity","FallHeightEnabled","FallenPartsDestroyHeight","StreamingEnabled","StreamingIntegrityMode","StreamingMinRadius","StreamingTargetRadius","TerrainWeldsFixed","DistributedGameTime","AllowThirdPartySales","ResetPlayerGuiOnSpawn","LoadCharacterAppearance","LoadCharacterLayeredClothing","UserEmotesEnabled","CameraMaxZoomDistance","CameraMinZoomDistance","CageMeshId","ReferenceMeshId","AutoSkin","ShrinkFactor","Stiffness","Order","DebugMode","ColorMap","NormalMap","RoughnessMap","MetalnessMap","EmissiveMask","AlphaMode","Metalness","Roughness","TexturePack","OffsetStudsU","OffsetStudsV","StudsPerTileU","StudsPerTileV","BasePartMaterial","Use2022Materials","MaxActivationDistance","HoldDuration","ActionText","ObjectText","KeyboardKeyCode","GamepadKeyCode","RequiresLineOfSight","ClickablePrompt","Exclusivity","UIOffset","FillColor","FillTransparency","OutlineColor","OutlineTransparency","GroupColor3","GroupTransparency","CornerRadius","ApplyStrokeMode","LineJoinMode","LimitsEnabled","UpperAngle","LowerAngle","TwistLimitsEnabled","TwistLowerAngle","TwistUpperAngle","Restitution","Length","Thickness","LimitAngle0","LimitAngle1","FreeLength","Coils","Damping","MaxLength","MinLength","MotorMaxAcceleration","MotorMaxTorque","MotorSpeed","ServoMaxTorque","TargetAngle","Part0","Part1","C0","C1","Axis","SecondaryAxis","LocalTransparencyModifier","Transform","AutoLocalize","RootLocalizationTable","UsePartColor","ScaleTo","AutoResume","PlaybackRegion","RegionDirection","LoopRegion","SoundGroup","AudioEqualizer","AudioFilter","StyleRule","StyleSheet","StyleLink","AdShape","Puffiness","ReferenceOrigin","BindOffset","WorldCageMeshId","Bevel","BevelRoundness","BevelType","PassThrough","Label","ModifierId","LineThickness","SurfaceColor3","SurfaceTransparency","LineColor3","TextureSpeed","LightEmission","LightInfluence","Density","Decay","Glare","Haze","Cover","CloudsEnabled","ForceLimitMode","ForceLimitsEnabled","LineDirection","LineVelocity","MaxForce","MaxAxesForce","PlaneVelocity","PrimaryTangentAxis","RelativeTo","SecondaryTangentAxis","VectorVelocity","VelocityConstraintMode","AngularVelocity","ReactionTorqueEnabled","ApplyAtCenterOfMass","Force","ReactionForceEnabled","Responsiveness","RigidityEnabled","WorldCFrame","WorldPosition","WorldOrientation","WorldAxis","WorldSecondaryAxis","WorldBasis","TransformedCFrame","TransformedWorldCFrame","RenderMesh","CollisionMesh"],
-"instance_specific": {
-"Tool":["TextureId","ToolTip","CanBeDropped","RequiresHandle","ManualActivationOnly","Enabled","Grip","GripForward","GripPos","GripRight","GripUp"],
-"Part":["Shape","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","TopSurface","BottomSurface","LeftSurface","RightSurface","FrontSurface","BackSurface","CustomPhysicalProperties","FormFactor","Velocity"],
-"WedgePart":["Shape","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","CustomPhysicalProperties"],
-"CornerWedgePart":["Shape","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","CustomPhysicalProperties"],
-"TrussPart":["Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","Style"],
-"Platform":["Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup"],
-"SpawnLocation":["Size","CFrame","Anchored","CanCollide","Transparency","Material","MaterialVariant","BrickColor","Color","Enabled","Duration","Neutral","TeamColor","AllowTeamChangeOnTouch"],
-"Seat":["Size","CFrame","Anchored","CanCollide","Material","MaterialVariant","BrickColor","Color","Disabled"],
-"VehicleSeat":["Size","CFrame","Anchored","CanCollide","Material","MaterialVariant","BrickColor","Color","MaxSpeed","Torque","TurnSpeed","HeadsUpDisplay","Disabled"],
-"MeshPart":["MeshId","TextureID","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","RenderFidelity","CollisionFidelity","DoubleSided","LevelOfDetail","MeshSize","InitialSize","Texture","CustomPhysicalProperties","RenderMesh"],
-"UnionOperation":["AssetId","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","RenderFidelity","CollisionFidelity","ChildData","PhysicsData","PhysicalConfigData","InitialSize","InitialCFrame","MeshSize","CustomPhysicalProperties"],
-"IntersectOperation":["AssetId","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","RenderFidelity","CollisionFidelity","ChildData","PhysicsData","PhysicalConfigData","InitialSize","InitialCFrame","MeshSize","CustomPhysicalProperties"],
-"NegateOperation":["AssetId","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","ChildData","PhysicsData","PhysicalConfigData","InitialSize","InitialCFrame","MeshSize","CustomPhysicalProperties"],
-"PartOperation":["AssetId","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","RenderFidelity","CollisionFidelity","ChildData","PhysicsData","PhysicalConfigData","InitialSize","InitialCFrame","MeshSize","CustomPhysicalProperties"],
-"SpecialMesh":["MeshId","MeshType","Scale","Offset","VertexColor","TextureId","Texture"],
-"CylinderMesh":["Scale","Offset","VertexColor"],
-"BlockMesh":["Scale","Offset","VertexColor"],
-"WedgeMesh":["Scale","Offset","VertexColor"],
-"SphereMesh":["Scale","Offset","VertexColor"],
-"BevelMesh":["Scale","Offset","VertexColor","Bevel","BevelRoundness","BevelType"],
-"FileMesh":["MeshId","TextureId","Scale","Offset","VertexColor"],
-"Decal":["Face","Texture","Color3","Transparency","ZIndex","LocalTransparencyModifier"],
-"Texture":["Face","Texture","Color3","Transparency","ZIndex","OffsetStudsU","OffsetStudsV","StudsPerTileU","StudsPerTileV","LocalTransparencyModifier"],
-"SurfaceAppearance":["ColorMap","NormalMap","RoughnessMap","MetalnessMap","EmissiveMask","AlphaMode","Color3","Metalness","Roughness","TexturePack"],
-"Terrain":["WaterColor","WaterWaveSize","WaterWaveSpeed","WaterReflectance","WaterTransparency","Decoration"],
-"Lighting":["Ambient","OutdoorAmbient","ColorShift_Top","ColorShift_Bottom","Brightness","ClockTime","TimeOfDay","GeographicLatitude","FogColor","FogStart","FogEnd","GlobalShadows","ShadowSoftness","EnvironmentDiffuseScale","EnvironmentSpecularScale","ExposureCompensation","Technology","SkyboxBk","SkyboxDn","SkyboxFt","SkyboxLf","SkyboxRt","SkyboxUp","SkyboxOrientation","SunAngularSize","MoonAngularSize","SunTextureId","MoonTextureId","StarCount","CelestialBodiesShown","Outlines","CloudsEnabled"],
-"Atmosphere":["Density","Offset","Color","Decay","Glare","Haze"],
-"Clouds":["Cover","Density","Color","Enabled"],
-"Sky":["SkyboxBk","SkyboxDn","SkyboxFt","SkyboxLf","SkyboxRt","SkyboxUp","SkyboxOrientation","SunAngularSize","MoonAngularSize","SunTextureId","MoonTextureId","StarCount","CelestialBodiesShown"],
-"BloomEffect":["Enabled","Intensity","Size","Threshold"],
-"BlurEffect":["Enabled","Size"],
-"ColorCorrectionEffect":["Enabled","Brightness","Contrast","Saturation","TintColor"],
-"DepthOfFieldEffect":["Enabled","FarIntensity","FocusDistance","InFocusRadius","NearIntensity"],
-"SunRaysEffect":["Enabled","Intensity","Spread"],
-"PointLight":["Enabled","Brightness","Color","Range","Shadows"],
-"SpotLight":["Enabled","Brightness","Color","Range","Angle","Face","Shadows"],
-"SurfaceLight":["Enabled","Brightness","Color","Range","Angle","Face","Shadows"],
-"Sound":["SoundId","Volume","Pitch","Looped","Playing","PlayOnRemove","PlaybackSpeed","TimePosition","RollOffMode","RollOffMinDistance","RollOffMaxDistance","EmitterSize","SoundGroup","ReverbType","DistanceFactor","MaxDistance","PlaybackRegion","LoopRegion","TimeLength","AudioEqualizer","AudioFilter"],
-"SoundGroup":["Volume"],
-"Animation":["AnimationId"],
-"KeyframeSequence":["Loop","Priority"],
-"Keyframe":["Time"],
-"Pose":["CFrame","Weight","EasingStyle","EasingDirection"],
-"Humanoid":["Health","MaxHealth","WalkSpeed","JumpPower","JumpHeight","HipHeight","AutoRotate","AutoJumpEnabled","AutoScalingEnabled","DisplayDistanceType","HealthDisplayDistance","NameDisplayDistance","DisplayName","RigType","BodyTypeScale","BodyDepthScale","BodyWidthScale","BodyHeightScale","HeadScale","BodyProportionScale","UniformScale","OriginalSize","AnimationId"],
-"BodyColors":["HeadColor","TorsoColor","LeftArmColor","RightArmColor","LeftLegColor","RightLegColor"],
-"CharacterMesh":["BasePart","MeshId","Overlay","BodyPart","TextureId"],
-"Attachment":["CFrame","Position","Orientation","Axis","SecondaryAxis","Visible","WorldCFrame","WorldPosition","WorldOrientation","WorldAxis","WorldSecondaryAxis"],
-"Bone":["CFrame","Position","Orientation","Transform","TransformedCFrame","TransformedWorldCFrame"],
-"Motor6D":["Part0","Part1","C0","C1","CurrentAngle","DesiredAngle","MaxVelocity","Transform"],
-"Motor":["Part0","Part1","C0","C1","CurrentAngle","DesiredAngle","MaxVelocity"],
-"Weld":["Part0","Part1","C0","C1"],
-"WeldConstraint":["Part0","Part1","Enabled"],
-"Snap":["Part0","Part1","C0","C1"],
-"Rotate":["Part0","Part1","C0","C1"],
-"RotateP":["Part0","Part1","C0","C1"],
-"RotateV":["Part0","Part1","C0","C1"],
-"Glue":["Part0","Part1","C0","C1","F0","F1"],
-"HingeConstraint":["Attachment0","Attachment1","MotorMaxAcceleration","MotorMaxTorque","MotorSpeed","ServoMaxTorque","TargetAngle","AngularVelocity","AngularSpeed","ActuatorType","LimitsEnabled","LowerAngle","UpperAngle","Radius","Visible","Enabled"],
-"BallSocketConstraint":["Attachment0","Attachment1","LimitsEnabled","UpperAngle","TwistLimitsEnabled","TwistLowerAngle","TwistUpperAngle","Restitution","Radius","Visible","Enabled"],
-"RodConstraint":["Attachment0","Attachment1","Length","Thickness","LimitsEnabled","LimitAngle0","LimitAngle1","Visible","Enabled"],
-"RopeConstraint":["Attachment0","Attachment1","Length","Thickness","Restitution","Visible","Enabled"],
-"SpringConstraint":["Attachment0","Attachment1","FreeLength","Coils","Damping","Stiffness","MaxForce","MaxLength","MinLength","Thickness","Visible","Enabled"],
-"TorsionSpringConstraint":["Attachment0","Attachment1","Coils","Damping","MaxAngle","MaxTorque","Radius","Restitution","Stiffness","Visible","Enabled"],
-"UniversalConstraint":["Attachment0","Attachment1","LimitsEnabled","MaxAngle","Radius","Restitution","Visible","Enabled"],
-"CylindricalConstraint":["Attachment0","Attachment1","AngularActuatorType","AngularLimitsEnabled","AngularRestitution","AngularSpeed","AngularVelocity","InclinationAngle","LinearActuatorType","LinearLimitsEnabled","LinearRestitution","LinearVelocity","LowerAngle","LowerLimit","MotorMaxAcceleration","MotorMaxForce","Radius","ServoMaxForce","UpperAngle","UpperLimit","Visible","Enabled"],
-"PrismaticConstraint":["Attachment0","Attachment1","ActuatorType","LimitsEnabled","LowerLimit","UpperLimit","MotorMaxAcceleration","MotorMaxForce","Restitution","ServoMaxForce","Speed","Velocity","Visible","Enabled"],
-"PlaneConstraint":["Attachment0","Attachment1","Visible","Enabled"],
-"AlignPosition":["Attachment0","Attachment1","ApplyAtCenterOfMass","MaxForce","MaxVelocity","Position","ReactionForceEnabled","Responsiveness","RigidityEnabled","Mode","Enabled"],
-"AlignOrientation":["Attachment0","Attachment1","AlignType","CFrame","MaxAngularVelocity","MaxTorque","Mode","PrimaryAxisOnly","ReactionTorqueEnabled","Responsiveness","RigidityEnabled","Enabled"],
-"LinearVelocity":["Attachment0","ForceLimitMode","ForceLimitsEnabled","LineDirection","LineVelocity","MaxForce","MaxAxesForce","PlaneVelocity","PrimaryTangentAxis","RelativeTo","SecondaryTangentAxis","VectorVelocity","VelocityConstraintMode","Visible","Enabled"],
-"AngularVelocity":["Attachment0","AngularVelocity","MaxTorque","ReactionTorqueEnabled","RelativeTo","Visible","Enabled"],
-"VectorForce":["Attachment0","ApplyAtCenterOfMass","Force","RelativeTo","Visible","Enabled"],
-"Torque":["Attachment0","RelativeTo","Torque","Visible","Enabled"],
-"ParticleEmitter":["Acceleration","Brightness","Color","ColorShift","Drag","EmissionDirection","EmitterSize","Enabled","FlipbookFramerate","FlipbookLayout","FlipbookMode","FlipbookStartRandom","Lifetime","LightEmission","LightInfluence","LockedToPart","Orientation","Rate","RotSpeed","Rotation","Shape","ShapeInOut","ShapePartial","ShapeStyle","Size","Size2","SoftParticlesEnabled","SoftParticlesFar","SoftParticlesNear","Speed","SpreadAngle","Squash","Texture","TimeScale","Transparency","VelocityInheritance","WindAffectsDrag","ZOffset"],
-"Beam":["Attachment0","Attachment1","Brightness","Color","CurveSize0","CurveSize1","Enabled","FaceCamera","LightEmission","LightInfluence","Segments","Texture","TextureLength","TextureMode","TextureSpeed","Transparency","Width0","Width1","ZOffset"],
-"Trail":["Attachment0","Attachment1","Brightness","Color","Enabled","FaceCamera","Lifetime","LightEmission","LightInfluence","MaxLength","MinLength","Texture","TextureLength","TextureMode","Transparency","WidthScale"],
-"Fire":["Enabled","Color","SecondaryColor","Heat","Size"],
-"Smoke":["Enabled","Color","Opacity","RiseVelocity","Size"],
-"Sparkles":["Enabled","Color","SparkleColor","TimeScale"],
-"ScreenGui":["DisplayOrder","Enabled","IgnoreGuiInset","ResetOnSpawn","ScreenInsets","ClipToDeviceSafeArea","SafeAreaCompatibility","ZIndexBehavior"],
-"SurfaceGui":["Adornee","AlwaysOnTop","Brightness","CanvasSize","ClipsDescendants","Enabled","Face","LightInfluence","MaxDistance","PixelsPerStud","ResetOnSpawn","SizingMode","ToolPunchThroughDistance","ZOffset","ZIndexBehavior"],
-"BillboardGui":["Adornee","AlwaysOnTop","Brightness","ClipsDescendants","DistanceLowerLimit","DistanceUpperLimit","Enabled","ExtentsOffset","ExtentsOffsetWorldSpace","LightInfluence","MaxDistance","ResetOnSpawn","Size","SizeOffset","StudsOffset","StudsOffsetWorldSpace","ZIndexBehavior"],
-"Frame":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","ClipsDescendants","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","Style","AutomaticSize"],
-"ScrollingFrame":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","CanvasSize","CanvasPosition","ScrollBarThickness","ScrollBarImageColor3","ScrollBarImageTransparency","ElasticBehavior","ScrollingDirection","ScrollingEnabled","VerticalScrollBarInset","HorizontalScrollBarInset","AutomaticCanvasSize","ClipsDescendants","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","Style"],
-"CanvasGroup":["GroupColor3","GroupTransparency","BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","ClipsDescendants","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutomaticSize"],
-"ViewportFrame":["CurrentCamera","Ambient","LightColor","LightDirection","ImageColor3","ImageTransparency","BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active"],
-"VideoFrame":["Video","Playing","Looped","TimePosition","Volume","PlaybackSpeed","BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active"],
-"TextLabel":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Text","TextColor3","TextSize","TextScaled","TextWrapped","TextStrokeColor3","TextStrokeTransparency","TextTransparency","RichText","Font","FontFace","LineHeight","MaxVisibleGraphemes","TextXAlignment","TextYAlignment","TextTruncate","TextFits","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutoLocalize","AutomaticSize"],
-"TextButton":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Text","TextColor3","TextSize","TextScaled","TextWrapped","TextStrokeColor3","TextStrokeTransparency","TextTransparency","RichText","Font","FontFace","LineHeight","MaxVisibleGraphemes","TextXAlignment","TextYAlignment","TextTruncate","TextFits","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutoButtonColor","Modal","Style","AutoLocalize","AutomaticSize"],
-"TextBox":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Text","TextColor3","TextSize","TextScaled","TextWrapped","TextStrokeColor3","TextStrokeTransparency","TextTransparency","RichText","Font","FontFace","LineHeight","MaxVisibleGraphemes","TextXAlignment","TextYAlignment","TextTruncate","TextFits","PlaceholderText","PlaceholderColor3","ClearTextOnFocus","MultiLine","TextEditable","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutoLocalize","AutomaticSize"],
-"ImageLabel":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Image","ImageColor3","ImageRectOffset","ImageRectSize","ImageTransparency","ResampleMode","ScaleType","SliceCenter","SliceScale","TileSize","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutomaticSize"],
-"ImageButton":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Image","ImageColor3","ImageRectOffset","ImageRectSize","ImageTransparency","ResampleMode","ScaleType","SliceCenter","SliceScale","TileSize","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutoButtonColor","Modal","Style","AutomaticSize"],
-"UIListLayout":["Padding","FillDirection","HorizontalAlignment","VerticalAlignment","SortOrder","HorizontalFlex","VerticalFlex","Wraps"],
-"UIGridLayout":["CellPadding","CellSize","FillDirection","FillDirectionMaxCells","HorizontalAlignment","VerticalAlignment","SortOrder","StartCorner"],
-"UITableLayout":["FillDirection","FillEmptySpaceColumns","FillEmptySpaceRows","HorizontalAlignment","MajorAxis","Padding","SortOrder","VerticalAlignment"],
-"UIPageLayout":["Animated","Circular","EasingDirection","EasingStyle","FillDirection","GamepadInputEnabled","HorizontalAlignment","Padding","ScrollWheelInputEnabled","SortOrder","TouchInputEnabled","TweenTime","VerticalAlignment"],
-"UIPadding":["PaddingTop","PaddingBottom","PaddingLeft","PaddingRight"],
-"UICorner":["CornerRadius"],
-"UIStroke":["ApplyStrokeMode","Color","Enabled","LineJoinMode","Thickness","Transparency"],
-"UIGradient":["Color","Enabled","Offset","Rotation","Transparency"],
-"UIScale":["Scale"],
-"UIAspectRatioConstraint":["AspectRatio","AspectType","DominantAxis"],
-"UISizeConstraint":["MaxSize","MinSize"],
-"UITextSizeConstraint":["MaxTextSize","MinTextSize"],
-"Highlight":["Adornee","DepthMode","Enabled","FillColor","FillTransparency","OutlineColor","OutlineTransparency"],
-"ClickDetector":["MaxActivationDistance","CursorIcon"],
-"ProximityPrompt":["ActionText","ObjectText","HoldDuration","MaxActivationDistance","RequiresLineOfSight","KeyboardKeyCode","GamepadKeyCode","ClickablePrompt","Exclusivity","UIOffset","Style","Enabled","AutoLocalize"],
-"Team":["TeamColor","AutoAssignable"],
-"Camera":["CameraType","CameraSubject","CFrame","Focus","FieldOfView","CameraMode","FieldOfViewMode","MaxAxisFieldOfView","DiagonalFieldOfView"],
-"Model":["PrimaryPart","WorldPivot","ModelInPrimary"],
-"Folder":[],
-"Configuration":[],
-"NumberValue":["Value"],
-"StringValue":["Value"],
-"BoolValue":["Value"],
-"IntValue":["Value"],
-"ObjectValue":["Value"],
-"Vector3Value":["Value"],
-"CFrameValue":["Value"],
-"Color3Value":["Value"],
-"BrickColorValue":["Value"],
-"RayValue":["Value"],
-"RemoteEvent":[],
-"RemoteFunction":[],
-"BindableEvent":[],
-"BindableFunction":[],
-"Script":["Source","Disabled","RunContext","LinkedSource"],
-"LocalScript":["Source","Disabled","RunContext","LinkedSource"],
-"ModuleScript":["Source","Disabled","RunContext","LinkedSource"],
-"WrapLayer":["AutoSkin","BindOffset","CageMeshId","ColorMap","Enabled","Order","Puffiness","ReferenceMeshId","ReferenceOrigin","ShrinkFactor","Stiffness"],
-"WrapTarget":["AutoSkin","CageMeshId","ColorMap","Depth","Height","ReferenceMeshId","Stiffness","Width"],
-"PathfindingModifier":["PassThrough","Label","ModifierId"],
-"PathfindingLink":["Attachment0","Attachment1"],
-"Actor":["Enabled"],
-"StyleRule":["Selector","Properties","Priority"],
-"StyleSheet":["Source"],
-"StyleLink":["StyleSheet"],
-"AudioPlayer":["AssetId","Volume","PlaybackSpeed","Looped","Playing","TimePosition"],
-"AudioDeviceOutput":["Player"],
-"AudioDeviceInput":["Player"]
-},
-"readme_template": "--[[\nFishilizer v{{VERSION}}\nSerialized with source recovery via LunaUX and Fishilizer serializer.\n\nGame saved with Fishilizer\n\nhttps://github.com/Civilation/Fishilizer\nhttps://civilation.github.io/Fishilizer/\n\n\n\n                                ...........\n                           .....          \n                        ....              \n                     ....                 \n                 .....                    \n                ....                      \n               .....                      \n             ...                          \n  ....     ...                            \n ....    ...                              \n..     ...                   .............\n...   ..               ...................\n  .....            .......................\n               ...........................\n              ..........   ...............\n                 .........................\n                     .....................\n             .............................\n               ...........................\n                   .......................\n                       . .................\n\n\n\nFor assistance on Fishilizer join https://discord.gg/avafsVeTZ\n\nFishilizer is not responsible for failing to decompile scripts or modules.\n\nGENERATION\n  Place: {{PLACE_NAME}}\n  PlaceId: {{PLACE_ID}}\n  JobId: {{JOB_ID}}\n  Mode: {{MODE}}\n  Decompile: {{DECOMPILE}}\n  TerrainResolution: {{TERRAIN_RESOLUTION}}\n  Depth: {{DEPTH}}\n  Saved at (UTC): {{TIMESTAMP}}\n]]"
-}</script>
+<script type="application/json" id="fish-data">{"meta":{"name":"Fishilizer","version":"10.7.0","schema":2},"options":{"Decompile":true,"MaxThreads":3,"SaveBytecode":false,"RemovePlayerCharacters":true,"IncludeBackpack":true,"IgnoreDefaultProps":true,"IgnoreNotArchivable":true,"UseGetProperties":true,"FetchDocs":true,"APIProperties":true,"Mode":"full","FilePath":false,"Callback":false,"Clipboard":false,"AvoidFileOverwrite":true,"KillAllScripts":false,"Anonymous":false,"EmitTags":true,"EmitAttributes":true,"StripCharacters":true,"StripCoreScripts":true,"TerrainResolution":8,"TerrainCellCap":4194304,"Depth":100,"Notify":true,"ShowStatus":true,"ReadMe":true,"OUT":"Fishilizer","DataAPIURL":"https://civilation.github.io/Fishilizer/","APIDumpURL":"https://raw.githubusercontent.com/MaximumADHD/Roblox-Client-Tracker/roblox/API-Dump.json"},"decompiler":{"url":"https://lunaux-decompiler.dev/api/decompile","method":"POST","encoding":"base64","format":"luau","headers":{"Content-Type":"application/json"},"body":{"script":"<base64-encoded-bytecode>","options":{"transformCompoundAssignments":true,"virtualizeContinues":true,"showFunctionInfo":true,"upvalueComments":true}},"responseKeys":["source","decompiled","result","code","output"],"fallbackBytecodeOption":"SaveBytecode"},"tables":{"attr_type_ids":{"string":2,"boolean":3,"number":4,"UDim":13,"UDim2":16,"Vector2":18,"Vector3":19,"CFrame":16,"Color3":26,"BrickColor":30,"NumberRange":31,"NumberSequence":32,"ColorSequence":33,"Rect":34,"Font":28},"ser_types":["string","ProtectedString","SharedString","boolean","bool","number","int","int64","float","double","Vector2","Vector3","CFrame","Color3","BrickColor","UDim","UDim2","Rect","NumberRange","NumberSequence","ColorSequence","EnumItem","Faces","Axes","Instance","PhysicalProperties","BinaryString","Ray","Font","FontFace"],"binary_props":["SmoothGrid","ChildData","PhysicsData","PhysicalConfigData","MaterialColors"],"real_content_props":["Texture","TextureId","TextureID","Image","MeshId","SoundId","AnimationId","ShirtTemplate","PantsTemplate","Graphic","SkyboxBk","SkyboxDn","SkyboxFt","SkyboxLf","SkyboxRt","SkyboxUp","SunTextureId","MoonTextureId","ImageId","Video","Sound","Decal","ColorMap","NormalMap","RoughnessMap","MetalnessMap","EmissiveMask","CageMeshId","ReferenceMeshId","TexturePack"],"content_prop_exact":["MeshContent","ImageContent","SoundContent","AnimationContent","TextureContent","ShirtTemplateContent","PantsTemplateContent","GraphicContent","FaceContent","VideoContent","ColorMapContent","NormalMapContent","RoughnessMapContent","MetalnessMapContent","EmissiveMaskContent","SkyboxBkContent","SkyboxDnContent","SkyboxFtContent","SkyboxLfContent","SkyboxRtContent","SkyboxUpContent","SunTextureContent","MoonTextureContent","DecalContent","ParticleTextureContent","ExplosionTextureContent","TrailTextureContent","BeamTextureContent","SpecialMeshContent","CylinderMeshContent","BlockMeshContent","WedgeMeshContent","LevelOfDetailContent","ColorMapLookup","RoughnessMapLookup","NormalMapLookup","MetalnessMapLookup","WrapLayerContent","WrapTargetContent","CageMeshContent","ReferenceMeshContent","AlphaModeContent","TexturePackContent","WireframeContent"],"core_script_names":["PlayerModule","CameraModule","ControlModule","Common","Utils","RbxCharacterSounds","Animate","Health","RbxCamera","RbxCharacterSoundsScript","RbxDefaultCharacter","TouchJump","TouchControlFrame","ClickToMoveController","DynamicThumbstick","LegacyThumbstick","Keyboard","Gamepad","Touch","VRNavigation","CameraInput","CameraToggle","CameraUI","ZoomController","MouseLockController","BaseCamera","ClassicCamera","TransparencyController","Poppercam","Invisicam","OrbitalCamera","ScriptableCamera","FollowCamera","VehicleCamera","LegacyCamera","BaseCharacterController","UserInput","HumanoidController","DefaultChatSystemChatEvents","ChatMain","BubbleChat","ChatWindow","ChatBar","ChatTypes","ChatSettings","ChatCommands","ChatModules"],"character_classes":["Humanoid","Head","Torso","HumanoidRootPart","LeftArm","RightArm","LeftLeg","RightLeg","UpperTorso","LowerTorso","LeftUpperArm","LeftLowerArm","RightUpperArm","RightLowerArm","LeftUpperLeg","LeftLowerLeg","RightUpperLeg","RightLowerLeg","LeftFoot","RightFoot","LeftHand","RightHand","BodyColors","CharacterMesh","Accessory","Accoutrement","Hat","Shirt","Pants","ShirtGraphic","Face","FaceControls","FaceInstance","HumanoidDescription"],"skip_svc":["CoreGui","CorePackages","CoreScripts","Chat","LogService","ContentProvider","ScriptContext","Selection","TestService","PluginGuiService","PluginDebugService","SolidModelContentProvider","Visit","Stats","Players","StarterPlayer","SoundService","LocalizationService","MarketplaceService","AppStorageService","AvatarEditorService","BadgeService","GamePassService","GroupService","GuiService","HopperService","KeyframeSequenceProvider","MemoryStoreService","MessagingService","PathfindingService","PolicyService","ProximityPromptService","RobloxReplicatedStorage","SessionService","SharedTableRegistry","TeleportService","TextChatService","TrackerService","UserInputService","UserService","VRService","VoiceChatService","AnalyticsService","ContextActionService","ControllerService","DragDetectorService","ExperienceNotificationService","FriendService","GamepadService","GeometryService","GuidRegistryService","HapticService","InsertService","JointsService","LuaWebService","MouseService","NotificationService","PermissionsService","PhysicsService","ReplicatedFirst","SocialService","TextService","TouchInputService","VirtualInputManager","VirtualUser","ChatService","DataStoreService","RunService","TweenService","HttpService","HTTPService","Debris","AvatarCreationService","AccountService","AdService","AssetService","AvatarImportService","BrowserService","BulkImportService","CallbackService","ChangeHistoryService","CloudLocalizationTable","ClusterPacketCache","CollaborationService","CommerceService","ConfigureServerService","DeviceIdService","DraftsService","FriendPagesService","GenericChallengeService","HomeService","IXPService","InstanceFileService","LiveScriptingService","LodService","LoginService","LuaChatService","MeshContentProvider","MessageBusService","NetworkClient","NetworkServer","OpenCloudService","PackageService","PatchBundlerService","PerformanceControlService","PlayerEmulatorService","PluginPolicyService","ProcessInstancePhysicsService","PublishService","ReflectionMetadataService","RemoteDebuggerServer","RenderSettings","RobloxServerStorage","SafetyService","ScriptService","StudioAssetService","StudioData","StudioService","StyleService","TelemetryService","TracerService","UGCValidationService","UpdateService","UserStorageService","VideoCaptureService","VoiceChatInternal","WebViewService"],"skip_prop":["AttributesSerialize","Tags","Parent","RobloxLocked","HistoryId","DataCost","Game","Identity","Verb","LocalLocation","PivotOffset","AbsoluteSize","AbsolutePosition","AbsoluteContentSize","AbsoluteRotation","AbsoluteCanQuery","AbsoluteOrientation","CrossPlatformAssetId","Autopilot","CameraSubject","CurrentCamera","SelectionBox","SelectionSphere","DraggingV1","Dragging","Archetype","NetworkOwner","RemoteEventsFolder","CameraType","CameraMode","FieldOfViewMode","MaxAxisFieldOfView","RotVelocity","OverlapParam","RootPriority","DebugId","JobId","IsGuest","UsesAsset","UnfilteredPackages","SnippetKey","ReplicationEnabled","NoCollisionConstraint","AccumulatedMouseDelta","AccumulatedTouchDelta","MouseDeltaSensitivity","TouchDeltaSensitivity","LastInputType","LastInputTypeChanged","Running","ElapsedTime","NetworkOwnershipAuto","ReceiveAge","TotalRcvAge","TotalRcvTime","RcvAge","RcvTime","CameraSubjectDistance","InputTypesChanged","Annotation","Annotations","AnnotationService","PlaybackState","SecurityCapabilities","ClassName"],"critical_props":["Name","Archivable","SourceAssetId","PackageId","AttributesSerialize","Tags","TextureId","TextureID","Texture","Image","MeshId","SoundId","AnimationId","ShirtTemplate","PantsTemplate","Graphic","Decal","Shape","Size","Position","CFrame","Orientation","Rotation","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","CanAutoCollide","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","CollisionGroupId","TopSurface","BottomSurface","LeftSurface","RightSurface","FrontSurface","BackSurface","MeshType","Scale","Offset","VertexColor","LevelOfDetail","RenderFidelity","DoubleSided","CustomPhysicalProperties","FormFactor","RigType","WalkSpeed","JumpPower","JumpHeight","MaxHealth","Health","HipHeight","AutoRotate","AutoJumpEnabled","AutoScalingEnabled","DisplayDistanceType","HealthDisplayDistance","NameDisplayDistance","DisplayName","HeadScale","BodyTypeScale","BodyDepthScale","BodyWidthScale","BodyHeightScale","BodyProportionScale","UniformScale","OriginalSize","Value","Text","Font","FontFace","TextColor3","TextSize","TextScaled","TextWrapped","TextStrokeColor3","TextStrokeTransparency","TextTransparency","RichText","LineHeight","MaxVisibleGraphemes","TextXAlignment","TextYAlignment","TextTruncate","TextFits","PlaceholderText","PlaceholderColor3","ClearTextOnFocus","MultiLine","TextEditable","BackgroundColor3","BackgroundTransparency","BorderSizePixel","BorderColor3","BorderMode","AutomaticSize","ClipsDescendants","ImageColor3","ImageTransparency","ImageRectOffset","ImageRectSize","ResampleMode","ScaleType","SliceCenter","SliceScale","TileSize","Visible","Active","Selectable","AutoButtonColor","Modal","Style","ZIndex","LayoutOrder","SizeConstraint","AnchorPoint","Interactable","CanvasSize","CanvasPosition","ScrollBarThickness","ScrollBarImageColor3","ScrollBarImageTransparency","ElasticBehavior","ScrollingDirection","ScrollingEnabled","VerticalScrollBarInset","HorizontalScrollBarInset","AutomaticCanvasSize","MidImage","TopImage","BottomImage","CellPadding","CellSize","FillDirection","FillDirectionMaxCells","HorizontalAlignment","VerticalAlignment","SortOrder","StartCorner","PaddingTop","PaddingBottom","PaddingLeft","PaddingRight","Padding","Spacing","AspectRatio","AspectType","DominantAxis","MaxSize","MinSize","MaxTextSize","MinTextSize","Enabled","ResetOnSpawn","DisplayOrder","IgnoreGuiInset","ClipToDeviceSafeArea","SafeAreaCompatibility","ScreenInsets","SizingMode","PixelsPerStud","AlwaysOnTop","Adornee","Brightness","ZOffset","MaxDistance","DistanceLowerLimit","DistanceUpperLimit","ExtentsOffset","ExtentsOffsetWorldSpace","StudsOffset","StudsOffsetWorldSpace","SizeOffset","LightColor","LightDirection","Ambient","Range","Angle","Shadows","OutdoorAmbient","ColorShift_Top","ColorShift_Bottom","GeographicLatitude","ClockTime","TimeOfDay","FogColor","FogStart","FogEnd","GlobalShadows","EnvironmentDiffuseScale","EnvironmentSpecularScale","ExposureCompensation","Technology","ShadowSoftness","SkyboxBk","SkyboxDn","SkyboxFt","SkyboxLf","SkyboxRt","SkyboxUp","SkyboxOrientation","SunAngularSize","MoonAngularSize","SunTextureId","MoonTextureId","StarCount","CelestialBodiesShown","Outlines","Volume","Pitch","Looped","PlayOnRemove","TimePosition","PlaybackSpeed","Playing","RollOffMode","RollOffMinDistance","RollOffMaxDistance","EmitterSize","Source","Disabled","RunContext","LinkedSource","Lifetime","Rate","Speed","Drag","Acceleration","LockedToPart","VelocityInheritance","Squash","EmissionDirection","Sequence","TimeScale","TextureMode","RotSpeed","SpreadAngle","SpawnRadius","Width0","Width1","TextureLength","FaceCamera","Segments","CurveSize0","CurveSize1","Attachment0","Attachment1","AttachmentForward","AttachmentRight","AttachmentUp","HeadColor","TorsoColor","LeftArmColor","RightArmColor","LeftLegColor","RightLegColor","Number","TargetRadius","MinRadius","Radius","Gain","Diffuse","Specular","Velocity","Focus","FieldOfView","ReverbType","DistanceFactor","AngularSpeed","Facing","DesiredAngle","CurrentAngle","MotorType","MaxVelocity","MaxTorque","P","D","Coefficient","OuterConeAngle","InnerConeAngle","Depth","Height","Width","DepthMode","FaceMode","Animation","Weight","CollisionFidelity","ClusterId","PhysicalConfigData","PhysicsData","ChildData","MeshSize","InitialSize","InitialCFrame","UnscaledCframe","UnscaledSize","AssetId","SmoothGrid","MaterialColors","WaterColor","WaterWaveSize","WaterWaveSpeed","WaterReflectance","WaterTransparency","Decoration","LeftParamA","LeftParamB","RightParamA","RightParamB","TopParamA","TopParamB","BottomParamA","BottomParamB","FrontParamA","FrontParamB","BackParamA","BackParamB","PrimaryPart","ModelInPrimary","Loop","IsPlaying","Priority","Time","EasingStyle","EasingDirection","Pose","Mode","Grip","GripForward","GripPos","GripRight","GripUp","ToolTip","CanBeDropped","RequiresHandle","ManualActivationOnly","BinType","Whitelist","Blacklist","AutoAssignable","TeamColor","Gravity","FallHeightEnabled","FallenPartsDestroyHeight","StreamingEnabled","StreamingIntegrityMode","StreamingMinRadius","StreamingTargetRadius","TerrainWeldsFixed","DistributedGameTime","AllowThirdPartySales","ResetPlayerGuiOnSpawn","LoadCharacterAppearance","LoadCharacterLayeredClothing","UserEmotesEnabled","CameraMaxZoomDistance","CameraMinZoomDistance","CageMeshId","ReferenceMeshId","AutoSkin","ShrinkFactor","Stiffness","Order","DebugMode","ColorMap","NormalMap","RoughnessMap","MetalnessMap","EmissiveMask","AlphaMode","Metalness","Roughness","TexturePack","OffsetStudsU","OffsetStudsV","StudsPerTileU","StudsPerTileV","BasePartMaterial","Use2022Materials","MaxActivationDistance","HoldDuration","ActionText","ObjectText","KeyboardKeyCode","GamepadKeyCode","RequiresLineOfSight","ClickablePrompt","Exclusivity","UIOffset","FillColor","FillTransparency","OutlineColor","OutlineTransparency","GroupColor3","GroupTransparency","CornerRadius","ApplyStrokeMode","LineJoinMode","LimitsEnabled","UpperAngle","LowerAngle","TwistLimitsEnabled","TwistLowerAngle","TwistUpperAngle","Restitution","Length","Thickness","LimitAngle0","LimitAngle1","FreeLength","Coils","Damping","MaxLength","MinLength","MotorMaxAcceleration","MotorMaxTorque","MotorSpeed","ServoMaxTorque","TargetAngle","Part0","Part1","C0","C1","Axis","SecondaryAxis","LocalTransparencyModifier","Transform","AutoLocalize","RootLocalizationTable","UsePartColor","ScaleTo","AutoResume","PlaybackRegion","RegionDirection","LoopRegion","SoundGroup","AudioEqualizer","AudioFilter","StyleRule","StyleSheet","StyleLink","AdShape","Puffiness","ReferenceOrigin","BindOffset","WorldCageMeshId","Bevel","BevelRoundness","BevelType","PassThrough","Label","ModifierId","LineThickness","SurfaceColor3","SurfaceTransparency","LineColor3","TextureSpeed","LightEmission","LightInfluence","Density","Decay","Glare","Haze","Cover","CloudsEnabled","ForceLimitMode","ForceLimitsEnabled","LineDirection","LineVelocity","MaxForce","MaxAxesForce","PlaneVelocity","PrimaryTangentAxis","RelativeTo","SecondaryTangentAxis","VectorVelocity","VelocityConstraintMode","AngularVelocity","ReactionTorqueEnabled","ApplyAtCenterOfMass","Force","ReactionForceEnabled","Responsiveness","RigidityEnabled","WorldCFrame","WorldPosition","WorldOrientation","WorldAxis","WorldSecondaryAxis","WorldBasis","TransformedCFrame","TransformedWorldCFrame","RenderMesh","CollisionMesh"],"instance_specific":{"Tool":["TextureId","ToolTip","CanBeDropped","RequiresHandle","ManualActivationOnly","Enabled","Grip","GripForward","GripPos","GripRight","GripUp"],"Part":["Shape","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","TopSurface","BottomSurface","LeftSurface","RightSurface","FrontSurface","BackSurface","CustomPhysicalProperties","FormFactor","Velocity"],"WedgePart":["Shape","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","CustomPhysicalProperties"],"CornerWedgePart":["Shape","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","CustomPhysicalProperties"],"TrussPart":["Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","Style"],"SpawnLocation":["Size","CFrame","Anchored","CanCollide","Transparency","Material","MaterialVariant","BrickColor","Color","Enabled","Duration","Neutral","TeamColor","AllowTeamChangeOnTouch"],"Seat":["Size","CFrame","Anchored","CanCollide","Material","MaterialVariant","BrickColor","Color","Disabled"],"VehicleSeat":["Size","CFrame","Anchored","CanCollide","Material","MaterialVariant","BrickColor","Color","MaxSpeed","Torque","TurnSpeed","HeadsUpDisplay","Disabled"],"MeshPart":["MeshId","TextureID","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","RenderFidelity","CollisionFidelity","DoubleSided","LevelOfDetail","MeshSize","InitialSize","Texture","CustomPhysicalProperties","RenderMesh"],"UnionOperation":["AssetId","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","RenderFidelity","CollisionFidelity","ChildData","PhysicsData","PhysicalConfigData","InitialSize","InitialCFrame","MeshSize","CustomPhysicalProperties"],"IntersectOperation":["AssetId","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","RenderFidelity","CollisionFidelity","ChildData","PhysicsData","PhysicalConfigData","InitialSize","InitialCFrame","MeshSize","CustomPhysicalProperties"],"NegateOperation":["AssetId","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","ChildData","PhysicsData","PhysicalConfigData","InitialSize","InitialCFrame","MeshSize","CustomPhysicalProperties"],"PartOperation":["AssetId","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","RenderFidelity","CollisionFidelity","ChildData","PhysicsData","PhysicalConfigData","InitialSize","InitialCFrame","MeshSize","CustomPhysicalProperties"],"SpecialMesh":["MeshId","MeshType","Scale","Offset","VertexColor","TextureId","Texture"],"CylinderMesh":["Scale","Offset","VertexColor"],"BlockMesh":["Scale","Offset","VertexColor"],"WedgeMesh":["Scale","Offset","VertexColor"],"SphereMesh":["Scale","Offset","VertexColor"],"BevelMesh":["Scale","Offset","VertexColor","Bevel","BevelRoundness","BevelType"],"FileMesh":["MeshId","TextureId","Scale","Offset","VertexColor"],"Decal":["Face","Texture","Color3","Transparency","ZIndex","LocalTransparencyModifier"],"Texture":["Face","Texture","Color3","Transparency","ZIndex","OffsetStudsU","OffsetStudsV","StudsPerTileU","StudsPerTileV","LocalTransparencyModifier"],"SurfaceAppearance":["ColorMap","NormalMap","RoughnessMap","MetalnessMap","EmissiveMask","AlphaMode","Color3","Metalness","Roughness","TexturePack"],"Terrain":["WaterColor","WaterWaveSize","WaterWaveSpeed","WaterReflectance","WaterTransparency","Decoration"],"Lighting":["Ambient","OutdoorAmbient","ColorShift_Top","ColorShift_Bottom","Brightness","ClockTime","TimeOfDay","GeographicLatitude","FogColor","FogStart","FogEnd","GlobalShadows","ShadowSoftness","EnvironmentDiffuseScale","EnvironmentSpecularScale","ExposureCompensation","Technology","SkyboxBk","SkyboxDn","SkyboxFt","SkyboxLf","SkyboxRt","SkyboxUp","SkyboxOrientation","SunAngularSize","MoonAngularSize","SunTextureId","MoonTextureId","StarCount","CelestialBodiesShown","Outlines","CloudsEnabled"],"Atmosphere":["Density","Offset","Color","Decay","Glare","Haze"],"Clouds":["Cover","Density","Color","Enabled"],"Sky":["SkyboxBk","SkyboxDn","SkyboxFt","SkyboxLf","SkyboxRt","SkyboxUp","SkyboxOrientation","SunAngularSize","MoonAngularSize","SunTextureId","MoonTextureId","StarCount","CelestialBodiesShown"],"BloomEffect":["Enabled","Intensity","Size","Threshold"],"BlurEffect":["Enabled","Size"],"ColorCorrectionEffect":["Enabled","Brightness","Contrast","Saturation","TintColor"],"DepthOfFieldEffect":["Enabled","FarIntensity","FocusDistance","InFocusRadius","NearIntensity"],"SunRaysEffect":["Enabled","Intensity","Spread"],"PointLight":["Enabled","Brightness","Color","Range","Shadows"],"SpotLight":["Enabled","Brightness","Color","Range","Angle","Face","Shadows"],"SurfaceLight":["Enabled","Brightness","Color","Range","Angle","Face","Shadows"],"Sound":["SoundId","Volume","Pitch","Looped","Playing","PlayOnRemove","PlaybackSpeed","TimePosition","RollOffMode","RollOffMinDistance","RollOffMaxDistance","EmitterSize","SoundGroup","ReverbType","DistanceFactor","MaxDistance","PlaybackRegion","LoopRegion","TimeLength","AudioEqualizer","AudioFilter"],"SoundGroup":["Volume"],"Animation":["AnimationId"],"KeyframeSequence":["Loop","Priority"],"Keyframe":["Time"],"Pose":["CFrame","Weight","EasingStyle","EasingDirection"],"Humanoid":["Health","MaxHealth","WalkSpeed","JumpPower","JumpHeight","HipHeight","AutoRotate","AutoJumpEnabled","AutoScalingEnabled","DisplayDistanceType","HealthDisplayDistance","NameDisplayDistance","DisplayName","RigType","BodyTypeScale","BodyDepthScale","BodyWidthScale","BodyHeightScale","HeadScale","BodyProportionScale","UniformScale","OriginalSize","AnimationId"],"BodyColors":["HeadColor","TorsoColor","LeftArmColor","RightArmColor","LeftLegColor","RightLegColor"],"CharacterMesh":["BasePart","MeshId","Overlay","BodyPart","TextureId"],"Attachment":["CFrame","Position","Orientation","Axis","SecondaryAxis","Visible","WorldCFrame","WorldPosition","WorldOrientation","WorldAxis","WorldSecondaryAxis"],"Bone":["CFrame","Position","Orientation","Transform","TransformedCFrame","TransformedWorldCFrame"],"Motor6D":["Part0","Part1","C0","C1","CurrentAngle","DesiredAngle","MaxVelocity","Transform"],"Motor":["Part0","Part1","C0","C1","CurrentAngle","DesiredAngle","MaxVelocity"],"Weld":["Part0","Part1","C0","C1"],"WeldConstraint":["Part0","Part1","Enabled"],"Snap":["Part0","Part1","C0","C1"],"Rotate":["Part0","Part1","C0","C1"],"RotateP":["Part0","Part1","C0","C1"],"RotateV":["Part0","Part1","C0","C1"],"Glue":["Part0","Part1","C0","C1","F0","F1"],"HingeConstraint":["Attachment0","Attachment1","MotorMaxAcceleration","MotorMaxTorque","MotorSpeed","ServoMaxTorque","TargetAngle","AngularVelocity","AngularSpeed","ActuatorType","LimitsEnabled","LowerAngle","UpperAngle","Radius","Visible","Enabled"],"BallSocketConstraint":["Attachment0","Attachment1","LimitsEnabled","UpperAngle","TwistLimitsEnabled","TwistLowerAngle","TwistUpperAngle","Restitution","Radius","Visible","Enabled"],"RodConstraint":["Attachment0","Attachment1","Length","Thickness","LimitsEnabled","LimitAngle0","LimitAngle1","Visible","Enabled"],"RopeConstraint":["Attachment0","Attachment1","Length","Thickness","Restitution","Visible","Enabled"],"SpringConstraint":["Attachment0","Attachment1","FreeLength","Coils","Damping","Stiffness","MaxForce","MaxLength","MinLength","Thickness","Visible","Enabled"],"TorsionSpringConstraint":["Attachment0","Attachment1","Coils","Damping","MaxAngle","MaxTorque","Radius","Restitution","Stiffness","Visible","Enabled"],"UniversalConstraint":["Attachment0","Attachment1","LimitsEnabled","MaxAngle","Radius","Restitution","Visible","Enabled"],"CylindricalConstraint":["Attachment0","Attachment1","AngularActuatorType","AngularLimitsEnabled","AngularRestitution","AngularSpeed","AngularVelocity","InclinationAngle","LinearActuatorType","LinearLimitsEnabled","LinearRestitution","LinearVelocity","LowerAngle","LowerLimit","MotorMaxAcceleration","MotorMaxForce","Radius","ServoMaxForce","UpperAngle","UpperLimit","Visible","Enabled"],"PrismaticConstraint":["Attachment0","Attachment1","ActuatorType","LimitsEnabled","LowerLimit","UpperLimit","MotorMaxAcceleration","MotorMaxForce","Restitution","ServoMaxForce","Speed","Velocity","Visible","Enabled"],"PlaneConstraint":["Attachment0","Attachment1","Visible","Enabled"],"AlignPosition":["Attachment0","Attachment1","ApplyAtCenterOfMass","MaxForce","MaxVelocity","Position","ReactionForceEnabled","Responsiveness","RigidityEnabled","Mode","Enabled"],"AlignOrientation":["Attachment0","Attachment1","AlignType","CFrame","MaxAngularVelocity","MaxTorque","Mode","PrimaryAxisOnly","ReactionTorqueEnabled","Responsiveness","RigidityEnabled","Enabled"],"LinearVelocity":["Attachment0","ForceLimitMode","ForceLimitsEnabled","LineDirection","LineVelocity","MaxForce","MaxAxesForce","PlaneVelocity","PrimaryTangentAxis","RelativeTo","SecondaryTangentAxis","VectorVelocity","VelocityConstraintMode","Visible","Enabled"],"AngularVelocity":["Attachment0","AngularVelocity","MaxTorque","ReactionTorqueEnabled","RelativeTo","Visible","Enabled"],"VectorForce":["Attachment0","ApplyAtCenterOfMass","Force","RelativeTo","Visible","Enabled"],"Torque":["Attachment0","RelativeTo","Torque","Visible","Enabled"],"ParticleEmitter":["Acceleration","Brightness","Color","ColorShift","Drag","EmissionDirection","EmitterSize","Enabled","FlipbookFramerate","FlipbookLayout","FlipbookMode","FlipbookStartRandom","Lifetime","LightEmission","LightInfluence","LockedToPart","Orientation","Rate","RotSpeed","Rotation","Shape","ShapeInOut","ShapePartial","ShapeStyle","Size","Size2","SoftParticlesEnabled","SoftParticlesFar","SoftParticlesNear","Speed","SpreadAngle","Squash","Texture","TimeScale","Transparency","VelocityInheritance","WindAffectsDrag","ZOffset"],"Beam":["Attachment0","Attachment1","Brightness","Color","CurveSize0","CurveSize1","Enabled","FaceCamera","LightEmission","LightInfluence","Segments","Texture","TextureLength","TextureMode","TextureSpeed","Transparency","Width0","Width1","ZOffset"],"Trail":["Attachment0","Attachment1","Brightness","Color","Enabled","FaceCamera","Lifetime","LightEmission","LightInfluence","MaxLength","MinLength","Texture","TextureLength","TextureMode","Transparency","WidthScale"],"Fire":["Enabled","Color","SecondaryColor","Heat","Size"],"Smoke":["Enabled","Color","Opacity","RiseVelocity","Size"],"Sparkles":["Enabled","Color","SparkleColor","TimeScale"],"ScreenGui":["DisplayOrder","Enabled","IgnoreGuiInset","ResetOnSpawn","ScreenInsets","ClipToDeviceSafeArea","SafeAreaCompatibility","ZIndexBehavior"],"SurfaceGui":["Adornee","AlwaysOnTop","Brightness","CanvasSize","ClipsDescendants","Enabled","Face","LightInfluence","MaxDistance","PixelsPerStud","ResetOnSpawn","SizingMode","ToolPunchThroughDistance","ZOffset","ZIndexBehavior"],"BillboardGui":["Adornee","AlwaysOnTop","Brightness","ClipsDescendants","DistanceLowerLimit","DistanceUpperLimit","Enabled","ExtentsOffset","ExtentsOffsetWorldSpace","LightInfluence","MaxDistance","ResetOnSpawn","Size","SizeOffset","StudsOffset","StudsOffsetWorldSpace","ZIndexBehavior"],"Frame":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","ClipsDescendants","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","Style","AutomaticSize"],"ScrollingFrame":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","CanvasSize","CanvasPosition","ScrollBarThickness","ScrollBarImageColor3","ScrollBarImageTransparency","ElasticBehavior","ScrollingDirection","ScrollingEnabled","VerticalScrollBarInset","HorizontalScrollBarInset","AutomaticCanvasSize","ClipsDescendants","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","Style"],"CanvasGroup":["GroupColor3","GroupTransparency","BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","ClipsDescendants","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutomaticSize"],"ViewportFrame":["CurrentCamera","Ambient","LightColor","LightDirection","ImageColor3","ImageTransparency","BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active"],"VideoFrame":["Video","Playing","Looped","TimePosition","Volume","PlaybackSpeed","BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active"],"TextLabel":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Text","TextColor3","TextSize","TextScaled","TextWrapped","TextStrokeColor3","TextStrokeTransparency","TextTransparency","RichText","Font","FontFace","LineHeight","MaxVisibleGraphemes","TextXAlignment","TextYAlignment","TextTruncate","TextFits","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutoLocalize","AutomaticSize"],"TextButton":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Text","TextColor3","TextSize","TextScaled","TextWrapped","TextStrokeColor3","TextStrokeTransparency","TextTransparency","RichText","Font","FontFace","LineHeight","MaxVisibleGraphemes","TextXAlignment","TextYAlignment","TextTruncate","TextFits","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutoButtonColor","Modal","Style","AutoLocalize","AutomaticSize"],"TextBox":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Text","TextColor3","TextSize","TextScaled","TextWrapped","TextStrokeColor3","TextStrokeTransparency","TextTransparency","RichText","Font","FontFace","LineHeight","MaxVisibleGraphemes","TextXAlignment","TextYAlignment","TextTruncate","TextFits","PlaceholderText","PlaceholderColor3","ClearTextOnFocus","MultiLine","TextEditable","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutoLocalize","AutomaticSize"],"ImageLabel":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Image","ImageColor3","ImageRectOffset","ImageRectSize","ImageTransparency","ResampleMode","ScaleType","SliceCenter","SliceScale","TileSize","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutomaticSize"],"ImageButton":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Image","ImageColor3","ImageRectOffset","ImageRectSize","ImageTransparency","ResampleMode","ScaleType","SliceCenter","SliceScale","TileSize","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutoButtonColor","Modal","Style","AutomaticSize"],"UIListLayout":["Padding","FillDirection","HorizontalAlignment","VerticalAlignment","SortOrder","HorizontalFlex","VerticalFlex","Wraps"],"UIGridLayout":["CellPadding","CellSize","FillDirection","FillDirectionMaxCells","HorizontalAlignment","VerticalAlignment","SortOrder","StartCorner"],"UITableLayout":["FillDirection","FillEmptySpaceColumns","FillEmptySpaceRows","HorizontalAlignment","MajorAxis","Padding","SortOrder","VerticalAlignment"],"UIPageLayout":["Animated","Circular","EasingDirection","EasingStyle","FillDirection","GamepadInputEnabled","HorizontalAlignment","Padding","ScrollWheelInputEnabled","SortOrder","TouchInputEnabled","TweenTime","VerticalAlignment"],"UIPadding":["PaddingTop","PaddingBottom","PaddingLeft","PaddingRight"],"UICorner":["CornerRadius"],"UIStroke":["ApplyStrokeMode","Color","Enabled","LineJoinMode","Thickness","Transparency"],"UIGradient":["Color","Enabled","Offset","Rotation","Transparency"],"UIScale":["Scale"],"UIAspectRatioConstraint":["AspectRatio","AspectType","DominantAxis"],"UISizeConstraint":["MaxSize","MinSize"],"UITextSizeConstraint":["MaxTextSize","MinTextSize"],"Highlight":["Adornee","DepthMode","Enabled","FillColor","FillTransparency","OutlineColor","OutlineTransparency"],"ClickDetector":["MaxActivationDistance","CursorIcon"],"ProximityPrompt":["ActionText","ObjectText","HoldDuration","MaxActivationDistance","RequiresLineOfSight","KeyboardKeyCode","GamepadKeyCode","ClickablePrompt","Exclusivity","UIOffset","Style","Enabled","AutoLocalize"],"Team":["TeamColor","AutoAssignable"],"Camera":["CameraType","CameraSubject","CFrame","Focus","FieldOfView","CameraMode","FieldOfViewMode","MaxAxisFieldOfView","DiagonalFieldOfView"],"Model":["PrimaryPart","WorldPivot","ModelInPrimary"],"Folder":[],"Configuration":[],"NumberValue":["Value"],"StringValue":["Value"],"BoolValue":["Value"],"IntValue":["Value"],"ObjectValue":["Value"],"Vector3Value":["Value"],"CFrameValue":["Value"],"Color3Value":["Value"],"BrickColorValue":["Value"],"RayValue":["Value"],"RemoteEvent":[],"RemoteFunction":[],"BindableEvent":[],"BindableFunction":[],"Script":["Source","Disabled","RunContext","LinkedSource"],"LocalScript":["Source","Disabled","RunContext","LinkedSource"],"ModuleScript":["Source","Disabled","RunContext","LinkedSource"],"WrapLayer":["AutoSkin","BindOffset","CageMeshId","ColorMap","Enabled","Order","Puffiness","ReferenceMeshId","ReferenceOrigin","ShrinkFactor","Stiffness"],"WrapTarget":["AutoSkin","CageMeshId","ColorMap","Depth","Height","ReferenceMeshId","Stiffness","Width"],"PathfindingModifier":["PassThrough","Label","ModifierId"],"PathfindingLink":["Attachment0","Attachment1"],"Actor":["Enabled"],"StyleRule":["Selector","Properties","Priority"],"StyleSheet":["Source"],"StyleLink":["StyleSheet"],"AudioPlayer":["AssetId","Volume","PlaybackSpeed","Looped","Playing","TimePosition"],"AudioDeviceOutput":["Player"],"AudioDeviceInput":["Player"]}},"templates":{"server_script_placeholder":"-- Serverscripts are almost IMPOSSIBLE to save without additional requirements in every serverscript","readme":"--[[\nFishilizer v{{VERSION}}\nSerialized with source recovery via LunaUX and Fishilizer serializer.\n\nGame saved with Fishilizer\n\nhttps://github.com/Civilation/Fishilizer\nhttps://civilation.github.io/Fishilizer/\n\n\n\n                                ...........\n                           .....          \n                        ....              \n                     ....                 \n                 .....                    \n                ....                      \n               .....                      \n             ...                          \n  ....     ...                            \n ....    ...                              \n..     ...                   .............\n...   ..               ...................\n  .....            .......................\n               ...........................\n              ..........   ...............\n                 .........................\n                     .....................\n             .............................\n               ...........................\n                   .......................\n                       . .................\n\n\n\nFor assistance on Fishilizer join https://discord.gg/avafsVeTZ\n\nFishilizer is not responsible for failing to decompile scripts or modules.\n\nGENERATION\n  Place: {{PLACE_NAME}}\n  PlaceId: {{PLACE_ID}}\n  JobId: {{JOB_ID}}\n  Mode: {{MODE}}\n  Decompile: {{DECOMPILE}}\n  TerrainResolution: {{TERRAIN_RESOLUTION}}\n  Depth: {{DEPTH}}\n  Saved at (UTC): {{TIMESTAMP}}\n]]"}}}</script>
 
 <script>
 var FISH_DATA = JSON.parse(document.getElementById("fish-data").textContent);
 
 var FishAPI = (function(){
   var d = FISH_DATA;
-  var classes = Object.keys(d.instance_specific).sort();
+  var tables = d.tables;
+  var classes = Object.keys(tables.instance_specific).sort();
+
   var endpoints = [
-    { path: "/api/version", label: "version", data: function(){ return d.version; } },
-    { path: "/api/options", label: "options", data: function(){ return d.options; } },
-    { path: "/api/instance-specific", label: "instance-specific", data: function(){ return d.instance_specific; } },
-    { path: "/api/classes", label: "classes", data: function(){ return classes; } },
-    { path: "/api/critical-props", label: "critical-props", data: function(){ return d.critical_props; } },
-    { path: "/api/binary-props", label: "binary-props", data: function(){ return d.binary_props; } },
-    { path: "/api/real-content-props", label: "real-content-props", data: function(){ return d.real_content_props; } },
-    { path: "/api/content-prop-exact", label: "content-prop-exact", data: function(){ return d.content_prop_exact; } },
-    { path: "/api/core-script-names", label: "core-script-names", data: function(){ return d.core_script_names; } },
-    { path: "/api/character-classes", label: "character-classes", data: function(){ return d.character_classes; } },
-    { path: "/api/skip-svc", label: "skip-svc", data: function(){ return d.skip_svc; } },
-    { path: "/api/skip-prop", label: "skip-prop", data: function(){ return d.skip_prop; } },
-    { path: "/api/attr-type-ids", label: "attr-type-ids", data: function(){ return d.attr_type_ids; } },
-    { path: "/api/ser-types", label: "ser-types", data: function(){ return d.ser_types; } },
-    { path: "/api/server-script-placeholder", label: "server-script-placeholder", data: function(){ return d.server_script_placeholder; } },
-    { path: "/api/readme-template", label: "readme-template", data: function(){ return d.readme_template; } },
-    { path: "/api/all", label: "all", data: function(){ return d; } }
+    { path: "/api/version", data: function(){ return d.meta.version; } },
+    { path: "/api/options", data: function(){ return d.options; } },
+    { path: "/api/decompiler", data: function(){ return d.decompiler; } },
+    { path: "/api/tables", data: function(){ return tables; } },
+    { path: "/api/instance-specific", data: function(){ return tables.instance_specific; } },
+    { path: "/api/classes", data: function(){ return classes; } },
+    { path: "/api/critical-props", data: function(){ return tables.critical_props; } },
+    { path: "/api/binary-props", data: function(){ return tables.binary_props; } },
+    { path: "/api/real-content-props", data: function(){ return tables.real_content_props; } },
+    { path: "/api/content-prop-exact", data: function(){ return tables.content_prop_exact; } },
+    { path: "/api/core-script-names", data: function(){ return tables.core_script_names; } },
+    { path: "/api/character-classes", data: function(){ return tables.character_classes; } },
+    { path: "/api/skip-svc", data: function(){ return tables.skip_svc; } },
+    { path: "/api/skip-prop", data: function(){ return tables.skip_prop; } },
+    { path: "/api/attr-type-ids", data: function(){ return tables.attr_type_ids; } },
+    { path: "/api/ser-types", data: function(){ return tables.ser_types; } },
+    { path: "/api/templates", data: function(){ return d.templates; } },
+    { path: "/api/all", data: function(){ return d; } }
   ];
 
   function get(path){
@@ -938,28 +485,18 @@ var FishAPI = (function(){
     }
     if (path.indexOf("/api/instance-specific/") === 0){
       var cls = path.slice("/api/instance-specific/".length);
-      return d.instance_specific[cls] || null;
+      return tables.instance_specific[cls] || null;
     }
     return null;
   }
 
   return {
-    version: d.version,
+    meta: d.meta,
     options: d.options,
-    instance_specific: d.instance_specific,
+    decompiler: d.decompiler,
+    tables: tables,
+    templates: d.templates,
     classes: classes,
-    critical_props: d.critical_props,
-    binary_props: d.binary_props,
-    real_content_props: d.real_content_props,
-    content_prop_exact: d.content_prop_exact,
-    core_script_names: d.core_script_names,
-    character_classes: d.character_classes,
-    skip_svc: d.skip_svc,
-    skip_prop: d.skip_prop,
-    attr_type_ids: d.attr_type_ids,
-    ser_types: d.ser_types,
-    server_script_placeholder: d.server_script_placeholder,
-    readme_template: d.readme_template,
     endpoints: endpoints,
     get: get,
     raw: d
@@ -1021,7 +558,7 @@ window.FishAPI = FishAPI;
 
   function highlight(src){
     src = src.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-    var rx = /(--\[\[[\s\S]*?\]\]|--[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')|(\b0x[0-9a-fA-F]+\b|\b\d+(?:\.\d+)?\b)|(\b(?:local|function|end|if|then|else|elseif|for|while|do|return|break|in|repeat|until|and|or|not|nil|true|false|self)\b)|(\b(?:print|pairs|ipairs|tostring|tonumber|type|typeof|pcall|xpcall|error|assert|require|select|unpack|setmetatable|getmetatable|rawget|rawset|loadstring|next|game|workspace|script|Instance|Enum|task|wait|getgenv|writefile|readfile|isfile|isfolder|makefolder|delfile|HttpGet|HttpGetAsync|Save|SaveGame|SaveScripts|SaveModels|Init|FishAPI)\b)/g;
+    var rx = /(--\[\[[\s\S]*?\]\]|--[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')|(\b0x[0-9a-fA-F]+\b|\b\d+(?:\.\d+)?\b)|(\b(?:local|function|end|if|then|else|elseif|for|while|do|return|break|in|repeat|until|and|or|not|nil|true|false|self)\b)|(\b(?:print|pairs|ipairs|tostring|tonumber|type|typeof|pcall|xpcall|error|assert|require|select|unpack|setmetatable|getmetatable|rawget|rawset|loadstring|next|game|workspace|script|Instance|Enum|task|wait|getgenv|writefile|readfile|isfile|isfolder|makefolder|delfile|HttpGet|HttpGetAsync|Save|SaveGame|SaveScripts|SaveModels|Init|LoadData|FishAPI)\b)/g;
     return src.replace(rx, function(m, com, str, num, kw, fn){
       if (com) return '<span class="c-com">'+com+'</span>';
       if (str) return '<span class="c-str">'+str+'</span>';
@@ -1110,6 +647,57 @@ window.FishAPI = FishAPI;
     document.body.removeChild(ta);
   }
 
+  var optDesc = {
+    Decompile: "Runs the LunaUX decompiler on every LocalScript and ModuleScript.",
+    MaxThreads: "Number of parallel decompile workers.",
+    SaveBytecode: "If decompilation fails or source is empty, saves base64 bytecode instead.",
+    RemovePlayerCharacters: "Strips every player character model from the save.",
+    IncludeBackpack: "Temporarily moves runtime tools to StarterPack to preserve hotbar icons.",
+    IgnoreDefaultProps: "Compares properties to a fresh Instance.new() and skips them.",
+    IgnoreNotArchivable: "Skips any instance where Archivable = false.",
+    UseGetProperties: "Calls getproperties(inst) to enumerate every engine property.",
+    FetchDocs: "Pulls the MaximumADHD API dump on Init to generate live class maps.",
+    APIProperties: "Gates every emitted property against the API dump for stability.",
+    Mode: "Accepts full, scripts, or models.",
+    FilePath: "Absolute output path. Overrides OUT.",
+    Callback: "function(xml) instead of writing to disk.",
+    Clipboard: "Copies the XML to the clipboard instead of writing a file.",
+    AvoidFileOverwrite: "Does not delete existing files at the target path.",
+    KillAllScripts: "Disables all running scripts before saving.",
+    Anonymous: "Replaces player names with Player_UserId.",
+    EmitTags: "Serializes CollectionService tags.",
+    EmitAttributes: "Serializes GetAttributes() into binary blobs.",
+    StripCharacters: "Automatically removes character models.",
+    StripCoreScripts: "Automatically removes Roblox internal modules.",
+    TerrainResolution: "Voxel resolution for Terrain:ReadVoxels() capture.",
+    TerrainCellCap: "Max voxel count before resolution auto-raises.",
+    Depth: "Maximum recursion depth.",
+    Notify: "Toasts on start, finish, and fail.",
+    ShowStatus: "Shows the fading status text in CoreGui.",
+    ReadMe: "Emits an enabled README Script at game root next to Lighting.",
+    OUT: "Folder name when no FilePath is specified.",
+    DataAPIURL: "Where to fetch the data JSON from.",
+    APIDumpURL: "Where to fetch the Roblox API dump from."
+  };
+
+  var optTable = document.getElementById("optionsTable");
+  var opts = FishAPI.options;
+  Object.keys(opts).sort().forEach(function(k){
+    var tr = document.createElement("tr");
+    var td1 = document.createElement("td");
+    td1.innerHTML = "<code>" + k + "</code>";
+    var td2 = document.createElement("td");
+    td2.className = "n";
+    var val = opts[k];
+    td2.textContent = typeof val === "string" ? '"' + val + '"' : String(val);
+    var td3 = document.createElement("td");
+    td3.textContent = optDesc[k] || "";
+    tr.appendChild(td1);
+    tr.appendChild(td2);
+    tr.appendChild(td3);
+    optTable.appendChild(tr);
+  });
+
   var dataList = document.getElementById("dataList");
   var dataOut = document.getElementById("dataOut");
   var dataSearch = document.getElementById("dataSearch");
@@ -1128,7 +716,6 @@ window.FishAPI = FishAPI;
     var q = (dataSearch.value || "").toLowerCase().trim();
     dataList.innerHTML = "";
     FishAPI.endpoints.forEach(function(ep){
-      var label = ep.path;
       if (q && ep.path.toLowerCase().indexOf(q) === -1) return;
       var v = ep.data();
       var size = JSON.stringify(v).length;
@@ -1145,7 +732,7 @@ window.FishAPI = FishAPI;
       cls.slice(0, 40).forEach(function(c){
         var el = document.createElement("div");
         el.className = "data-item" + (activePath === "/api/instance-specific/" + c ? " on" : "");
-        el.innerHTML = '<span class="ep-path">/api/instance-specific/' + c + '</span><span class="ep-size">' + FishAPI.instance_specific[c].length + '</span>';
+        el.innerHTML = '<span class="ep-path">/api/instance-specific/' + c + '</span><span class="ep-size">' + FishAPI.tables.instance_specific[c].length + '</span>';
         el.addEventListener("click", function(){ selectEndpoint("/api/instance-specific/" + c); });
         dataList.appendChild(el);
       });
