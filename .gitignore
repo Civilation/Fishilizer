@@ -6,6 +6,5 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Build artifacts
-# (Uncomment the next line if you want to build locally and not upload the compiled file)
-# Fishilizer.lua
+# Compiled build
+Fishilizer.lua
