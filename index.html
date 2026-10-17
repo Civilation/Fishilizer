@@ -1,787 +1,1668 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="light">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://files.catbox.moe https://raw.githubusercontent.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline';">
-<title>Fishilizer</title>
-<meta name="description" content="An accurate, lightweight Roblox place serializer written in pure Lua."/>
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://civilation.github.io/Fishilizer/">
-<meta property="og:title" content="Fishilizer">
-<meta property="og:description" content="An accurate, lightweight Roblox place serializer written in pure Lua.">
-<meta property="og:image" content="https://raw.githubusercontent.com/Civilation/Fishilizer/main/embed.PNG">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Fishilizer">
-<meta name="twitter:description" content="An accurate, lightweight Roblox place serializer written in pure Lua.">
-<meta name="twitter:image" content="https://raw.githubusercontent.com/Civilation/Fishilizer/main/embed.PNG">
-<link rel="icon" type="image/png" href="https://files.catbox.moe/6x81k8.jfif">
-<style>
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Open+Sans:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap");
+--[[
 
-:root {
-  --bg: #eeeeee;
-  --bg-alt: #e4e4e4;
-  --bg-panel: #f5f5f5;
-  --bg-code: #2d2d2d;
-  --fg: #1f1f1f;
-  --fg-2: #565656;
-  --fg-3: #8a8a8a;
-  --border: #cacaca;
-  --border-2: #aeaeae;
-  --line: #d5d5d5;
-  --accent: #2563eb;
-  --accent-glow: rgba(37, 99, 235, 0.35);
-  --yellow: #b8860b;
-  --yellow-glow: rgba(184, 134, 11, 0.35);
-  --code-fg: #e0e0e0;
-  --c-com: #6a9955;
-  --c-str: #ce9178;
-  --c-num: #b5cea8;
-  --c-kw: #569cd6;
-  --c-fn: #dcdcaa;
-  --pattern: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'><g fill='none' stroke='%23d5d5d5' stroke-width='1'><path d='M0,30 L30,0 L60,30 L30,60 Z'/><path d='M0,30 L60,30'/><path d='M30,0 L30,60'/><path d='M15,15 L45,45'/><path d='M45,15 L15,45'/></g></svg>");
+Fishilizer is now open-sourced.
+
+A gift from Garfield Cat. Eventually, once Fishilizer reaches its full capabilities, it will no longer be open-sourced.
+
+Enjoy this special gift <3
+
+]]
+
+
+
+local Fish = {}
+Fish.VERSION = "10.7.1"
+Fish.NAME = "Fishilizer"
+
+local HttpService = game:GetService("HttpService")
+local CollectionService = game:GetService("CollectionService")
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+
+local function resolveIO(name)
+    local g = (getgenv and getgenv()) or _G
+    if g and type(g[name]) == "function" then return g[name] end
+    if type(rawget(_G, name)) == "function" then return rawget(_G, name) end
+    if g then
+        for _, v in pairs(g) do
+            if type(v) == "table" and type(v[name]) == "function" then
+                return v[name]
+            end
+        end
+    end
+    return nil
+end
+
+local IO = {
+    writefile = resolveIO("writefile"),
+    readfile = resolveIO("readfile"),
+    makefolder = resolveIO("makefolder"),
+    isfolder = resolveIO("isfolder"),
+    isfile = resolveIO("isfile"),
+    delfile = resolveIO("delfile"),
+    setclipboard = resolveIO("setclipboard"),
+    getproperties = resolveIO("getproperties"),
 }
 
-html[data-theme="dark"] {
-  --bg: #141414;
-  --bg-alt: #1d1d1d;
-  --bg-panel: #1a1a1a;
-  --bg-code: #121212;
-  --fg: #e0e0e0;
-  --fg-2: #9a9a9a;
-  --fg-3: #656565;
-  --border: #2a2a2a;
-  --border-2: #383838;
-  --line: #262626;
-  --accent: #6ea8fe;
-  --accent-glow: rgba(110, 168, 254, 0.5);
-  --yellow: #e5c07b;
-  --yellow-glow: rgba(229, 192, 123, 0.5);
-  --code-fg: #d4d4d4;
-  --pattern: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'><g fill='none' stroke='%23262626' stroke-width='1'><path d='M0,30 L30,0 L60,30 L30,60 Z'/><path d='M0,30 L60,30'/><path d='M30,0 L30,60'/><path d='M15,15 L45,45'/><path d='M45,15 L15,45'/></g></svg>");
+local function log(msg)
+    pcall(function() print("[Fishilizer] " .. tostring(msg)) end)
+end
+
+local function resolveBytecode()
+    if type(getscriptbytecode) == "function" then return getscriptbytecode end
+    local g = (getgenv and getgenv()) or _G
+    if g then
+        for _, v in pairs(g) do
+            if type(v) == "table" and type(v.getscriptbytecode) == "function" then
+                return v.getscriptbytecode
+            end
+        end
+    end
+    return nil
+end
+
+--- a list of apis
+Fish.Options = {
+    Decompile = true,
+    MaxThreads = 3,
+    SaveBytecode = false,
+    RemovePlayerCharacters = true,
+    IncludeBackpack = true,
+    IgnoreDefaultProps = true,
+    IgnoreNotArchivable = true,
+    UseGetProperties = true,
+    FetchDocs = true,
+    APIProperties = true,
+    Mode = "full",
+    FilePath = false,
+    Callback = false,
+    Clipboard = false,
+    AvoidFileOverwrite = true,
+    KillAllScripts = false,
+    Anonymous = false,
+    EmitTags = true,
+    EmitAttributes = true,
+    StripCharacters = true,
+    StripCoreScripts = true,
+    TerrainResolution = 8,
+    TerrainCellCap = 4194304,
+    Depth = 100,
+    Notify = true,
+    ShowStatus = true,
+    ReadMe = true,
+    OUT = "Fishilizer",
+    DataAPIURL = "https://civilation.github.io/Fishilizer/",
+    APIDumpURL = "https://raw.githubusercontent.com/MaximumADHD/Roblox-Client-Tracker/roblox/API-Dump.json",
+    LunaUXURL = "https://lunaux-decompiler.dev/api/decompile",
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; }
-
-body {
-  background-color: var(--bg);
-  background-image: var(--pattern);
-  background-size: 60px 60px;
-  background-attachment: fixed;
-  color: var(--fg);
-  font-family: 'Open Sans', system-ui, sans-serif;
-  font-size: 0.94rem;
-  line-height: 1.65;
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-  transition: background-color 0.2s, color 0.2s;
-  user-select: none;
-  -webkit-user-select: none;
+local DATA = {
+    version = "0.0.0",
+    instance_specific = {},
+    critical_props = {},
+    binary_props = {},
+    real_content_props = {},
+    content_prop_exact = {},
+    core_script_names = {},
+    character_classes = {},
+    skip_svc = {},
+    skip_prop = {},
+    attr_type_ids = { string=0x02, boolean=0x03, number=0x04 },
+    ser_types = {},
+    server_script_placeholder = "-- Serverscripts are almost IMPOSSIBLE to save without additional requirements in every serverscript",
+    readme_template = "",
+    decompiler = nil,
 }
 
-pre, code, textarea, input { user-select: text; -webkit-user-select: text; }
-a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
+local SKIP_SVC = {}
+local SKIP_PROP = {}
+local BINARY_PROPS = {}
+local CONTENT_PROP_EXACT = {}
+local REAL_CONTENT_PROPS = {}
+local CORE_SCRIPT_NAMES = {}
+local CHARACTER_CLASSES = {}
+local CRITICAL_PROPS = {}
+local CRITICAL_PROPS_SET = {}
+local INSTANCE_SPECIFIC = {}
+local ATTR_TYPE_IDS = { string=0x02, boolean=0x03, number=0x04 }
+local _dataLoaded = false
 
-header {
-  border-bottom: 1px solid var(--border);
-  background: var(--bg);
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  transition: background 0.2s, border-color 0.2s;
+local FALLBACK = {
+    meta = { version = "0.0.0" },
+    tables = {
+        instance_specific = {},
+        critical_props = {
+            "Name","Archivable","Source","Disabled","RunContext","Texture","TextureId","TextureID",
+            "Image","MeshId","SoundId","AnimationId","ShirtTemplate","PantsTemplate","Graphic","Decal",
+            "Size","CFrame","Anchored","CanCollide","CanTouch","Transparency","Reflectance","Material",
+            "Color","BrickColor","Value","Text","FontFace","BackgroundColor3","BackgroundTransparency",
+            "Visible","ZIndex","Ambient","Brightness","ClockTime","Part0","Part1","C0","C1",
+            "Attachment0","Attachment1","SmoothGrid","MaterialColors","ChildData","PhysicsData","PhysicalConfigData"
+        },
+        binary_props = {"SmoothGrid","ChildData","PhysicsData","PhysicalConfigData","MaterialColors"},
+        real_content_props = {"Texture","TextureId","TextureID","Image","MeshId","SoundId","AnimationId","Decal","ShirtTemplate","PantsTemplate","Graphic"},
+        content_prop_exact = {},
+        core_script_names = {},
+        character_classes = {"Humanoid","Head","Torso","HumanoidRootPart","UpperTorso","LowerTorso"},
+        skip_svc = {"CoreGui","CorePackages","CoreScripts","Chat","LogService"},
+        skip_prop = {"Parent","RobloxLocked","HistoryId","ClassName"},
+        attr_type_ids = {string=0x02,boolean=0x03,number=0x04,UDim=0x0D,UDim2=0x10,Vector2=0x12,Vector3=0x13,CFrame=0x10,Color3=0x1A,BrickColor=0x1E,NumberRange=0x1F,NumberSequence=0x20,ColorSequence=0x21,Rect=0x22,Font=0x1C},
+        ser_types = {},
+    },
+    templates = {
+        server_script_placeholder = "-- Serverscripts are almost IMPOSSIBLE to save without additional requirements in every serverscript",
+        readme = "",
+    },
 }
 
-.header-inner {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 0 28px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  gap: 36px;
-}
+local function toSet(arr)
+    local s = {}
+    if type(arr) == "table" then
+        for _, v in ipairs(arr) do
+            if type(v) == "string" then s[v] = true end
+        end
+    end
+    return s
+end
 
-.brand { display: flex; align-items: center; gap: 12px; flex-shrink: 0; text-decoration: none; }
-.brand:hover { text-decoration: none; }
-.brand img { height: 38px; width: 38px; object-fit: contain; display: block; }
-html[data-theme="light"] .brand img { filter: brightness(0); }
-.brand-name { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 1.05rem; letter-spacing: 0.02em; color: var(--fg); }
+local function shouldSkipProp(name)
+    if SKIP_PROP[name] then return true end
+    if CONTENT_PROP_EXACT[name] then return true end
+    return false
+end
 
-nav.top { display: flex; gap: 4px; flex: 1; }
-nav.top a {
-  position: relative;
-  padding: 8px 14px;
-  font-size: 0.88rem;
-  font-weight: 500;
-  color: var(--fg-2);
-  cursor: pointer;
-  border-radius: 3px;
-  transition: color 0.2s, background 0.2s;
-  overflow: hidden;
-}
-nav.top a:hover { color: var(--fg); background: var(--bg-alt); text-decoration: none; }
-nav.top a::after { content: ""; position: absolute; left: 50%; bottom: 2px; width: 0; height: 2px; background: var(--accent); transition: width 0.25s ease, left 0.25s ease; }
-nav.top a.on { color: var(--accent); }
-nav.top a.on::after { width: calc(100% - 20px); left: 10px; }
+local function applyData(d)
+    local t = d.tables or d
+    if type(t.instance_specific) == "table" then INSTANCE_SPECIFIC = t.instance_specific end
+    if type(t.critical_props) == "table" then
+        CRITICAL_PROPS = t.critical_props
+        CRITICAL_PROPS_SET = toSet(t.critical_props)
+    end
+    if type(t.binary_props) == "table" then BINARY_PROPS = toSet(t.binary_props) end
+    if type(t.real_content_props) == "table" then REAL_CONTENT_PROPS = toSet(t.real_content_props) end
+    if type(t.content_prop_exact) == "table" then CONTENT_PROP_EXACT = toSet(t.content_prop_exact) end
+    if type(t.core_script_names) == "table" then CORE_SCRIPT_NAMES = toSet(t.core_script_names) end
+    if type(t.character_classes) == "table" then CHARACTER_CLASSES = toSet(t.character_classes) end
+    if type(t.skip_svc) == "table" then SKIP_SVC = toSet(t.skip_svc) end
+    if type(t.skip_prop) == "table" then SKIP_PROP = toSet(t.skip_prop) end
+    if type(t.attr_type_ids) == "table" then ATTR_TYPE_IDS = t.attr_type_ids end
+    if type(t.ser_types) == "table" then DATA.ser_types = t.ser_types end
 
-.theme-toggle { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid var(--border); border-radius: 3px; background: var(--bg); cursor: pointer; color: var(--fg-2); flex-shrink: 0; transition: all 0.2s; }
-.theme-toggle:hover { border-color: var(--border-2); color: var(--fg); transform: rotate(15deg); }
+    local tmpl = d.templates or d
+    if type(tmpl.server_script_placeholder) == "string" and tmpl.server_script_placeholder ~= "" then
+        DATA.server_script_placeholder = tmpl.server_script_placeholder
+    end
+    if type(tmpl.readme) == "string" and tmpl.readme ~= "" then
+        DATA.readme_template = tmpl.readme
+    end
 
-.container { max-width: 1120px; margin: 0 auto; padding: 56px 28px 96px; }
+    if type(d.decompiler) == "table" then
+        DATA.decompiler = d.decompiler
+    end
 
-.panel { display: none; }
-.panel.on { display: block; animation: panel-in 0.3s ease; }
-@keyframes panel-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    if type(d.options) == "table" then
+        for k, v in pairs(d.options) do
+            if Fish.Options[k] == nil then Fish.Options[k] = v end
+        end
+    end
 
-h1 { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 2rem; letter-spacing: -0.015em; color: var(--fg); margin-bottom: 12px; line-height: 1.25; }
-h2 { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 1.25rem; letter-spacing: -0.01em; color: var(--fg); margin: 44px 0 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
-p { color: var(--fg-2); margin-bottom: 14px; max-width: 780px; }
-.lead { font-size: 1.05rem; color: var(--fg-2); max-width: 720px; margin-bottom: 8px; }
-.accent-blue { color: var(--accent); text-shadow: 0 0 10px var(--accent-glow); font-weight: 500; }
-.accent-yellow { color: var(--yellow); text-shadow: 0 0 10px var(--yellow-glow); font-weight: 500; }
-
-code { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: var(--accent); text-shadow: 0 0 6px var(--accent-glow); }
-
-pre { background: var(--bg-code); border: 1px solid var(--border); border-radius: 3px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.65; color: var(--code-fg); overflow-x: auto; margin: 12px 0 20px; position: relative; }
-pre code { background: none; border: 0; padding: 0; color: inherit; font-size: inherit; text-shadow: none; }
-pre .c-com { color: var(--c-com); font-style: italic; }
-pre .c-str { color: var(--c-str); }
-pre .c-num { color: var(--c-num); }
-pre .c-kw { color: var(--c-kw); }
-pre .c-fn { color: var(--c-fn); }
-
-.copy-btn { position: absolute; top: 10px; right: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--fg-3); background: rgba(255,255,255,0.06); border: 1px solid var(--border-2); border-radius: 3px; padding: 4px 10px; cursor: pointer; z-index: 2; transition: all 0.15s; }
-.copy-btn:hover { color: var(--accent); border-color: var(--accent); }
-.copy-btn.done { color: var(--yellow); border-color: var(--yellow); }
-
-.hero { padding: 24px 0 8px; text-align: center; }
-.hero h1 { margin-bottom: 16px; }
-.hero .lead { margin: 0 auto 24px; }
-
-.discord-widget { display: inline-flex; align-items: center; gap: 14px; padding: 14px 22px; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 4px; margin: 12px 0 28px; color: var(--fg); max-width: 640px; width: 100%; cursor: pointer; text-decoration: none; transition: transform 0.2s, border-color 0.2s; }
-.discord-widget:hover { border-color: var(--accent); transform: translateY(-2px); text-decoration: none; }
-.discord-widget img { width: 42px; height: 42px; object-fit: cover; flex-shrink: 0; border-radius: 8px; }
-.discord-widget-text { flex: 1; text-align: left; }
-.discord-widget-title { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 0.92rem; color: var(--fg); }
-
-table { width: 100%; border-collapse: collapse; margin: 12px 0 28px; font-size: 0.87rem; border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
-th, td { padding: 11px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); color: var(--fg-2); }
-tr:last-child td { border-bottom: 0; }
-th { background: var(--bg-alt); font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); }
-td.n { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--fg-3); }
-
-.builder { display: grid; grid-template-columns: 280px 1fr; gap: 24px; margin: 20px 0; }
-@media (max-width: 760px) { .builder { grid-template-columns: 1fr; } }
-.builder-opts { border: 1px solid var(--border); border-radius: 3px; padding: 18px 20px; background: var(--bg-alt); }
-
-.modes { display: flex; border: 1px solid var(--border); border-radius: 3px; margin-bottom: 18px; background: var(--bg); overflow: hidden; }
-.modes button { flex: 1; padding: 8px 10px; font-family: 'Montserrat', sans-serif; font-weight: 500; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; background: none; border: 0; color: var(--fg-3); cursor: pointer; transition: color 0.2s, background 0.2s; }
-.modes button + button { border-left: 1px solid var(--border); }
-.modes button:hover { color: var(--fg-2); background: var(--bg-alt); }
-.modes button.on { color: var(--accent); background: var(--bg-alt); }
-
-.opt { display: block; font-size: 0.87rem; color: var(--fg-2); padding: 7px 0; cursor: pointer; user-select: none; transition: color 0.15s; }
-.opt:hover { color: var(--fg); }
-.opt input { appearance: none; -webkit-appearance: none; width: 16px; height: 16px; border: 1px solid var(--border-2); border-radius: 4px; background: var(--bg); margin-right: 10px; vertical-align: -3px; cursor: pointer; position: relative; transition: background 0.2s, border-color 0.2s, transform 0.15s; }
-.opt input:hover { border-color: var(--accent); }
-.opt input:active { transform: scale(0.9); }
-.opt input:checked { background: var(--accent); border-color: var(--accent); }
-.opt input:checked::after { content: ""; position: absolute; left: 4.5px; top: 1px; width: 4px; height: 8px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg) scale(0); animation: check-pop 0.2s cubic-bezier(0.5, 1.6, 0.5, 1) forwards; }
-@keyframes check-pop { from { transform: rotate(45deg) scale(0); } to { transform: rotate(45deg) scale(1); } }
-
-.builder-out { border: 1px solid var(--border); border-radius: 3px; position: relative; background: var(--bg-code); min-width: 0; }
-.builder-out pre { margin: 0; border: 0; border-radius: 0; background: transparent; min-height: 320px; }
-
-.note { border-left: 3px solid var(--yellow); background: var(--bg-alt); padding: 12px 18px; margin: 16px 0; font-size: 0.88rem; color: var(--fg-2); max-width: 780px; }
-.note b { color: var(--yellow); }
-
-.data-layout { display: grid; grid-template-columns: 340px 1fr; gap: 24px; margin: 20px 0; }
-@media (max-width: 860px) { .data-layout { grid-template-columns: 1fr; } }
-.data-side { border: 1px solid var(--border); border-radius: 3px; background: var(--bg-alt); overflow: hidden; display: flex; flex-direction: column; max-height: 720px; }
-.data-search { width: 100%; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; background: var(--bg); border: 0; border-bottom: 1px solid var(--border); color: var(--fg); outline: none; }
-.data-search::placeholder { color: var(--fg-3); }
-.data-list { overflow-y: auto; flex: 1; }
-.data-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 14px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--fg-2); cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.12s, color 0.12s; }
-.data-item:last-child { border-bottom: 0; }
-.data-item:hover { background: var(--bg); color: var(--fg); }
-.data-item.on { background: var(--bg); color: var(--accent); }
-.data-item .ep-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.data-item .ep-size { color: var(--fg-3); font-size: 0.72rem; flex-shrink: 0; }
-.data-out { border: 1px solid var(--border); border-radius: 3px; position: relative; background: var(--bg-code); min-width: 0; display: flex; flex-direction: column; }
-.data-out pre { margin: 0; border: 0; border-radius: 0; background: transparent; flex: 1; min-height: 500px; max-height: 720px; overflow-y: auto; }
-.data-actions { display: flex; gap: 6px; position: absolute; top: 10px; right: 10px; z-index: 2; }
-.data-actions .copy-btn { position: static; }
-</style>
-</head>
-<body>
-
-<header>
-  <div class="header-inner">
-    <a class="brand" href="#" data-jump="home">
-      <img src="https://files.catbox.moe/5uumgz.png" alt="Fishilizer">
-      <span class="brand-name">Garfield Cat Presents</span>
-    </a>
-    <nav class="top">
-      <a data-tab="home" class="on">Home</a>
-      <a data-tab="builder">Builder</a>
-      <a data-tab="api">API</a>
-      <a data-tab="options">Options</a>
-      <a data-tab="data">Data</a>
-    </nav>
-    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-      <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-      </svg>
-    </button>
-  </div>
-</header>
-
-<div class="container">
-
-  <section id="tab-home" class="panel on">
-    <div class="hero">
-      <h1>Serialize <span class="accent-blue">any Roblox place</span></h1>
-      <p class="lead">Ever wanted to save a ROBLOX game 1-1 but it failed to save terrain or other contents? <span class="accent-yellow">Fishilizer</span> fixes that.</p>
-      <a class="discord-widget" href="https://discord.gg/GZDXBMjndT" target="_blank" rel="noopener noreferrer">
-        <img src="https://files.catbox.moe/6x81k8.jfif" alt="Garfield Cat Presents">
-        <div class="discord-widget-text">
-          <div class="discord-widget-title">Join Garfield Cat Presents</div>
-        </div>
-      </a>
-    </div>
-    <h2>Quick start</h2>
-    <div style="position:relative">
-      <button class="copy-btn" data-t="qs">copy</button>
-<pre id="qs">loadstring(game:HttpGetAsync(
-    "https://civilation.github.io/Fishilizer/Fishilizer.lua"
-))()</pre>
-    </div>
-    <div class="note">
-      <b>Tip</b> Open the <a href="#" data-jump="data">Data</a> tab to browse every class map and config the serializer pulls at runtime.
-    </div>
-  </section>
-
-  <section id="tab-builder" class="panel">
-    <h1>Builder</h1>
-    <p class="lead">Pick a mode, toggle what you want, copy the loadstring.</p>
-    <div class="builder">
-      <div class="builder-opts">
-        <div class="modes" id="modes">
-          <button data-m="full" class="on">full</button>
-          <button data-m="scripts">scripts</button>
-          <button data-m="models">models</button>
-        </div>
-        <label class="opt"><input type="checkbox" data-k="Decompile" checked> Decompile scripts</label>
-        <label class="opt"><input type="checkbox" data-k="SaveBytecode"> Bytecode fallback</label>
-        <label class="opt"><input type="checkbox" data-k="UseGetProperties" checked> Use getproperties()</label>
-        <label class="opt"><input type="checkbox" data-k="IncludeBackpack" checked> Include backpack tools</label>
-        <label class="opt"><input type="checkbox" data-k="EmitAttributes" checked> Attributes and tags</label>
-        <label class="opt"><input type="checkbox" data-k="StripCharacters" checked> Strip characters</label>
-        <label class="opt"><input type="checkbox" data-k="StripCoreScripts" checked> Strip core scripts</label>
-        <label class="opt"><input type="checkbox" data-k="IgnoreDefaultProps" checked> Skip default props</label>
-        <label class="opt"><input type="checkbox" data-k="FetchDocs" checked> Fetch API dump</label>
-        <label class="opt"><input type="checkbox" data-k="APIProperties" checked> Gate props via API</label>
-        <label class="opt"><input type="checkbox" data-k="KillAllScripts"> Kill scripts</label>
-        <label class="opt"><input type="checkbox" data-k="Notify" checked> Notifications</label>
-      </div>
-      <div class="builder-out">
-        <button class="copy-btn" data-t="out">copy</button>
-        <pre id="out"></pre>
-      </div>
-    </div>
-    <h2>Manual control</h2>
-    <div style="position:relative">
-      <button class="copy-btn" data-t="manual">copy</button>
-<pre id="manual">getgenv().FISHILIZER_NO_AUTORUN = true
-local Fish = loadstring(game:HttpGetAsync(
-    "https://civilation.github.io/Fishilizer/Fishilizer.lua"
-))()
-Fish.Init()
-
-Fish.SaveGame("MyPlace")
-Fish.SaveScripts(game, "ScriptsOnly")
-Fish.SaveModels(game, "ModelsOnly")
-Fish.Save(workspace.MyModel, "SingleModel")</pre>
-    </div>
-    <h2>Multiple hosts</h2>
-    <div style="position:relative">
-      <button class="copy-btn" data-t="mirror">copy</button>
-<pre id="mirror">local HOSTS = {
-    "https://civilation.github.io/Fishilizer/Fishilizer.lua",
-    "https://raw.githubusercontent.com/Civilation/Fishilizer/main/Fishilizer.lua",
-}
-
-local src
-for _, url in ipairs(HOSTS) do
-    local ok, body = pcall(game.HttpGetAsync, game, url)
-    if ok and body and body:find("return", 1, true) then
-        src = body
-        break
+    if d.meta and type(d.meta.version) == "string" then
+        DATA.version = d.meta.version
     end
 end
-assert(src, "all hosts failed")
-loadstring(src)()</pre>
-    </div>
-  </section>
 
-  <section id="tab-api" class="panel">
-    <h1>API Reference</h1>
-    <p class="lead">Fishilizer is a thin serializer. It fetches every class map, option default, and decompiler config from this site at runtime via the <code>&lt;script id="fish-data"&gt;</code> block, so the Lua file stays tiny.</p>
-    <h2>Core Methods</h2>
-    <table>
-      <tr><th style="width:40%">Signature</th><th>Description</th></tr>
-      <tr><td><code>Fish.Init()</code></td><td>Fetches the data API, builds the property cache from the Roblox API dump, prepares the LunaUX decompiler. Returns the Fish table.</td></tr>
-      <tr><td><code>Fish.Save(instance, name?, opts?)</code></td><td>Main entry point. Accepts <code>game</code>, a single Instance, or an array of Instances. Returns the serialized XML string.</td></tr>
-      <tr><td><code>Fish.SaveGame(name?, opts?)</code></td><td>Shorthand for <code>Fish.Save(game, ...)</code>.</td></tr>
-      <tr><td><code>Fish.SaveInstance(inst, name?, opts?)</code></td><td>Forces <code>Mode = "full"</code>.</td></tr>
-      <tr><td><code>Fish.SaveScripts(inst, name?, opts?)</code></td><td>Forces <code>Mode = "scripts"</code> and enables <code>Decompile = true</code>.</td></tr>
-      <tr><td><code>Fish.SaveModels(inst, name?, opts?)</code></td><td>Forces <code>Mode = "models"</code> and forces <code>Decompile = false</code>.</td></tr>
-      <tr><td><code>Fish.FetchClasses(cacheFile?)</code></td><td>Fetches the official Roblox API Dump to enable property gating.</td></tr>
-      <tr><td><code>Fish.LoadData()</code></td><td>Re-fetches the data API without touching the API dump. Useful if the site updates.</td></tr>
-      <tr><td><code>Fish.Data</code></td><td>The full parsed data object: <code>tables</code>, <code>options</code>, <code>decompiler</code>, <code>templates</code>.</td></tr>
-    </table>
-    <h2>Callbacks &amp; Interception</h2>
-    <div style="position:relative">
-      <button class="copy-btn" data-t="cb">copy</button>
-<pre id="cb">getgenv().FISHILIZER_NO_AUTORUN = true
-local Fish = loadstring(game:HttpGetAsync(
-    "https://civilation.github.io/Fishilizer/Fishilizer.lua"
-))()
-Fish.Init()
+local function loadFromAPI()
+    if _dataLoaded then return _dataLoaded end
+    local ok, html = pcall(function() return game:HttpGet(Fish.Options.DataAPIURL) end)
+    if ok and type(html) == "string" and #html > 0 then
+        local blob = html:match('<script[^>]*id="fish%-data"[^>]*>(.-)</script>')
+        if blob then
+            local okD, decoded = pcall(HttpService.JSONDecode, HttpService, blob)
+            if okD and type(decoded) == "table" then
+                applyData(decoded)
+                _dataLoaded = true
+                log("Data API loaded v" .. tostring(DATA.version or "?"))
+                return true
+            end
+        end
+    end
+    log("Data API unreachable, using fallback tables")
+    applyData(FALLBACK)
+    _dataLoaded = true
+    return false
+end
 
-local xml = Fish.Save(game, "Preview", {
-    Callback = function(data)
-        print("bytes: " .. #data)
-    end,
-})</pre>
-    </div>
-    <h2>Advanced Injection</h2>
-    <div style="position:relative">
-      <button class="copy-btn" data-t="adv">copy</button>
-<pre id="adv">getgenv().FISHILIZER_NO_AUTORUN = true
-local Fish = loadstring(game:HttpGetAsync(
-    "https://civilation.github.io/Fishilizer/Fishilizer.lua"
-))()
-Fish.Init()
+local apiClassProps = {}
 
-Fish.Save({
-    workspace,
-    game:GetService("Lighting"),
-    game:GetService("ReplicatedStorage")
-}, "EnvironmentAndAssets", {
-    Mode = "models",
-    IgnoreDefaultProps = true
-})</pre>
-    </div>
-  </section>
+local function buildApiClassProps(data)
+    if type(data) ~= "table" or type(data.Classes) ~= "table" then return end
+    local ownProps = {}
+    local superclass = {}
+    for _, class in ipairs(data.Classes) do
+        local cn = class.Name
+        if cn then
+            superclass[cn] = class.Superclass
+            local props = {}
+            if type(class.Members) == "table" then
+                for _, m in ipairs(class.Members) do
+                    if m.MemberType == "Property" and m.Name then
+                        props[m.Name] = true
+                    end
+                end
+            end
+            ownProps[cn] = props
+        end
+    end
+    local count = 0
+    for cn in pairs(ownProps) do
+        local combined = {}
+        local cur = cn
+        local guard = 0
+        while cur and guard < 50 do
+            local p = ownProps[cur]
+            if not p then break end
+            for k in pairs(p) do combined[k] = true end
+            cur = superclass[cur]
+            guard = guard + 1
+        end
+        apiClassProps[cn] = combined
+        count = count + 1
+    end
+    log("API dump: property cache built for " .. count .. " classes")
+end
 
-  <section id="tab-options" class="panel">
-    <h1>Options</h1>
-    <p class="lead">Every configuration key, its default, and what it does. Defaults are also exposed via <code>FishAPI.get("/api/options")</code> so a fresh serializer pulls them from here rather than hardcoding.</p>
-    <table id="optionsTable">
-      <tr><th style="width:28%">Key</th><th style="width:16%">Default</th><th>Description</th></tr>
-    </table>
-    <p style="margin-top:20px;font-size:0.85rem;color:var(--fg-3)">Descriptions live in the Options tab of this page. Defaults come from the data block. Any key can be overridden via <code>getgenv().FISHILIZER_CONFIG</code> or the <code>opts</code> table.</p>
-  </section>
+local function isPropValid(cls, propName)
+    if CRITICAL_PROPS_SET[propName] then return true end
+    local apiSet = apiClassProps[cls]
+    if not apiSet then return true end
+    return apiSet[propName] == true
+end
 
-  <section id="tab-data" class="panel">
-    <h1>Data API</h1>
-    <p class="lead">Every map the serializer needs lives in this page. The full object is embedded at <code>&lt;script id="fish-data"&gt;</code> as one JSON blob. Fetch the page, extract the block, decode, done.</p>
+local function httpPost(url, body, headers)
+    local g = (getgenv and getgenv()) or _G or {}
+    local sent = {}
 
-    <div class="note">
-      <b>Fetch from a Roblox executor</b>
-    </div>
+    local function tryCall(fn)
+        if type(fn) ~= "function" or sent[fn] then return nil end
+        sent[fn] = true
+        local ok, res = pcall(fn, { Url = url, Method = "POST", Body = body, Headers = headers or {} })
+        if not ok or res == nil then return nil end
+        if type(res) == "string" then return { status = 200, body = res } end
+        if type(res) ~= "table" then return nil end
+        local st = res.StatusCode or res.status or res.Status
+        local bd = res.Body or res.body or res.Response or res.Data
+        if type(bd) == "table" then
+            local okE, e = pcall(HttpService.JSONEncode, HttpService, bd)
+            if okE then bd = e end
+        end
+        if type(bd) == "string" then return { status = st, body = bd } end
+        return nil
+    end
 
-    <div style="position:relative">
-      <button class="copy-btn" data-t="fetch">copy</button>
-<pre id="fetch">local HttpService = game:GetService("HttpService")
-local html = game:HttpGet("https://civilation.github.io/Fishilizer/")
-local blob = html:match('<script[^>]*id="fish%-data"[^>]*>(.-)</script>')
-local data = HttpService:JSONDecode(blob)
-print(data.meta.version)
-print(#data.tables.classes .. " classes indexed")
-print(data.decompiler.url)</pre>
-    </div>
+    local r = tryCall(g.request) if r then return r end
+    if type(g.http) == "table" then r = tryCall(g.http.request) if r then return r end end
+    if type(g.Http) == "table" then r = tryCall(g.Http.request) if r then return r end end
+    if type(g.HTTP) == "table" then r = tryCall(g.HTTP.request) if r then return r end end
+    r = tryCall(g.http_request) if r then return r end
 
-    <div class="data-layout">
-      <div class="data-side">
-        <input type="text" class="data-search" id="dataSearch" placeholder="search endpoints or classes...">
-        <div class="data-list" id="dataList"></div>
-      </div>
-      <div class="data-out">
-        <div class="data-actions">
-          <button class="copy-btn" id="dataCopy">copy</button>
-          <button class="copy-btn" id="dataDownload">download</button>
-        </div>
-        <pre id="dataOut">select an endpoint</pre>
-      </div>
-    </div>
+    for _, v in pairs(g) do
+        if type(v) == "table" then
+            local rf = v.request or v.http_request or v.Request
+            r = tryCall(rf)
+            if r then return r end
+        end
+    end
 
-    <h2>Endpoints</h2>
-    <table>
-      <tr><th style="width:42%">Path</th><th>Description</th></tr>
-      <tr><td><code>/api/version</code></td><td>Serializer version string.</td></tr>
-      <tr><td><code>/api/options</code></td><td>Default Fish.Options table.</td></tr>
-      <tr><td><code>/api/decompiler</code></td><td>LunaUX endpoint, request shape, options, and response keys.</td></tr>
-      <tr><td><code>/api/tables</code></td><td>All support tables grouped (instance_specific, critical_props, etc).</td></tr>
-      <tr><td><code>/api/instance-specific</code></td><td>Class → property list map for every supported Instance.</td></tr>
-      <tr><td><code>/api/instance-specific/{Class}</code></td><td>Properties for a single class.</td></tr>
-      <tr><td><code>/api/classes</code></td><td>Flat array of all indexed class names.</td></tr>
-      <tr><td><code>/api/critical-props</code></td><td>Properties always emitted regardless of API dump.</td></tr>
-      <tr><td><code>/api/binary-props</code></td><td>Properties serialized as base64 BinaryString.</td></tr>
-      <tr><td><code>/api/real-content-props</code></td><td>Properties treated as Content URIs.</td></tr>
-      <tr><td><code>/api/content-prop-exact</code></td><td>Properties skipped by the generic content extractor.</td></tr>
-      <tr><td><code>/api/core-script-names</code></td><td>Names of Roblox internal scripts to strip.</td></tr>
-      <tr><td><code>/api/character-classes</code></td><td>Classes considered part of a player character rig.</td></tr>
-      <tr><td><code>/api/skip-svc</code></td><td>Services never emitted as root children.</td></tr>
-      <tr><td><code>/api/skip-prop</code></td><td>Properties never serialized.</td></tr>
-      <tr><td><code>/api/attr-type-ids</code></td><td>Attribute type → byte tag map for AttributesSerialize encoding.</td></tr>
-      <tr><td><code>/api/ser-types</code></td><td>All property type names the serializer can emit.</td></tr>
-      <tr><td><code>/api/templates</code></td><td>README template and server script placeholder.</td></tr>
-      <tr><td><code>/api/all</code></td><td>Everything above in one object.</td></tr>
-    </table>
-  </section>
+    local ok, res = pcall(HttpService.RequestAsync, HttpService, {
+        Url = url,
+        Method = "POST",
+        Body = body,
+        Headers = headers or {}
+    })
+    if ok and res then
+        return { status = res.StatusCode, body = res.Body }
+    end
 
-</div>
+    return nil
+end
 
-<script type="application/json" id="fish-data">{"meta":{"name":"Fishilizer","version":"10.7.0","schema":2},"options":{"Decompile":true,"MaxThreads":3,"SaveBytecode":false,"RemovePlayerCharacters":true,"IncludeBackpack":true,"IgnoreDefaultProps":true,"IgnoreNotArchivable":true,"UseGetProperties":true,"FetchDocs":true,"APIProperties":true,"Mode":"full","FilePath":false,"Callback":false,"Clipboard":false,"AvoidFileOverwrite":true,"KillAllScripts":false,"Anonymous":false,"EmitTags":true,"EmitAttributes":true,"StripCharacters":true,"StripCoreScripts":true,"TerrainResolution":8,"TerrainCellCap":4194304,"Depth":100,"Notify":true,"ShowStatus":true,"ReadMe":true,"OUT":"Fishilizer","DataAPIURL":"https://civilation.github.io/Fishilizer/","APIDumpURL":"https://raw.githubusercontent.com/MaximumADHD/Roblox-Client-Tracker/roblox/API-Dump.json"},"decompiler":{"url":"https://lunaux-decompiler.dev/api/decompile","method":"POST","encoding":"base64","format":"luau","headers":{"Content-Type":"application/json"},"body":{"script":"<base64-encoded-bytecode>","options":{"transformCompoundAssignments":true,"virtualizeContinues":true,"showFunctionInfo":true,"upvalueComments":true}},"responseKeys":["source","decompiled","result","code","output"],"fallbackBytecodeOption":"SaveBytecode"},"tables":{"attr_type_ids":{"string":2,"boolean":3,"number":4,"UDim":13,"UDim2":16,"Vector2":18,"Vector3":19,"CFrame":16,"Color3":26,"BrickColor":30,"NumberRange":31,"NumberSequence":32,"ColorSequence":33,"Rect":34,"Font":28},"ser_types":["string","ProtectedString","SharedString","boolean","bool","number","int","int64","float","double","Vector2","Vector3","CFrame","Color3","BrickColor","UDim","UDim2","Rect","NumberRange","NumberSequence","ColorSequence","EnumItem","Faces","Axes","Instance","PhysicalProperties","BinaryString","Ray","Font","FontFace"],"binary_props":["SmoothGrid","ChildData","PhysicsData","PhysicalConfigData","MaterialColors"],"real_content_props":["Texture","TextureId","TextureID","Image","MeshId","SoundId","AnimationId","ShirtTemplate","PantsTemplate","Graphic","SkyboxBk","SkyboxDn","SkyboxFt","SkyboxLf","SkyboxRt","SkyboxUp","SunTextureId","MoonTextureId","ImageId","Video","Sound","Decal","ColorMap","NormalMap","RoughnessMap","MetalnessMap","EmissiveMask","CageMeshId","ReferenceMeshId","TexturePack"],"content_prop_exact":["MeshContent","ImageContent","SoundContent","AnimationContent","TextureContent","ShirtTemplateContent","PantsTemplateContent","GraphicContent","FaceContent","VideoContent","ColorMapContent","NormalMapContent","RoughnessMapContent","MetalnessMapContent","EmissiveMaskContent","SkyboxBkContent","SkyboxDnContent","SkyboxFtContent","SkyboxLfContent","SkyboxRtContent","SkyboxUpContent","SunTextureContent","MoonTextureContent","DecalContent","ParticleTextureContent","ExplosionTextureContent","TrailTextureContent","BeamTextureContent","SpecialMeshContent","CylinderMeshContent","BlockMeshContent","WedgeMeshContent","LevelOfDetailContent","ColorMapLookup","RoughnessMapLookup","NormalMapLookup","MetalnessMapLookup","WrapLayerContent","WrapTargetContent","CageMeshContent","ReferenceMeshContent","AlphaModeContent","TexturePackContent","WireframeContent"],"core_script_names":["PlayerModule","CameraModule","ControlModule","Common","Utils","RbxCharacterSounds","Animate","Health","RbxCamera","RbxCharacterSoundsScript","RbxDefaultCharacter","TouchJump","TouchControlFrame","ClickToMoveController","DynamicThumbstick","LegacyThumbstick","Keyboard","Gamepad","Touch","VRNavigation","CameraInput","CameraToggle","CameraUI","ZoomController","MouseLockController","BaseCamera","ClassicCamera","TransparencyController","Poppercam","Invisicam","OrbitalCamera","ScriptableCamera","FollowCamera","VehicleCamera","LegacyCamera","BaseCharacterController","UserInput","HumanoidController","DefaultChatSystemChatEvents","ChatMain","BubbleChat","ChatWindow","ChatBar","ChatTypes","ChatSettings","ChatCommands","ChatModules"],"character_classes":["Humanoid","Head","Torso","HumanoidRootPart","LeftArm","RightArm","LeftLeg","RightLeg","UpperTorso","LowerTorso","LeftUpperArm","LeftLowerArm","RightUpperArm","RightLowerArm","LeftUpperLeg","LeftLowerLeg","RightUpperLeg","RightLowerLeg","LeftFoot","RightFoot","LeftHand","RightHand","BodyColors","CharacterMesh","Accessory","Accoutrement","Hat","Shirt","Pants","ShirtGraphic","Face","FaceControls","FaceInstance","HumanoidDescription"],"skip_svc":["CoreGui","CorePackages","CoreScripts","Chat","LogService","ContentProvider","ScriptContext","Selection","TestService","PluginGuiService","PluginDebugService","SolidModelContentProvider","Visit","Stats","Players","StarterPlayer","SoundService","LocalizationService","MarketplaceService","AppStorageService","AvatarEditorService","BadgeService","GamePassService","GroupService","GuiService","HopperService","KeyframeSequenceProvider","MemoryStoreService","MessagingService","PathfindingService","PolicyService","ProximityPromptService","RobloxReplicatedStorage","SessionService","SharedTableRegistry","TeleportService","TextChatService","TrackerService","UserInputService","UserService","VRService","VoiceChatService","AnalyticsService","ContextActionService","ControllerService","DragDetectorService","ExperienceNotificationService","FriendService","GamepadService","GeometryService","GuidRegistryService","HapticService","InsertService","JointsService","LuaWebService","MouseService","NotificationService","PermissionsService","PhysicsService","ReplicatedFirst","SocialService","TextService","TouchInputService","VirtualInputManager","VirtualUser","ChatService","DataStoreService","RunService","TweenService","HttpService","HTTPService","Debris","AvatarCreationService","AccountService","AdService","AssetService","AvatarImportService","BrowserService","BulkImportService","CallbackService","ChangeHistoryService","CloudLocalizationTable","ClusterPacketCache","CollaborationService","CommerceService","ConfigureServerService","DeviceIdService","DraftsService","FriendPagesService","GenericChallengeService","HomeService","IXPService","InstanceFileService","LiveScriptingService","LodService","LoginService","LuaChatService","MeshContentProvider","MessageBusService","NetworkClient","NetworkServer","OpenCloudService","PackageService","PatchBundlerService","PerformanceControlService","PlayerEmulatorService","PluginPolicyService","ProcessInstancePhysicsService","PublishService","ReflectionMetadataService","RemoteDebuggerServer","RenderSettings","RobloxServerStorage","SafetyService","ScriptService","StudioAssetService","StudioData","StudioService","StyleService","TelemetryService","TracerService","UGCValidationService","UpdateService","UserStorageService","VideoCaptureService","VoiceChatInternal","WebViewService"],"skip_prop":["AttributesSerialize","Tags","Parent","RobloxLocked","HistoryId","DataCost","Game","Identity","Verb","LocalLocation","PivotOffset","AbsoluteSize","AbsolutePosition","AbsoluteContentSize","AbsoluteRotation","AbsoluteCanQuery","AbsoluteOrientation","CrossPlatformAssetId","Autopilot","CameraSubject","CurrentCamera","SelectionBox","SelectionSphere","DraggingV1","Dragging","Archetype","NetworkOwner","RemoteEventsFolder","CameraType","CameraMode","FieldOfViewMode","MaxAxisFieldOfView","RotVelocity","OverlapParam","RootPriority","DebugId","JobId","IsGuest","UsesAsset","UnfilteredPackages","SnippetKey","ReplicationEnabled","NoCollisionConstraint","AccumulatedMouseDelta","AccumulatedTouchDelta","MouseDeltaSensitivity","TouchDeltaSensitivity","LastInputType","LastInputTypeChanged","Running","ElapsedTime","NetworkOwnershipAuto","ReceiveAge","TotalRcvAge","TotalRcvTime","RcvAge","RcvTime","CameraSubjectDistance","InputTypesChanged","Annotation","Annotations","AnnotationService","PlaybackState","SecurityCapabilities","ClassName"],"critical_props":["Name","Archivable","SourceAssetId","PackageId","AttributesSerialize","Tags","TextureId","TextureID","Texture","Image","MeshId","SoundId","AnimationId","ShirtTemplate","PantsTemplate","Graphic","Decal","Shape","Size","Position","CFrame","Orientation","Rotation","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","CanAutoCollide","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","CollisionGroupId","TopSurface","BottomSurface","LeftSurface","RightSurface","FrontSurface","BackSurface","MeshType","Scale","Offset","VertexColor","LevelOfDetail","RenderFidelity","DoubleSided","CustomPhysicalProperties","FormFactor","RigType","WalkSpeed","JumpPower","JumpHeight","MaxHealth","Health","HipHeight","AutoRotate","AutoJumpEnabled","AutoScalingEnabled","DisplayDistanceType","HealthDisplayDistance","NameDisplayDistance","DisplayName","HeadScale","BodyTypeScale","BodyDepthScale","BodyWidthScale","BodyHeightScale","BodyProportionScale","UniformScale","OriginalSize","Value","Text","Font","FontFace","TextColor3","TextSize","TextScaled","TextWrapped","TextStrokeColor3","TextStrokeTransparency","TextTransparency","RichText","LineHeight","MaxVisibleGraphemes","TextXAlignment","TextYAlignment","TextTruncate","TextFits","PlaceholderText","PlaceholderColor3","ClearTextOnFocus","MultiLine","TextEditable","BackgroundColor3","BackgroundTransparency","BorderSizePixel","BorderColor3","BorderMode","AutomaticSize","ClipsDescendants","ImageColor3","ImageTransparency","ImageRectOffset","ImageRectSize","ResampleMode","ScaleType","SliceCenter","SliceScale","TileSize","Visible","Active","Selectable","AutoButtonColor","Modal","Style","ZIndex","LayoutOrder","SizeConstraint","AnchorPoint","Interactable","CanvasSize","CanvasPosition","ScrollBarThickness","ScrollBarImageColor3","ScrollBarImageTransparency","ElasticBehavior","ScrollingDirection","ScrollingEnabled","VerticalScrollBarInset","HorizontalScrollBarInset","AutomaticCanvasSize","MidImage","TopImage","BottomImage","CellPadding","CellSize","FillDirection","FillDirectionMaxCells","HorizontalAlignment","VerticalAlignment","SortOrder","StartCorner","PaddingTop","PaddingBottom","PaddingLeft","PaddingRight","Padding","Spacing","AspectRatio","AspectType","DominantAxis","MaxSize","MinSize","MaxTextSize","MinTextSize","Enabled","ResetOnSpawn","DisplayOrder","IgnoreGuiInset","ClipToDeviceSafeArea","SafeAreaCompatibility","ScreenInsets","SizingMode","PixelsPerStud","AlwaysOnTop","Adornee","Brightness","ZOffset","MaxDistance","DistanceLowerLimit","DistanceUpperLimit","ExtentsOffset","ExtentsOffsetWorldSpace","StudsOffset","StudsOffsetWorldSpace","SizeOffset","LightColor","LightDirection","Ambient","Range","Angle","Shadows","OutdoorAmbient","ColorShift_Top","ColorShift_Bottom","GeographicLatitude","ClockTime","TimeOfDay","FogColor","FogStart","FogEnd","GlobalShadows","EnvironmentDiffuseScale","EnvironmentSpecularScale","ExposureCompensation","Technology","ShadowSoftness","SkyboxBk","SkyboxDn","SkyboxFt","SkyboxLf","SkyboxRt","SkyboxUp","SkyboxOrientation","SunAngularSize","MoonAngularSize","SunTextureId","MoonTextureId","StarCount","CelestialBodiesShown","Outlines","Volume","Pitch","Looped","PlayOnRemove","TimePosition","PlaybackSpeed","Playing","RollOffMode","RollOffMinDistance","RollOffMaxDistance","EmitterSize","Source","Disabled","RunContext","LinkedSource","Lifetime","Rate","Speed","Drag","Acceleration","LockedToPart","VelocityInheritance","Squash","EmissionDirection","Sequence","TimeScale","TextureMode","RotSpeed","SpreadAngle","SpawnRadius","Width0","Width1","TextureLength","FaceCamera","Segments","CurveSize0","CurveSize1","Attachment0","Attachment1","AttachmentForward","AttachmentRight","AttachmentUp","HeadColor","TorsoColor","LeftArmColor","RightArmColor","LeftLegColor","RightLegColor","Number","TargetRadius","MinRadius","Radius","Gain","Diffuse","Specular","Velocity","Focus","FieldOfView","ReverbType","DistanceFactor","AngularSpeed","Facing","DesiredAngle","CurrentAngle","MotorType","MaxVelocity","MaxTorque","P","D","Coefficient","OuterConeAngle","InnerConeAngle","Depth","Height","Width","DepthMode","FaceMode","Animation","Weight","CollisionFidelity","ClusterId","PhysicalConfigData","PhysicsData","ChildData","MeshSize","InitialSize","InitialCFrame","UnscaledCframe","UnscaledSize","AssetId","SmoothGrid","MaterialColors","WaterColor","WaterWaveSize","WaterWaveSpeed","WaterReflectance","WaterTransparency","Decoration","LeftParamA","LeftParamB","RightParamA","RightParamB","TopParamA","TopParamB","BottomParamA","BottomParamB","FrontParamA","FrontParamB","BackParamA","BackParamB","PrimaryPart","ModelInPrimary","Loop","IsPlaying","Priority","Time","EasingStyle","EasingDirection","Pose","Mode","Grip","GripForward","GripPos","GripRight","GripUp","ToolTip","CanBeDropped","RequiresHandle","ManualActivationOnly","BinType","Whitelist","Blacklist","AutoAssignable","TeamColor","Gravity","FallHeightEnabled","FallenPartsDestroyHeight","StreamingEnabled","StreamingIntegrityMode","StreamingMinRadius","StreamingTargetRadius","TerrainWeldsFixed","DistributedGameTime","AllowThirdPartySales","ResetPlayerGuiOnSpawn","LoadCharacterAppearance","LoadCharacterLayeredClothing","UserEmotesEnabled","CameraMaxZoomDistance","CameraMinZoomDistance","CageMeshId","ReferenceMeshId","AutoSkin","ShrinkFactor","Stiffness","Order","DebugMode","ColorMap","NormalMap","RoughnessMap","MetalnessMap","EmissiveMask","AlphaMode","Metalness","Roughness","TexturePack","OffsetStudsU","OffsetStudsV","StudsPerTileU","StudsPerTileV","BasePartMaterial","Use2022Materials","MaxActivationDistance","HoldDuration","ActionText","ObjectText","KeyboardKeyCode","GamepadKeyCode","RequiresLineOfSight","ClickablePrompt","Exclusivity","UIOffset","FillColor","FillTransparency","OutlineColor","OutlineTransparency","GroupColor3","GroupTransparency","CornerRadius","ApplyStrokeMode","LineJoinMode","LimitsEnabled","UpperAngle","LowerAngle","TwistLimitsEnabled","TwistLowerAngle","TwistUpperAngle","Restitution","Length","Thickness","LimitAngle0","LimitAngle1","FreeLength","Coils","Damping","MaxLength","MinLength","MotorMaxAcceleration","MotorMaxTorque","MotorSpeed","ServoMaxTorque","TargetAngle","Part0","Part1","C0","C1","Axis","SecondaryAxis","LocalTransparencyModifier","Transform","AutoLocalize","RootLocalizationTable","UsePartColor","ScaleTo","AutoResume","PlaybackRegion","RegionDirection","LoopRegion","SoundGroup","AudioEqualizer","AudioFilter","StyleRule","StyleSheet","StyleLink","AdShape","Puffiness","ReferenceOrigin","BindOffset","WorldCageMeshId","Bevel","BevelRoundness","BevelType","PassThrough","Label","ModifierId","LineThickness","SurfaceColor3","SurfaceTransparency","LineColor3","TextureSpeed","LightEmission","LightInfluence","Density","Decay","Glare","Haze","Cover","CloudsEnabled","ForceLimitMode","ForceLimitsEnabled","LineDirection","LineVelocity","MaxForce","MaxAxesForce","PlaneVelocity","PrimaryTangentAxis","RelativeTo","SecondaryTangentAxis","VectorVelocity","VelocityConstraintMode","AngularVelocity","ReactionTorqueEnabled","ApplyAtCenterOfMass","Force","ReactionForceEnabled","Responsiveness","RigidityEnabled","WorldCFrame","WorldPosition","WorldOrientation","WorldAxis","WorldSecondaryAxis","WorldBasis","TransformedCFrame","TransformedWorldCFrame","RenderMesh","CollisionMesh"],"instance_specific":{"Tool":["TextureId","ToolTip","CanBeDropped","RequiresHandle","ManualActivationOnly","Enabled","Grip","GripForward","GripPos","GripRight","GripUp"],"Part":["Shape","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","TopSurface","BottomSurface","LeftSurface","RightSurface","FrontSurface","BackSurface","CustomPhysicalProperties","FormFactor","Velocity"],"WedgePart":["Shape","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","CustomPhysicalProperties"],"CornerWedgePart":["Shape","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","CustomPhysicalProperties"],"TrussPart":["Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","Style"],"SpawnLocation":["Size","CFrame","Anchored","CanCollide","Transparency","Material","MaterialVariant","BrickColor","Color","Enabled","Duration","Neutral","TeamColor","AllowTeamChangeOnTouch"],"Seat":["Size","CFrame","Anchored","CanCollide","Material","MaterialVariant","BrickColor","Color","Disabled"],"VehicleSeat":["Size","CFrame","Anchored","CanCollide","Material","MaterialVariant","BrickColor","Color","MaxSpeed","Torque","TurnSpeed","HeadsUpDisplay","Disabled"],"MeshPart":["MeshId","TextureID","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","RenderFidelity","CollisionFidelity","DoubleSided","LevelOfDetail","MeshSize","InitialSize","Texture","CustomPhysicalProperties","RenderMesh"],"UnionOperation":["AssetId","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","RenderFidelity","CollisionFidelity","ChildData","PhysicsData","PhysicalConfigData","InitialSize","InitialCFrame","MeshSize","CustomPhysicalProperties"],"IntersectOperation":["AssetId","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","RenderFidelity","CollisionFidelity","ChildData","PhysicsData","PhysicalConfigData","InitialSize","InitialCFrame","MeshSize","CustomPhysicalProperties"],"NegateOperation":["AssetId","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","ChildData","PhysicsData","PhysicalConfigData","InitialSize","InitialCFrame","MeshSize","CustomPhysicalProperties"],"PartOperation":["AssetId","Size","CFrame","Anchored","CanCollide","CanTouch","CanQuery","CanClimb","Transparency","Reflectance","CastShadow","Material","MaterialVariant","BrickColor","Color","Massless","Locked","CollisionGroup","RenderFidelity","CollisionFidelity","ChildData","PhysicsData","PhysicalConfigData","InitialSize","InitialCFrame","MeshSize","CustomPhysicalProperties"],"SpecialMesh":["MeshId","MeshType","Scale","Offset","VertexColor","TextureId","Texture"],"CylinderMesh":["Scale","Offset","VertexColor"],"BlockMesh":["Scale","Offset","VertexColor"],"WedgeMesh":["Scale","Offset","VertexColor"],"SphereMesh":["Scale","Offset","VertexColor"],"BevelMesh":["Scale","Offset","VertexColor","Bevel","BevelRoundness","BevelType"],"FileMesh":["MeshId","TextureId","Scale","Offset","VertexColor"],"Decal":["Face","Texture","Color3","Transparency","ZIndex","LocalTransparencyModifier"],"Texture":["Face","Texture","Color3","Transparency","ZIndex","OffsetStudsU","OffsetStudsV","StudsPerTileU","StudsPerTileV","LocalTransparencyModifier"],"SurfaceAppearance":["ColorMap","NormalMap","RoughnessMap","MetalnessMap","EmissiveMask","AlphaMode","Color3","Metalness","Roughness","TexturePack"],"Terrain":["WaterColor","WaterWaveSize","WaterWaveSpeed","WaterReflectance","WaterTransparency","Decoration"],"Lighting":["Ambient","OutdoorAmbient","ColorShift_Top","ColorShift_Bottom","Brightness","ClockTime","TimeOfDay","GeographicLatitude","FogColor","FogStart","FogEnd","GlobalShadows","ShadowSoftness","EnvironmentDiffuseScale","EnvironmentSpecularScale","ExposureCompensation","Technology","SkyboxBk","SkyboxDn","SkyboxFt","SkyboxLf","SkyboxRt","SkyboxUp","SkyboxOrientation","SunAngularSize","MoonAngularSize","SunTextureId","MoonTextureId","StarCount","CelestialBodiesShown","Outlines","CloudsEnabled"],"Atmosphere":["Density","Offset","Color","Decay","Glare","Haze"],"Clouds":["Cover","Density","Color","Enabled"],"Sky":["SkyboxBk","SkyboxDn","SkyboxFt","SkyboxLf","SkyboxRt","SkyboxUp","SkyboxOrientation","SunAngularSize","MoonAngularSize","SunTextureId","MoonTextureId","StarCount","CelestialBodiesShown"],"BloomEffect":["Enabled","Intensity","Size","Threshold"],"BlurEffect":["Enabled","Size"],"ColorCorrectionEffect":["Enabled","Brightness","Contrast","Saturation","TintColor"],"DepthOfFieldEffect":["Enabled","FarIntensity","FocusDistance","InFocusRadius","NearIntensity"],"SunRaysEffect":["Enabled","Intensity","Spread"],"PointLight":["Enabled","Brightness","Color","Range","Shadows"],"SpotLight":["Enabled","Brightness","Color","Range","Angle","Face","Shadows"],"SurfaceLight":["Enabled","Brightness","Color","Range","Angle","Face","Shadows"],"Sound":["SoundId","Volume","Pitch","Looped","Playing","PlayOnRemove","PlaybackSpeed","TimePosition","RollOffMode","RollOffMinDistance","RollOffMaxDistance","EmitterSize","SoundGroup","ReverbType","DistanceFactor","MaxDistance","PlaybackRegion","LoopRegion","TimeLength","AudioEqualizer","AudioFilter"],"SoundGroup":["Volume"],"Animation":["AnimationId"],"KeyframeSequence":["Loop","Priority"],"Keyframe":["Time"],"Pose":["CFrame","Weight","EasingStyle","EasingDirection"],"Humanoid":["Health","MaxHealth","WalkSpeed","JumpPower","JumpHeight","HipHeight","AutoRotate","AutoJumpEnabled","AutoScalingEnabled","DisplayDistanceType","HealthDisplayDistance","NameDisplayDistance","DisplayName","RigType","BodyTypeScale","BodyDepthScale","BodyWidthScale","BodyHeightScale","HeadScale","BodyProportionScale","UniformScale","OriginalSize","AnimationId"],"BodyColors":["HeadColor","TorsoColor","LeftArmColor","RightArmColor","LeftLegColor","RightLegColor"],"CharacterMesh":["BasePart","MeshId","Overlay","BodyPart","TextureId"],"Attachment":["CFrame","Position","Orientation","Axis","SecondaryAxis","Visible","WorldCFrame","WorldPosition","WorldOrientation","WorldAxis","WorldSecondaryAxis"],"Bone":["CFrame","Position","Orientation","Transform","TransformedCFrame","TransformedWorldCFrame"],"Motor6D":["Part0","Part1","C0","C1","CurrentAngle","DesiredAngle","MaxVelocity","Transform"],"Motor":["Part0","Part1","C0","C1","CurrentAngle","DesiredAngle","MaxVelocity"],"Weld":["Part0","Part1","C0","C1"],"WeldConstraint":["Part0","Part1","Enabled"],"Snap":["Part0","Part1","C0","C1"],"Rotate":["Part0","Part1","C0","C1"],"RotateP":["Part0","Part1","C0","C1"],"RotateV":["Part0","Part1","C0","C1"],"Glue":["Part0","Part1","C0","C1","F0","F1"],"HingeConstraint":["Attachment0","Attachment1","MotorMaxAcceleration","MotorMaxTorque","MotorSpeed","ServoMaxTorque","TargetAngle","AngularVelocity","AngularSpeed","ActuatorType","LimitsEnabled","LowerAngle","UpperAngle","Radius","Visible","Enabled"],"BallSocketConstraint":["Attachment0","Attachment1","LimitsEnabled","UpperAngle","TwistLimitsEnabled","TwistLowerAngle","TwistUpperAngle","Restitution","Radius","Visible","Enabled"],"RodConstraint":["Attachment0","Attachment1","Length","Thickness","LimitsEnabled","LimitAngle0","LimitAngle1","Visible","Enabled"],"RopeConstraint":["Attachment0","Attachment1","Length","Thickness","Restitution","Visible","Enabled"],"SpringConstraint":["Attachment0","Attachment1","FreeLength","Coils","Damping","Stiffness","MaxForce","MaxLength","MinLength","Thickness","Visible","Enabled"],"TorsionSpringConstraint":["Attachment0","Attachment1","Coils","Damping","MaxAngle","MaxTorque","Radius","Restitution","Stiffness","Visible","Enabled"],"UniversalConstraint":["Attachment0","Attachment1","LimitsEnabled","MaxAngle","Radius","Restitution","Visible","Enabled"],"CylindricalConstraint":["Attachment0","Attachment1","AngularActuatorType","AngularLimitsEnabled","AngularRestitution","AngularSpeed","AngularVelocity","InclinationAngle","LinearActuatorType","LinearLimitsEnabled","LinearRestitution","LinearVelocity","LowerAngle","LowerLimit","MotorMaxAcceleration","MotorMaxForce","Radius","ServoMaxForce","UpperAngle","UpperLimit","Visible","Enabled"],"PrismaticConstraint":["Attachment0","Attachment1","ActuatorType","LimitsEnabled","LowerLimit","UpperLimit","MotorMaxAcceleration","MotorMaxForce","Restitution","ServoMaxForce","Speed","Velocity","Visible","Enabled"],"PlaneConstraint":["Attachment0","Attachment1","Visible","Enabled"],"AlignPosition":["Attachment0","Attachment1","ApplyAtCenterOfMass","MaxForce","MaxVelocity","Position","ReactionForceEnabled","Responsiveness","RigidityEnabled","Mode","Enabled"],"AlignOrientation":["Attachment0","Attachment1","AlignType","CFrame","MaxAngularVelocity","MaxTorque","Mode","PrimaryAxisOnly","ReactionTorqueEnabled","Responsiveness","RigidityEnabled","Enabled"],"LinearVelocity":["Attachment0","ForceLimitMode","ForceLimitsEnabled","LineDirection","LineVelocity","MaxForce","MaxAxesForce","PlaneVelocity","PrimaryTangentAxis","RelativeTo","SecondaryTangentAxis","VectorVelocity","VelocityConstraintMode","Visible","Enabled"],"AngularVelocity":["Attachment0","AngularVelocity","MaxTorque","ReactionTorqueEnabled","RelativeTo","Visible","Enabled"],"VectorForce":["Attachment0","ApplyAtCenterOfMass","Force","RelativeTo","Visible","Enabled"],"Torque":["Attachment0","RelativeTo","Torque","Visible","Enabled"],"ParticleEmitter":["Acceleration","Brightness","Color","ColorShift","Drag","EmissionDirection","EmitterSize","Enabled","FlipbookFramerate","FlipbookLayout","FlipbookMode","FlipbookStartRandom","Lifetime","LightEmission","LightInfluence","LockedToPart","Orientation","Rate","RotSpeed","Rotation","Shape","ShapeInOut","ShapePartial","ShapeStyle","Size","Size2","SoftParticlesEnabled","SoftParticlesFar","SoftParticlesNear","Speed","SpreadAngle","Squash","Texture","TimeScale","Transparency","VelocityInheritance","WindAffectsDrag","ZOffset"],"Beam":["Attachment0","Attachment1","Brightness","Color","CurveSize0","CurveSize1","Enabled","FaceCamera","LightEmission","LightInfluence","Segments","Texture","TextureLength","TextureMode","TextureSpeed","Transparency","Width0","Width1","ZOffset"],"Trail":["Attachment0","Attachment1","Brightness","Color","Enabled","FaceCamera","Lifetime","LightEmission","LightInfluence","MaxLength","MinLength","Texture","TextureLength","TextureMode","Transparency","WidthScale"],"Fire":["Enabled","Color","SecondaryColor","Heat","Size"],"Smoke":["Enabled","Color","Opacity","RiseVelocity","Size"],"Sparkles":["Enabled","Color","SparkleColor","TimeScale"],"ScreenGui":["DisplayOrder","Enabled","IgnoreGuiInset","ResetOnSpawn","ScreenInsets","ClipToDeviceSafeArea","SafeAreaCompatibility","ZIndexBehavior"],"SurfaceGui":["Adornee","AlwaysOnTop","Brightness","CanvasSize","ClipsDescendants","Enabled","Face","LightInfluence","MaxDistance","PixelsPerStud","ResetOnSpawn","SizingMode","ToolPunchThroughDistance","ZOffset","ZIndexBehavior"],"BillboardGui":["Adornee","AlwaysOnTop","Brightness","ClipsDescendants","DistanceLowerLimit","DistanceUpperLimit","Enabled","ExtentsOffset","ExtentsOffsetWorldSpace","LightInfluence","MaxDistance","ResetOnSpawn","Size","SizeOffset","StudsOffset","StudsOffsetWorldSpace","ZIndexBehavior"],"Frame":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","ClipsDescendants","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","Style","AutomaticSize"],"ScrollingFrame":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","CanvasSize","CanvasPosition","ScrollBarThickness","ScrollBarImageColor3","ScrollBarImageTransparency","ElasticBehavior","ScrollingDirection","ScrollingEnabled","VerticalScrollBarInset","HorizontalScrollBarInset","AutomaticCanvasSize","ClipsDescendants","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","Style"],"CanvasGroup":["GroupColor3","GroupTransparency","BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","ClipsDescendants","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutomaticSize"],"ViewportFrame":["CurrentCamera","Ambient","LightColor","LightDirection","ImageColor3","ImageTransparency","BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active"],"VideoFrame":["Video","Playing","Looped","TimePosition","Volume","PlaybackSpeed","BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active"],"TextLabel":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Text","TextColor3","TextSize","TextScaled","TextWrapped","TextStrokeColor3","TextStrokeTransparency","TextTransparency","RichText","Font","FontFace","LineHeight","MaxVisibleGraphemes","TextXAlignment","TextYAlignment","TextTruncate","TextFits","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutoLocalize","AutomaticSize"],"TextButton":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Text","TextColor3","TextSize","TextScaled","TextWrapped","TextStrokeColor3","TextStrokeTransparency","TextTransparency","RichText","Font","FontFace","LineHeight","MaxVisibleGraphemes","TextXAlignment","TextYAlignment","TextTruncate","TextFits","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutoButtonColor","Modal","Style","AutoLocalize","AutomaticSize"],"TextBox":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Text","TextColor3","TextSize","TextScaled","TextWrapped","TextStrokeColor3","TextStrokeTransparency","TextTransparency","RichText","Font","FontFace","LineHeight","MaxVisibleGraphemes","TextXAlignment","TextYAlignment","TextTruncate","TextFits","PlaceholderText","PlaceholderColor3","ClearTextOnFocus","MultiLine","TextEditable","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutoLocalize","AutomaticSize"],"ImageLabel":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Image","ImageColor3","ImageRectOffset","ImageRectSize","ImageTransparency","ResampleMode","ScaleType","SliceCenter","SliceScale","TileSize","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutomaticSize"],"ImageButton":["BackgroundColor3","BackgroundTransparency","BorderColor3","BorderMode","BorderSizePixel","Size","Position","AnchorPoint","Image","ImageColor3","ImageRectOffset","ImageRectSize","ImageTransparency","ResampleMode","ScaleType","SliceCenter","SliceScale","TileSize","Visible","ZIndex","LayoutOrder","Rotation","Selectable","Active","AutoButtonColor","Modal","Style","AutomaticSize"],"UIListLayout":["Padding","FillDirection","HorizontalAlignment","VerticalAlignment","SortOrder","HorizontalFlex","VerticalFlex","Wraps"],"UIGridLayout":["CellPadding","CellSize","FillDirection","FillDirectionMaxCells","HorizontalAlignment","VerticalAlignment","SortOrder","StartCorner"],"UITableLayout":["FillDirection","FillEmptySpaceColumns","FillEmptySpaceRows","HorizontalAlignment","MajorAxis","Padding","SortOrder","VerticalAlignment"],"UIPageLayout":["Animated","Circular","EasingDirection","EasingStyle","FillDirection","GamepadInputEnabled","HorizontalAlignment","Padding","ScrollWheelInputEnabled","SortOrder","TouchInputEnabled","TweenTime","VerticalAlignment"],"UIPadding":["PaddingTop","PaddingBottom","PaddingLeft","PaddingRight"],"UICorner":["CornerRadius"],"UIStroke":["ApplyStrokeMode","Color","Enabled","LineJoinMode","Thickness","Transparency"],"UIGradient":["Color","Enabled","Offset","Rotation","Transparency"],"UIScale":["Scale"],"UIAspectRatioConstraint":["AspectRatio","AspectType","DominantAxis"],"UISizeConstraint":["MaxSize","MinSize"],"UITextSizeConstraint":["MaxTextSize","MinTextSize"],"Highlight":["Adornee","DepthMode","Enabled","FillColor","FillTransparency","OutlineColor","OutlineTransparency"],"ClickDetector":["MaxActivationDistance","CursorIcon"],"ProximityPrompt":["ActionText","ObjectText","HoldDuration","MaxActivationDistance","RequiresLineOfSight","KeyboardKeyCode","GamepadKeyCode","ClickablePrompt","Exclusivity","UIOffset","Style","Enabled","AutoLocalize"],"Team":["TeamColor","AutoAssignable"],"Camera":["CameraType","CameraSubject","CFrame","Focus","FieldOfView","CameraMode","FieldOfViewMode","MaxAxisFieldOfView","DiagonalFieldOfView"],"Model":["PrimaryPart","WorldPivot","ModelInPrimary"],"Folder":[],"Configuration":[],"NumberValue":["Value"],"StringValue":["Value"],"BoolValue":["Value"],"IntValue":["Value"],"ObjectValue":["Value"],"Vector3Value":["Value"],"CFrameValue":["Value"],"Color3Value":["Value"],"BrickColorValue":["Value"],"RayValue":["Value"],"RemoteEvent":[],"RemoteFunction":[],"BindableEvent":[],"BindableFunction":[],"Script":["Source","Disabled","RunContext","LinkedSource"],"LocalScript":["Source","Disabled","RunContext","LinkedSource"],"ModuleScript":["Source","Disabled","RunContext","LinkedSource"],"WrapLayer":["AutoSkin","BindOffset","CageMeshId","ColorMap","Enabled","Order","Puffiness","ReferenceMeshId","ReferenceOrigin","ShrinkFactor","Stiffness"],"WrapTarget":["AutoSkin","CageMeshId","ColorMap","Depth","Height","ReferenceMeshId","Stiffness","Width"],"PathfindingModifier":["PassThrough","Label","ModifierId"],"PathfindingLink":["Attachment0","Attachment1"],"Actor":["Enabled"],"StyleRule":["Selector","Properties","Priority"],"StyleSheet":["Source"],"StyleLink":["StyleSheet"],"AudioPlayer":["AssetId","Volume","PlaybackSpeed","Looped","Playing","TimePosition"],"AudioDeviceOutput":["Player"],"AudioDeviceInput":["Player"]}},"templates":{"server_script_placeholder":"-- Serverscripts are almost IMPOSSIBLE to save without additional requirements in every serverscript","readme":"--[[\nFishilizer v{{VERSION}}\nSerialized with source recovery via LunaUX and Fishilizer serializer.\n\nGame saved with Fishilizer\n\nhttps://github.com/Civilation/Fishilizer\nhttps://civilation.github.io/Fishilizer/\n\n\n\n                                ...........\n                           .....          \n                        ....              \n                     ....                 \n                 .....                    \n                ....                      \n               .....                      \n             ...                          \n  ....     ...                            \n ....    ...                              \n..     ...                   .............\n...   ..               ...................\n  .....            .......................\n               ...........................\n              ..........   ...............\n                 .........................\n                     .....................\n             .............................\n               ...........................\n                   .......................\n                       . .................\n\n\n\nFor assistance on Fishilizer join https://discord.gg/avafsVeTZ\n\nFishilizer is not responsible for failing to decompile scripts or modules.\n\nGENERATION\n  Place: {{PLACE_NAME}}\n  PlaceId: {{PLACE_ID}}\n  JobId: {{JOB_ID}}\n  Mode: {{MODE}}\n  Decompile: {{DECOMPILE}}\n  TerrainResolution: {{TERRAIN_RESOLUTION}}\n  Depth: {{DEPTH}}\n  Saved at (UTC): {{TIMESTAMP}}\n]]"}}}</script>
+local b64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
-<script>
-var FISH_DATA = JSON.parse(document.getElementById("fish-data").textContent);
+local function b64(s)
+    if type(s) ~= "string" then return "" end
+    local res = {}
+    local i = 1
+    local len = #s
+    while i <= len do
+        local c1 = s:byte(i)
+        local c2 = s:byte(i + 1)
+        local c3 = s:byte(i + 2)
+        local b1 = math.floor(c1 / 4)
+        local b2 = (c1 % 4) * 16 + (c2 and math.floor(c2 / 16) or 0)
+        local b3 = c2 and ((c2 % 16) * 4 + (c3 and math.floor(c3 / 64) or 0)) or 0
+        local b4 = c3 and (c3 % 64) or 0
+        table.insert(res, b64chars:sub(b1 + 1, b1 + 1))
+        table.insert(res, b64chars:sub(b2 + 1, b2 + 1))
+        table.insert(res, c2 and b64chars:sub(b3 + 1, b3 + 1) or "=")
+        table.insert(res, c3 and b64chars:sub(b4 + 1, b4 + 1) or "=")
+        i = i + 3
+    end
+    return table.concat(res)
+end
 
-var FishAPI = (function(){
-  var d = FISH_DATA;
-  var tables = d.tables;
-  var classes = Object.keys(tables.instance_specific).sort();
+local function lunauxDecompile(inst)
+    local bytecodeFn = resolveBytecode()
+    if not bytecodeFn then
+        local g = (getgenv and getgenv()) or _G
+        if g and type(g.decompile) == "function" then
+            local ok, res = pcall(g.decompile, inst)
+            if ok and type(res) == "string" then return res end
+        end
+        return nil
+    end
+    
+    local ok, bytecode = pcall(bytecodeFn, inst)
+    if not ok or type(bytecode) ~= "string" or #bytecode == 0 then
+        return nil
+    end
 
-  var endpoints = [
-    { path: "/api/version", data: function(){ return d.meta.version; } },
-    { path: "/api/options", data: function(){ return d.options; } },
-    { path: "/api/decompiler", data: function(){ return d.decompiler; } },
-    { path: "/api/tables", data: function(){ return tables; } },
-    { path: "/api/instance-specific", data: function(){ return tables.instance_specific; } },
-    { path: "/api/classes", data: function(){ return classes; } },
-    { path: "/api/critical-props", data: function(){ return tables.critical_props; } },
-    { path: "/api/binary-props", data: function(){ return tables.binary_props; } },
-    { path: "/api/real-content-props", data: function(){ return tables.real_content_props; } },
-    { path: "/api/content-prop-exact", data: function(){ return tables.content_prop_exact; } },
-    { path: "/api/core-script-names", data: function(){ return tables.core_script_names; } },
-    { path: "/api/character-classes", data: function(){ return tables.character_classes; } },
-    { path: "/api/skip-svc", data: function(){ return tables.skip_svc; } },
-    { path: "/api/skip-prop", data: function(){ return tables.skip_prop; } },
-    { path: "/api/attr-type-ids", data: function(){ return tables.attr_type_ids; } },
-    { path: "/api/ser-types", data: function(){ return tables.ser_types; } },
-    { path: "/api/templates", data: function(){ return d.templates; } },
-    { path: "/api/all", data: function(){ return d; } }
-  ];
-
-  function get(path){
-    for (var i = 0; i < endpoints.length; i++){
-      if (endpoints[i].path === path) return endpoints[i].data();
+    local dc = DATA.decompiler or {}
+    local url = dc.url or Fish.Options.LunaUXURL
+    local headers = dc.headers or { ["Content-Type"] = "application/json" }
+    local reqOpts = (dc.body and dc.body.options) or {
+        transformCompoundAssignments = true,
+        virtualizeContinues = true,
+        showFunctionInfo = true,
+        upvalueComments = true,
     }
-    if (path.indexOf("/api/instance-specific/") === 0){
-      var cls = path.slice("/api/instance-specific/".length);
-      return tables.instance_specific[cls] || null;
+    local responseKeys = dc.responseKeys or { "source", "decompiled", "result", "code", "output" }
+
+    local payload = HttpService:JSONEncode({ script = b64(bytecode), options = reqOpts })
+    local res = httpPost(url, payload, headers)
+    
+    if res and res.body then
+        local okD, data = pcall(HttpService.JSONDecode, HttpService, res.body)
+        if okD and type(data) == "table" then
+            for _, k in ipairs(responseKeys) do
+                if type(data[k]) == "string" and #data[k] > 0 then return data[k] end
+            end
+        elseif res.status and tonumber(res.status) and tonumber(res.status) >= 200 and tonumber(res.status) < 300 then
+            if type(res.body) == "string" and #res.body > 0 and res.body:sub(1, 1) ~= "<" then
+                return res.body
+            end
+        end
+    end
+    
+    local g = (getgenv and getgenv()) or _G
+    if g and type(g.decompile) == "function" then
+        local ok2, res2 = pcall(g.decompile, inst)
+        if ok2 and type(res2) == "string" then return res2 end
+    end
+    
+    return nil
+end
+
+function Fish.FetchClasses(cacheFile)
+    cacheFile = cacheFile or "FishilizerAPIDump.json"
+    if IO.isfile and IO.readfile then
+        local okI, exists = pcall(IO.isfile, cacheFile)
+        if okI and exists then
+            local okR, cached = pcall(IO.readfile, cacheFile)
+            if okR and cached and #cached > 100 then
+                local okD, data = pcall(HttpService.JSONDecode, HttpService, cached)
+                if okD and data then
+                    Fish.ApplyAPIDump(data)
+                    log("Loaded cached API dump")
+                    return data
+                end
+            end
+        end
+    end
+    local okG, raw = pcall(function() return game:HttpGet(Fish.Options.APIDumpURL) end)
+    if not okG or not raw then log("Failed to fetch API dump") return nil end
+    if IO.writefile then pcall(IO.writefile, cacheFile, raw) end
+    local okD, data = pcall(HttpService.JSONDecode, HttpService, raw)
+    if not okD or not data then log("Failed to parse API dump") return nil end
+    Fish.ApplyAPIDump(data)
+    return data
+end
+
+function Fish.ApplyAPIDump(data)
+    if type(data) ~= "table" or type(data.Classes) ~= "table" then return end
+    local added = 0
+    for _, class in ipairs(data.Classes) do
+        local className = class.Name
+        if className and not INSTANCE_SPECIFIC[className] then
+            local props = {}
+            if type(class.Members) == "table" then
+                for _, member in ipairs(class.Members) do
+                    if member.MemberType == "Property" and member.Name and not shouldSkipProp(member.Name) then
+                        table.insert(props, member.Name)
+                    end
+                end
+            end
+            if class.Superclass and INSTANCE_SPECIFIC[class.Superclass] then
+                for _, p in ipairs(INSTANCE_SPECIFIC[class.Superclass]) do table.insert(props, p) end
+            end
+            if #props > 0 then
+                INSTANCE_SPECIFIC[className] = props
+                added = added + 1
+            end
+        end
+    end
+    log("API dump: added " .. added .. " classes to INSTANCE_SPECIFIC")
+    buildApiClassProps(data)
+end
+
+local _statusUI = nil
+local _statusAccum = 0
+
+local function setStatusText(text, color)
+    if not _statusUI or not _statusUI.label then return end
+    pcall(function()
+        _statusUI.label.Text = tostring(text)
+        if color then _statusUI.label.TextColor3 = color end
+    end)
+end
+
+local function fadeStatusAndDestroy()
+    if not _statusUI then return end
+    local ui = _statusUI
+    _statusUI = nil
+    local ti = TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    pcall(function()
+        TweenService:Create(ui.label, ti, {
+            TextTransparency = 1,
+            TextStrokeTransparency = 1,
+        }):Play()
+    end)
+    task.delay(0.9, function()
+        pcall(function() if ui.gui then ui.gui:Destroy() end end)
+    end)
+end
+
+local function getUIParent()
+    if type(gethui) == "function" then
+        local ok, hui = pcall(gethui)
+        if ok and hui then return hui end
+    end
+    local ok, cg = pcall(function() return game:GetService("CoreGui") end)
+    if ok and cg then return cg end
+    local lp = Players.LocalPlayer
+    if lp then
+        local ok2, pg = pcall(function() return lp:FindFirstChildOfClass("PlayerGui") end)
+        if ok2 and pg then return pg end
+    end
+    return nil
+end
+
+local function buildStatusUI()
+    if not Fish.Options.ShowStatus then return nil end
+    local parentGui = getUIParent()
+    if not parentGui then return nil end
+
+    pcall(function()
+        local existing = parentGui:FindFirstChild("__FishilizerStatus__")
+        if existing then existing:Destroy() end
+    end)
+
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "__FishilizerStatus__"
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.ResetOnSpawn = false
+    gui.IgnoreGuiInset = true
+    gui.DisplayOrder = 100
+    pcall(function() gui.Parent = parentGui end)
+    if gui.Parent ~= parentGui then
+        local lp = Players.LocalPlayer
+        if lp then
+            local pg = lp:FindFirstChildOfClass("PlayerGui")
+            if pg then pcall(function() gui.Parent = pg end) end
+        end
+    end
+    if not gui.Parent then return nil end
+
+    local label = Instance.new("TextLabel")
+    label.Name = "Status"
+    label.BackgroundTransparency = 1
+    label.BorderSizePixel = 0
+    label.Size = UDim2.new(0, 600, 0, 30)
+    label.AnchorPoint = Vector2.new(0.5, 0)
+    label.Position = UDim2.new(0.5, 0, 0, 24)
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 18
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    label.TextStrokeTransparency = 0
+    label.TextTransparency = 0
+    label.Text = "Saving game.."
+    label.RichText = false
+    label.Parent = gui
+
+    return { gui = gui, label = label }
+end
+
+local function bumpStatus(prefix, current, total)
+    _statusAccum = _statusAccum + 1
+    if not _statusUI then return end
+    if _statusAccum % 25 ~= 0 then return end
+    local pct = 0
+    if total and total > 0 then
+        pct = math.floor((current / total) * 100)
+        if pct > 100 then pct = 100 end
+    end
+    setStatusText(prefix .. " " .. current .. "/" .. total .. " (" .. pct .. "%)")
+    task.wait()
+end
+
+local function u32(n) return string.pack("<I4", n) end
+local function f32(n) return string.pack("<f", n) end
+local function f64(n) return string.pack("<d", n) end
+local function i32(n) return string.pack("<i4", n) end
+local function wstr(s) return u32(#s) .. s end
+
+local function attrWriteValue(t, v)
+    if t == "string" then return wstr(v)
+    elseif t == "boolean" then return string.char(v and 1 or 0)
+    elseif t == "number" then return f64(v)
+    elseif t == "Vector2" then return f32(v.X) .. f32(v.Y)
+    elseif t == "Vector3" then return f32(v.X) .. f32(v.Y) .. f32(v.Z)
+    elseif t == "UDim" then return f32(v.Scale) .. i32(v.Offset)
+    elseif t == "UDim2" then return f32(v.X.Scale) .. i32(v.X.Offset) .. f32(v.Y.Scale) .. i32(v.Y.Offset)
+    elseif t == "Color3" then return f32(v.R) .. f32(v.G) .. f32(v.B)
+    elseif t == "BrickColor" then return u32(v.Number)
+    elseif t == "CFrame" then
+        local c = {v:GetComponents()}
+        local out = ""
+        for i = 1, 12 do out = out .. f32(c[i]) end
+        return out
+    elseif t == "NumberRange" then return f32(v.Min) .. f32(v.Max)
+    elseif t == "Rect" then return f32(v.Min.X) .. f32(v.Min.Y) .. f32(v.Max.X) .. f32(v.Max.Y)
+    elseif t == "NumberSequence" then
+        local out = u32(#v.Keypoints)
+        for _, k in ipairs(v.Keypoints) do
+            out = out .. f32(k.Time) .. f32(k.Value) .. f32(k.Envelope)
+        end
+        return out
+    elseif t == "ColorSequence" then
+        local out = u32(#v.Keypoints)
+        for _, k in ipairs(v.Keypoints) do
+            out = out .. f32(k.Time) .. f32(k.Value.R) .. f32(k.Value.G) .. f32(k.Value.B)
+        end
+        return out
+    end
+    return nil
+end
+
+local function encodeAttributes(inst)
+    local ok, attrs = pcall(function() return inst:GetAttributes() end)
+    if not ok or not attrs then return nil end
+    local names = {}
+    for k in pairs(attrs) do table.insert(names, k) end
+    if #names == 0 then return nil end
+    table.sort(names)
+    local out = u32(#names)
+    for _, name in ipairs(names) do
+        local v = attrs[name]
+        local t = typeof(v)
+        local typeId = ATTR_TYPE_IDS[t]
+        if typeId then
+            out = out .. wstr(name) .. string.char(typeId)
+            local body = attrWriteValue(t, v)
+            if body then out = out .. body else out = out .. string.char(0) end
+        end
+    end
+    return out
+end
+
+local function encodeTags(inst)
+    local ok, tags = pcall(function() return CollectionService:GetTags(inst) end)
+    if not ok or not tags or #tags == 0 then return nil end
+    local out = u32(#tags)
+    for _, t in ipairs(tags) do out = out .. wstr(t) end
+    return out
+end
+
+local function clean(s)
+    s = tostring(s)
+    s = s:gsub("[%z\1-\8\11\12\14-\31]", "")
+    s = s:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;")
+    s = s:gsub('"', "&quot;"):gsub("'", "&apos;")
+    return s
+end
+
+local function nm(x)
+    if type(x) ~= "number" then return "0" end
+    if x ~= x then return "0" end
+    if x == math.huge then return "1e308" end
+    if x == -math.huge then return "-1e308" end
+    if x == math.floor(x) and math.abs(x) < 1e15 then return string.format("%d", x) end
+    return string.format("%.10g", x)
+end
+
+local function isRealContent(name) return REAL_CONTENT_PROPS[name] == true end
+
+local function extractUri(v)
+    if v == nil then return nil end
+    local tv = type(v)
+    if tv == "string" then
+        if v == "" then return nil end
+        local id = v:match("rbxassetid://(%d+)")
+        if id then return "rbxassetid://" .. id end
+        local num = v:match("^(%d+)$")
+        if num and #num >= 5 then return "rbxassetid://" .. num end
+        if v:match("^rbxasset://") or v:match("^rbxgameasset://") or v:match("^rbxthumb://") or v:match("^https?://") or v:match("^rbxfile://") then return v end
+        local tail = v:match("(%d+)%s*$")
+        if tail and #tail >= 5 then return "rbxassetid://" .. tail end
+        return nil
+    end
+    if tv == "number" then return "rbxassetid://" .. tostring(v) end
+    local accessors = {"Source","Uri","Url","URL","Value","Text","String","AssetId","AssetID","Id","ID","Content","source","uri","url","value"}
+    for _, key in ipairs(accessors) do
+        local ok, s = pcall(function() return v[key] end)
+        if ok and type(s) == "string" and s ~= "" then
+            local inner = extractUri(s)
+            if inner then return inner end
+        end
+        if ok and type(s) == "number" then return "rbxassetid://" .. tostring(s) end
+    end
+    local methods = {"ToString","GetSource","GetUri","GetUrl"}
+    for _, m in ipairs(methods) do
+        local ok, f = pcall(function() return v[m] end)
+        if ok and type(f) == "function" then
+            local ok2, s = pcall(f, v)
+            if ok2 and type(s) == "string" and s ~= "" then
+                local inner = extractUri(s)
+                if inner then return inner end
+            end
+        end
+    end
+    if tv == "table" then
+        for _, val in pairs(v) do
+            if type(val) == "string" and val ~= "" then
+                local inner = extractUri(val)
+                if inner then return inner end
+            end
+        end
+    end
+    local ok, s = pcall(tostring, v)
+    if ok and type(s) == "string" and s ~= "" then
+        local id = s:match("rbxassetid://(%d+)")
+        if id then return "rbxassetid://" .. id end
+        local asset = s:match("rbxasset://([^%s%)%,]+)")
+        if asset then return "rbxasset://" .. asset end
+        local ga = s:match("rbxgameasset://(%d+)")
+        if ga then return "rbxgameasset://" .. ga end
+        local thumb = s:match("rbxthumb://[^%s%)]+")
+        if thumb then return thumb end
+        local http = s:match("(https?://[^%s%)%,]+)")
+        if http then return http end
+        local inner = s:match("Content%((.-)%)")
+        if inner and inner ~= "" and inner ~= s then return extractUri(inner) end
+    end
+    return nil
+end
+
+local function notify(title, text, dur)
+    if not Fish.Options.Notify then return end
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = title, Text = text, Duration = dur or 6,
+        })
+    end)
+end
+
+local function serContentTag(name, uri) return '<Content name="' .. clean(name) .. '"><url>' .. clean(uri) .. '</url></Content>' end
+local function serString(name, v) if type(v) ~= "string" then return nil end return '<string name="' .. clean(name) .. '">' .. clean(v) .. '</string>' end
+local function serProtectedString(name, v) if type(v) ~= "string" then v = "" end return '<ProtectedString name="' .. clean(name) .. '">' .. clean(v) .. '</ProtectedString>' end
+local function serBool(name, v) if type(v) ~= "boolean" then v = v and true or false end return '<bool name="' .. clean(name) .. '">' .. (v and "true" or "false") .. '</bool>' end
+local function serInt(name, v) return '<int name="' .. clean(name) .. '">' .. string.format("%d", v) .. '</int>' end
+local function serInt64(name, v) return '<int64 name="' .. clean(name) .. '">' .. string.format("%d", v) .. '</int64>' end
+local function serFloat(name, v) return '<float name="' .. clean(name) .. '">' .. nm(v) .. '</float>' end
+local function serDouble(name, v) return '<double name="' .. clean(name) .. '">' .. nm(v) .. '</double>' end
+local function serNumber(name, v)
+    if v == math.floor(v) and v >= -2147483648 and v <= 2147483647 then return serInt(name, v) end
+    if v == math.floor(v) and math.abs(v) < 9007199254740992 then return serInt64(name, v) end
+    return serDouble(name, v)
+end
+local function serVector2(name, v) return '<Vector2 name="' .. clean(name) .. '"><X>' .. nm(v.X) .. '</X><Y>' .. nm(v.Y) .. '</Y></Vector2>' end
+local function serVector3(name, v) return '<Vector3 name="' .. clean(name) .. '"><X>' .. nm(v.X) .. '</X><Y>' .. nm(v.Y) .. '</Y><Z>' .. nm(v.Z) .. '</Z></Vector3>' end
+local function serCFrame(name, v)
+    local ok, r = pcall(function() return {v:GetComponents()} end)
+    if not ok or not r then return nil end
+    local s = '<CoordinateFrame name="' .. clean(name) .. '"><X>' .. nm(r[1]) .. '</X><Y>' .. nm(r[2]) .. '</Y><Z>' .. nm(r[3]) .. '</Z>'
+    for i = 0, 2 do for j = 0, 2 do s = s .. '<R' .. i .. j .. '>' .. nm(r[i * 3 + j + 4]) .. '</R' .. i .. j .. '>' end end
+    return s .. '</CoordinateFrame>'
+end
+local function serColor3(name, v) return '<Color3 name="' .. clean(name) .. '"><R>' .. nm(v.R) .. '</R><G>' .. nm(v.G) .. '</G><B>' .. nm(v.B) .. '</B></Color3>' end
+local function serBrickColor(name, v) return '<BrickColor name="' .. clean(name) .. '">' .. tostring(v.Number) .. '</BrickColor>' end
+local function serUDim(name, v) return '<UDim name="' .. clean(name) .. '"><S>' .. nm(v.Scale) .. '</S><O>' .. tostring(v.Offset) .. '</O></UDim>' end
+local function serUDim2(name, v) return '<UDim2 name="' .. clean(name) .. '"><XS>' .. nm(v.X.Scale) .. '</XS><XO>' .. tostring(v.X.Offset) .. '</XO><YS>' .. nm(v.Y.Scale) .. '</YS><YO>' .. tostring(v.Y.Offset) .. '</YO></UDim2>' end
+local function serRect(name, v) return '<Rect name="' .. clean(name) .. '"><min><X>' .. nm(v.Min.X) .. '</X><Y>' .. nm(v.Min.Y) .. '</Y></min><max><X>' .. nm(v.Max.X) .. '</X><Y>' .. nm(v.Max.Y) .. '</Y></max></Rect>' end
+local function serNumberRange(name, v) return '<NumberRange name="' .. clean(name) .. '"><Min>' .. nm(v.Min) .. '</Min><Max>' .. nm(v.Max) .. '</Max></NumberRange>' end
+local function serNumberSequence(name, v)
+    local s = '<NumberSequence name="' .. clean(name) .. '">'
+    for _, k in ipairs(v.Keypoints) do s = s .. '<Keypoint><Time>' .. nm(k.Time) .. '</Time><Value>' .. nm(k.Value) .. '</Value><Envelope>' .. nm(k.Envelope) .. '</Envelope></Keypoint>' end
+    return s .. '</NumberSequence>'
+end
+local function serColorSequence(name, v)
+    local s = '<ColorSequence name="' .. clean(name) .. '">'
+    for _, k in ipairs(v.Keypoints) do s = s .. '<Keypoint><Time>' .. nm(k.Time) .. '</Time><Color><R>' .. nm(k.Value.R) .. '</R><G>' .. nm(k.Value.G) .. '</G><B>' .. nm(k.Value.B) .. '</B></Color></Keypoint>' end
+    return s .. '</ColorSequence>'
+end
+local function serEnumItem(name, v)
+    local ok, val = pcall(function() return v.Value end)
+    if ok and type(val) == "number" then return '<token name="' .. clean(name) .. '">' .. tostring(val) .. '</token>' end
+    return nil
+end
+local function serTokenNumber(name, v)
+    if type(v) == "number" then return '<token name="' .. clean(name) .. '">' .. tostring(v) .. '</token>' end
+    local ok, val = pcall(function() return v.Value end)
+    if ok and type(val) == "number" then return '<token name="' .. clean(name) .. '">' .. tostring(val) .. '</token>' end
+    return nil
+end
+local function serFaces(name, v)
+    local f, base = 0, 1
+    for _, k in ipairs({"Top","Bottom","Left","Right","Front","Back"}) do if v[k] then f = f + base end base = base * 2 end
+    return '<token name="' .. clean(name) .. '">' .. f .. '</token>'
+end
+local function serAxes(name, v)
+    local f, base = 0, 1
+    for _, k in ipairs({"X","Y","Z"}) do if v[k] then f = f + base end base = base * 2 end
+    return '<token name="' .. clean(name) .. '">' .. f .. '</token>'
+end
+
+local Walker = { refs = {}, refCount = 0, totalInst = 0 }
+
+local function serInstance(name, v)
+    if Walker.refs[v] then return '<Ref name="' .. clean(name) .. '">' .. Walker.refs[v] .. '</Ref>' end
+    return nil
+end
+local function serPhysicalProps(name, v)
+    local ok, body = pcall(function()
+        return '<Density>' .. nm(v.Density) .. '</Density><Friction>' .. nm(v.Friction) .. '</Friction><Elasticity>' .. nm(v.Elasticity) .. '</Elasticity><FrictionWeight>' .. nm(v.FrictionWeight) .. '</FrictionWeight><ElasticityWeight>' .. nm(v.ElasticityWeight) .. '</ElasticityWeight>'
+    end)
+    if not ok or not body then return nil end
+    return '<PhysicalProperties name="' .. clean(name) .. '">' .. body .. '</PhysicalProperties>'
+end
+local function serBinaryString(name, v)
+    if type(v) ~= "string" then return nil end
+    return '<BinaryString name="' .. clean(name) .. '">' .. b64(v) .. '</BinaryString>'
+end
+local function serRay(name, v)
+    local ok, o, d = pcall(function() return v.Origin, v.Direction end)
+    if not ok then return nil end
+    return '<Ray name="' .. clean(name) .. '"><Origin><X>' .. nm(o.X) .. '</X><Y>' .. nm(o.Y) .. '</Y><Z>' .. nm(o.Z) .. '</Z></Origin><Direction><X>' .. nm(d.X) .. '</X><Y>' .. nm(d.Y) .. '</Y><Z>' .. nm(d.Z) .. '</Z></Direction></Ray>'
+end
+local function serFont(name, v)
+    local parts = {}
+    pcall(function() table.insert(parts, '<Family>' .. clean(v.Family) .. '</Family>') end)
+    pcall(function() table.insert(parts, '<Weight>' .. tostring(v.Weight.Value) .. '</Weight>') end)
+    pcall(function() table.insert(parts, '<Style>' .. tostring(v.Style.Value) .. '</Style>') end)
+    if #parts == 0 then return nil end
+    return '<Font name="' .. clean(name) .. '">' .. table.concat(parts) .. '</Font>'
+end
+
+local serByType = {
+    string = serString, ProtectedString = serProtectedString, SharedString = serString,
+    boolean = serBool, bool = serBool, number = serNumber, int = serInt, int64 = serInt64,
+    float = serFloat, double = serDouble, Vector2 = serVector2, Vector3 = serVector3,
+    CFrame = serCFrame, Color3 = serColor3, BrickColor = serBrickColor, UDim = serUDim,
+    UDim2 = serUDim2, Rect = serRect, NumberRange = serNumberRange,
+    NumberSequence = serNumberSequence, ColorSequence = serColorSequence,
+    EnumItem = serEnumItem, Faces = serFaces, Axes = serAxes, Instance = serInstance,
+    PhysicalProperties = serPhysicalProps, BinaryString = serBinaryString,
+    Ray = serRay, Font = serFont, FontFace = serFont,
+}
+
+local specialPropHandlers = { Shape = serTokenNumber, Face = serTokenNumber, Material = serTokenNumber }
+
+local function serializeProp(name, v)
+    if v == nil then return nil end
+    if shouldSkipProp(name) then return nil end
+    if BINARY_PROPS[name] and type(v) == "string" then
+        return '<BinaryString name="' .. clean(name) .. '">' .. b64(v) .. '</BinaryString>'
+    end
+    if type(v) == "boolean" then return serBool(name, v) end
+    local special = specialPropHandlers[name]
+    if special then local s = special(name, v) if s then return s end end
+    local t = typeof(v)
+    if t == "EnumItem" then return serEnumItem(name, v) end
+    local fn = serByType[t]
+    if not fn and type(v) == "boolean" then fn = serBool end
+    if not fn then return nil end
+    local ok, s = pcall(fn, name, v)
+    if ok and s and s ~= "" then return s end
+    return nil
+end
+
+local function propsViaGetProperties(inst)
+    if not Fish.Options.UseGetProperties or not IO.getproperties then return nil end
+    local ok, list = pcall(IO.getproperties, inst)
+    if not ok or type(list) ~= "table" then return nil end
+    local out = {}
+    for _, k in ipairs(list) do
+        if type(k) == "string" and not shouldSkipProp(k) and isPropValid(inst.ClassName, k) then
+            table.insert(out, k)
+        end
+    end
+    return out
+end
+
+local defaultCache = {}
+local function getDefault(className)
+    if defaultCache[className] ~= nil then return defaultCache[className] end
+    local ok, inst = pcall(Instance.new, className)
+    if not ok or not inst then defaultCache[className] = false return false end
+    defaultCache[className] = inst
+    return inst
+end
+
+local function valuesEqual(a, b)
+    if a == b then return true end
+    local ta, tb = typeof(a), typeof(b)
+    if ta ~= tb then return false end
+    if ta == "number" then return math.abs(a - b) < 1e-6 end
+    if ta == "string" or ta == "boolean" then return a == b end
+    local ok1, s1 = pcall(tostring, a)
+    local ok2, s2 = pcall(tostring, b)
+    if ok1 and ok2 then return s1 == s2 end
+    return false
+end
+
+local function modelIsCharacter(m)
+    if not m then return false end
+    local ok, player = pcall(function() return Players:GetPlayerFromCharacter(m) end)
+    if ok and player then return true end
+    local ok2, hum = pcall(function() return m:FindFirstChildOfClass("Humanoid") end)
+    if ok2 and hum then
+        local ok3, hrp = pcall(function() return m:FindFirstChild("HumanoidRootPart") end)
+        if ok3 and hrp then return true end
+    end
+    return false
+end
+
+local function isCharacter(inst, opts, charRefs)
+    if not opts.StripCharacters then return false end
+    if not inst then return false end
+    if charRefs[inst] then return true end
+    if not inst:IsA("Model") then
+        local okp, charModel = pcall(function() return inst:FindFirstAncestorWhichIsA("Model") end)
+        if okp and charModel and charRefs[charModel] then
+            charRefs[inst] = true
+            return true
+        end
+        if CHARACTER_CLASSES[inst.ClassName] then
+            local okp2, parent = pcall(function() return inst.Parent end)
+            if okp2 and parent and parent:IsA("Model") and modelIsCharacter(parent) then
+                charRefs[inst] = true
+                return true
+            end
+        end
+        return false
+    end
+    if modelIsCharacter(inst) then
+        charRefs[inst] = true
+        local okd, desc = pcall(function() return inst:GetDescendants() end)
+        if okd and desc then for _, d in ipairs(desc) do charRefs[d] = true end end
+        return true
+    end
+    return false
+end
+
+local function nameIsCore(inst, opts, coreRefs)
+    if not opts.StripCoreScripts then return false end
+    local ok, n = pcall(function() return inst.Name end)
+    if not ok or not n then return false end
+    if CORE_SCRIPT_NAMES[n] then coreRefs[inst] = true return true end
+    return false
+end
+
+local function ancestorIsCore(inst, opts, coreRefs)
+    if not opts.StripCoreScripts then return false end
+    local okA, ancestor = pcall(function()
+        return inst:FindFirstAncestorOfClass("PlayerScripts")
+            or inst:FindFirstAncestorOfClass("PlayerGui")
+            or inst:FindFirstAncestorOfClass("StarterPlayer")
+    end)
+    if okA and ancestor then return true end
+    local cur = inst.Parent
+    for _ = 1, 30 do
+        if not cur then return false end
+        if coreRefs[cur] then return true end
+        if cur == Players or cur == game then return false end
+        cur = cur.Parent
+    end
+    return false
+end
+
+local function keepInst(inst, opts, charRefs, coreRefs)
+    if isCharacter(inst, opts, charRefs) then return false end
+    if nameIsCore(inst, opts, coreRefs) then return false end
+    if ancestorIsCore(inst, opts, coreRefs) then return false end
+    if inst:IsA("Lighting") then return true end
+    if opts.IgnoreNotArchivable then
+        local ok, ar = pcall(function() return inst.Archivable end)
+        if ok and ar == false then return false end
+    end
+    local parent = inst.Parent
+    if parent and charRefs[parent] then return false end
+    if parent and coreRefs[parent] then return false end
+    if parent == game and SKIP_SVC[inst.ClassName] then return false end
+    return true
+end
+
+local function walkRef(root, d, opts, refs, charRefs, coreRefs)
+    if d > opts.Depth then return end
+    if refs[root] then return end
+    Walker.refCount = Walker.refCount + 1
+    refs[root] = "RBX" .. Walker.refCount
+    if Walker.refCount % 500 == 0 then
+        setStatusText("Saving game.. scanning " .. Walker.refCount)
+        task.wait()
+    end
+    local ok, kids = pcall(function() return root:GetChildren() end)
+    if not ok or not kids then return end
+    for _, c in ipairs(kids) do
+        if keepInst(c, opts, charRefs, coreRefs) then walkRef(c, d + 1, opts, refs, charRefs, coreRefs) end
+    end
+end
+
+local function readProp(inst, name)
+    local ok, v = pcall(function() return inst[name] end)
+    if ok and v ~= nil then return v end
+    return nil
+end
+
+local function readTerrainVoxels(terrain, res)
+    if not terrain then return nil end
+    res = res or Fish.Options.TerrainResolution or 8
+    local ok_size, size = pcall(function() return terrain.Size end)
+    if not ok_size or not size then return nil end
+    local cap = Fish.Options.TerrainCellCap or 4194304
+    local adjRes = res
+    local cellsX, cellsY, cellsZ
+    while true do
+        cellsX = math.max(1, math.floor(size.X / adjRes + 0.5))
+        cellsY = math.max(1, math.floor(size.Y / adjRes + 0.5))
+        cellsZ = math.max(1, math.floor(size.Z / adjRes + 0.5))
+        if cellsX * cellsY * cellsZ <= cap then break end
+        adjRes = adjRes * 2
+        if adjRes > 1024 then
+            log("Terrain too large to capture even at res 1024, skipping.")
+            return nil
+        end
+    end
+    if adjRes ~= res then
+        log("Terrain resolution auto-raised from " .. res .. " to " .. adjRes .. " to stay under cell cap.")
+        setStatusText("Saving game.. terrain downsampled to res " .. adjRes)
+        task.wait()
+    end
+    local half = size * 0.5
+    local CHUNK = 32
+    local out = {}
+    out[#out+1] = string.pack("<I4", 4)
+    out[#out+1] = string.pack("<I4", 0)
+    out[#out+1] = string.pack("<I4", cellsX)
+    out[#out+1] = string.pack("<I4", cellsY)
+    out[#out+1] = string.pack("<I4", cellsZ)
+    local matParts = {}
+    local occParts = {}
+    local chunkIdx = 0
+    for cx = 0, cellsX - 1, CHUNK do
+        for cy = 0, cellsY - 1, CHUNK do
+            for cz = 0, cellsZ - 1, CHUNK do
+                local ex = math.min(cx + CHUNK, cellsX)
+                local ey = math.min(cy + CHUNK, cellsY)
+                local ez = math.min(cz + CHUNK, cellsZ)
+                local minV = Vector3.new(-half.X + cx * adjRes, -half.Y + cy * adjRes, -half.Z + cz * adjRes)
+                local maxV = Vector3.new(-half.X + ex * adjRes, -half.Y + ey * adjRes, -half.Z + ez * adjRes)
+                local region = Region3.new(minV, maxV)
+                local ok, m, o = pcall(function()
+                    return terrain:ReadVoxels(region, adjRes)
+                end)
+                if ok and m and o then
+                    for x = 1, #m do
+                        local mx = m[x]
+                        local ox = o[x]
+                        local xm = {}
+                        local xo = {}
+                        for y = 1, #mx do
+                            local mxy = mx[y]
+                            local oxy = ox[y]
+                            for z = 1, #mxy do
+                                local mv = mxy[z]
+                                local ov = oxy[z]
+                                xm[#xm+1] = string.char(mv.Value)
+                                xo[#xo+1] = string.char(math.floor(ov * 255 + 0.5))
+                            end
+                        end
+                        matParts[#matParts+1] = table.concat(xm)
+                        occParts[#occParts+1] = table.concat(xo)
+                    end
+                end
+                chunkIdx = chunkIdx + 1
+                if chunkIdx % 8 == 0 then
+                    setStatusText("Saving game.. terrain chunk " .. chunkIdx)
+                    task.wait()
+                end
+            end
+        end
+    end
+    out[#out+1] = table.concat(matParts)
+    out[#out+1] = table.concat(occParts)
+    return table.concat(out)
+end
+
+local function emitContentProp(buf, inst, pad, propName)
+    local raw = readProp(inst, propName)
+    if raw == nil then return end
+    local uri = extractUri(raw)
+    if not uri then return end
+    table.insert(buf, pad .. '    ' .. serContentTag(propName, uri))
+end
+
+local function emitSingleProp(buf, inst, pad, seen, k, opts, defaultInst)
+    if seen[k] or shouldSkipProp(k) then return end
+    if Fish.Options.APIProperties and not isPropValid(inst.ClassName, k) then return end
+    if isRealContent(k) then
+        seen[k] = true
+        emitContentProp(buf, inst, pad, k)
+    else
+        local v = readProp(inst, k)
+        if v ~= nil then
+            seen[k] = true
+            local skip = false
+            if defaultInst then
+                local okd, dv = pcall(function() return defaultInst[k] end)
+                if okd and dv ~= nil then
+                    local ok1, eq = pcall(valuesEqual, v, dv)
+                    if ok1 and eq then skip = true end
+                end
+            end
+            if not skip then
+                local s = serializeProp(k, v)
+                if s then table.insert(buf, pad .. '    ' .. s) end
+            end
+        end
+    end
+end
+
+local function emitPropsFromList(buf, inst, pad, seen, list, opts)
+    local cls = inst.ClassName
+    local defaultInst = opts.IgnoreDefaultProps and getDefault(cls) or nil
+    for _, k in ipairs(list) do
+        emitSingleProp(buf, inst, pad, seen, k, opts, defaultInst)
+    end
+end
+
+local function emitAttributesAndTags(buf, inst, pad, opts)
+    if opts.EmitAttributes then
+        local ok, encoded = pcall(encodeAttributes, inst)
+        if ok and encoded and #encoded > 0 then
+            table.insert(buf, pad .. '    <BinaryString name="AttributesSerialize">' .. b64(encoded) .. '</BinaryString>')
+        end
+    end
+    if opts.EmitTags then
+        local ok, encoded = pcall(encodeTags, inst)
+        if ok and encoded then
+            table.insert(buf, pad .. '    <BinaryString name="Tags">' .. b64(encoded) .. '</BinaryString>')
+        end
+    end
+end
+
+local function shouldEmitInMode(cls, mode)
+    if mode == "full" then return true end
+    if mode == "scripts" then return cls == "Script" or cls == "LocalScript" or cls == "ModuleScript" end
+    if mode == "models" then return cls ~= "Script" and cls ~= "LocalScript" and cls ~= "ModuleScript" end
+    return true
+end
+
+local function emitInst(buf, inst, d, opts, decompileCache, refs, totalRefs)
+    local ref = refs[inst]
+    if not ref then return end
+    local pad = string.rep("  ", d)
+    local cls = inst.ClassName
+
+    if not shouldEmitInMode(cls, opts.Mode) then
+        local okc, kids = pcall(function() return inst:GetChildren() end)
+        if okc and kids then for _, c in ipairs(kids) do if refs[c] then emitInst(buf, c, d, opts, decompileCache, refs, totalRefs) end end end
+        return
+    end
+
+    Walker.totalInst = Walker.totalInst + 1
+    bumpStatus("Saving", Walker.totalInst, totalRefs)
+
+    table.insert(buf, pad .. '<Item class="' .. clean(cls) .. '" referent="' .. ref .. '">')
+    table.insert(buf, pad .. '  <Properties>')
+
+    local seen = {}
+    local specific = INSTANCE_SPECIFIC[cls]
+    if specific then emitPropsFromList(buf, inst, pad, seen, specific, opts) end
+
+    emitPropsFromList(buf, inst, pad, seen, CRITICAL_PROPS, opts)
+
+    local dynProps = propsViaGetProperties(inst)
+    if dynProps then
+        for _, k in ipairs(dynProps) do
+            emitSingleProp(buf, inst, pad, seen, k, opts, nil)
+        end
+    end
+
+    if not seen.Name then
+        local name = readProp(inst, "Name")
+        if name then
+            if opts.Anonymous then
+                local ok, p = pcall(function() return Players:GetPlayerFromCharacter(inst) end)
+                if ok and p then name = "Player_" .. tostring(p.UserId) end
+            end
+            table.insert(buf, pad .. '    <string name="Name">' .. clean(name) .. '</string>')
+        end
+    end
+
+    emitAttributesAndTags(buf, inst, pad, opts)
+
+    if cls == "Script" then
+        local src = tostring(DATA.server_script_placeholder or "")
+        table.insert(buf, pad .. '    <ProtectedString name="Source">' .. clean(src) .. '</ProtectedString>')
+    elseif cls == "LocalScript" or cls == "ModuleScript" then
+        local src = readProp(inst, "Source")
+        if decompileCache and decompileCache[inst] then src = decompileCache[inst] end
+        if (not src or src == "") and opts.Decompile and opts._decompileFn then
+            local okd, decoded = pcall(opts._decompileFn, inst)
+            if okd and type(decoded) == "string" and decoded ~= "" then src = decoded end
+        end
+        if (not src or src == "") and opts.SaveBytecode and opts._bytecodeFn then
+            local okb, bc = pcall(opts._bytecodeFn, inst)
+            if okb and type(bc) == "string" and bc ~= "" then src = b64(bc) end
+        end
+        if not src or src == "" then
+            src = "-- [Fishilizer] No source recovered for " .. tostring(cls) .. " \"" .. tostring(inst.Name) .. "\""
+        end
+        table.insert(buf, pad .. '    <ProtectedString name="Source">' .. clean(src) .. '</ProtectedString>')
+    end
+
+    if cls == "UnionOperation" or cls == "IntersectOperation" or cls == "NegateOperation" or cls == "PartOperation" then
+        for _, bp in ipairs({"ChildData", "PhysicsData", "PhysicalConfigData"}) do
+            if not seen[bp] then
+                local raw = readProp(inst, bp)
+                if raw and type(raw) == "string" then
+                    table.insert(buf, pad .. '    <BinaryString name="' .. bp .. '">' .. b64(raw) .. '</BinaryString>')
+                end
+            end
+        end
+    end
+
+    if cls == "Terrain" then
+        if not seen.SmoothGrid then
+            local sg = readTerrainVoxels(inst, opts.TerrainResolution)
+            if sg and #sg > 0 then
+                table.insert(buf, pad .. '    <BinaryString name="SmoothGrid">' .. b64(sg) .. '</BinaryString>')
+            else
+                log("Terrain voxel capture returned nothing.")
+            end
+        end
+        local mc = readProp(inst, "MaterialColors")
+        if mc and type(mc) == "string" and #mc > 0 and not seen.MaterialColors then
+            table.insert(buf, pad .. '    <BinaryString name="MaterialColors">' .. b64(mc) .. '</BinaryString>')
+        end
+    end
+
+    table.insert(buf, pad .. '  </Properties>')
+
+    local okc, kids = pcall(function() return inst:GetChildren() end)
+    if okc and kids then for _, c in ipairs(kids) do if refs[c] then emitInst(buf, c, d + 1, opts, decompileCache, refs, totalRefs) end end end
+
+    table.insert(buf, pad .. '</Item>')
+end
+
+local function placeName()
+    local pid = game.PlaceId
+    local name
+    local ok, n = pcall(function() return game.Name end)
+    if ok and n and n ~= "" and n ~= "Game" and n:lower() ~= "ugc" then name = n end
+    if not name then
+        local okp, info = pcall(function() return game:GetService("MarketplaceService"):GetProductInfo(pid) end)
+        if okp and info and info.Name and info.Name ~= "" then name = info.Name end
+    end
+    if not name or name == "" then name = "Place_" .. tostring(pid) end
+    name = name:gsub("[^%w_%-%s]", ""):gsub("%s+", "_"):gsub("_+", "_")
+    if #name > 80 then name = name:sub(1, 80) end
+    if name == "" then name = "Place_" .. tostring(pid) end
+    return name
+end
+
+local function buildReadmeSource()
+    local tpl = DATA.readme_template
+    if type(tpl) ~= "string" or tpl == "" then
+        tpl = "-- Fishilizer v" .. Fish.VERSION .. "\nGame saved with Fishilizer\n"
+    end
+    local subs = {
+        VERSION = Fish.VERSION,
+        PLACE_NAME = placeName(),
+        PLACE_ID = tostring(game.PlaceId),
+        JOB_ID = tostring(game.JobId or "N/A"),
+        MODE = tostring(Fish.Options.Mode),
+        DECOMPILE = tostring(Fish.Options.Decompile),
+        TERRAIN_RESOLUTION = tostring(Fish.Options.TerrainResolution),
+        DEPTH = tostring(Fish.Options.Depth),
+        TIMESTAMP = os.date("!%Y-%m-%d %H:%M:%S"),
     }
-    return null;
-  }
+    return (tpl:gsub("{{(%w+)}}", function(k) return subs[k] or "" end))
+end
 
-  return {
-    meta: d.meta,
-    options: d.options,
-    decompiler: d.decompiler,
-    tables: tables,
-    templates: d.templates,
-    classes: classes,
-    endpoints: endpoints,
-    get: get,
-    raw: d
-  };
-})();
+local function buildReadmeXML(depth)
+    local pad = string.rep("  ", depth)
+    local src = buildReadmeSource()
+    return table.concat({
+        pad .. '<Item class="Script" referent="RBX_README">',
+        pad .. '  <Properties>',
+        pad .. '    <string name="Name">README</string>',
+        pad .. '    <bool name="Disabled">false</bool>',
+        pad .. '    <ProtectedString name="Source">' .. clean(src) .. '</ProtectedString>',
+        pad .. '  </Properties>',
+        pad .. '</Item>',
+    }, "\n")
+end
 
-window.FishAPI = FishAPI;
+local function mergeOptions(userOpts)
+    local merged = {}
+    for k, v in pairs(Fish.Options) do merged[k] = v end
+    if userOpts then for k, v in pairs(userOpts) do merged[k] = v end end
+    merged._decompileFn = Fish._decompileFn
+    merged._bytecodeFn = Fish._bytecodeFn
+    if merged.ReadMe then
+        merged._readmeXMLFn = buildReadmeXML
+    else
+        merged._readmeXMLFn = nil
+    end
+    return merged
+end
 
-(function(){
-  document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
-  document.addEventListener('dragstart', function(e){ e.preventDefault(); });
+local _pendingRestore = {}
 
-  var root = document.documentElement;
-  var saved = null;
-  try { saved = localStorage.getItem("fish-theme"); } catch(e){}
-  var initial = saved || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  root.setAttribute("data-theme", initial);
+local function moveBackpackToStarter()
+    _pendingRestore = {}
+    local lp = Players.LocalPlayer
+    if not lp then return end
+    local bp = lp:FindFirstChildOfClass("Backpack")
+    if not bp then return end
+    local sp = game:GetService("StarterPack")
+    if not sp then return end
+    local okL, tools = pcall(function() return bp:GetChildren() end)
+    if not okL or not tools then return end
+    for _, tool in ipairs(tools) do
+        if tool:IsA("Tool") then
+            if not sp:FindFirstChild(tool.Name) then
+                local origParent = tool.Parent
+                local okMove = pcall(function() tool.Parent = sp end)
+                if okMove then
+                    table.insert(_pendingRestore, {tool = tool, orig = origParent})
+                end
+            end
+        end
+    end
+end
 
-  var toggle = document.getElementById("themeToggle");
-  var icon = document.getElementById("themeIcon");
+local function restoreBackpack()
+    for i = #_pendingRestore, 1, -1 do
+        local entry = _pendingRestore[i]
+        pcall(function()
+            if entry.tool and entry.tool.Parent == game:GetService("StarterPack") then
+                entry.tool.Parent = entry.orig
+            end
+        end)
+    end
+    _pendingRestore = {}
+end
 
-  function updateIcon(){
-    var isDark = root.getAttribute("data-theme") === "dark";
-    icon.innerHTML = isDark
-      ? '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>'
-      : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
-  }
-  updateIcon();
+function Fish.Init()
+    loadFromAPI()
+    Fish._decompileFn = lunauxDecompile
+    Fish._bytecodeFn = resolveBytecode()
+    if Fish.Options.FetchDocs or Fish.Options.APIProperties then
+        local ok, data = pcall(Fish.FetchClasses)
+        if not ok then log("API dump fetch failed: " .. tostring(data)) end
+    end
+    return Fish
+end
 
-  toggle.addEventListener("click", function(){
-    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
-    root.setAttribute("data-theme", next);
-    try { localStorage.setItem("fish-theme", next); } catch(e){}
-    updateIcon();
-  });
+function Fish.Save(instance, name, userOpts)
+    if not _dataLoaded then loadFromAPI() end
+    local opts = mergeOptions(userOpts)
+    IO.writefile = IO.writefile or resolveIO("writefile")
+    IO.makefolder = IO.makefolder or resolveIO("makefolder")
+    IO.isfolder = IO.isfolder or resolveIO("isfolder")
+    IO.isfile = IO.isfile or resolveIO("isfile")
+    IO.delfile = IO.delfile or resolveIO("delfile")
+    IO.getproperties = IO.getproperties or resolveIO("getproperties")
 
-  var tabs = document.querySelectorAll("nav.top a");
-  var panels = document.querySelectorAll(".panel");
+    if not opts.Callback and not opts.Clipboard and not IO.writefile then
+        log("writefile unavailable")
+        notify("Fishilizer: FAILED", "Executor missing writefile", 10)
+        return nil
+    end
 
-  function show(name){
-    tabs.forEach(function(t){ t.classList.toggle("on", t.dataset.tab === name); });
-    panels.forEach(function(p){ p.classList.toggle("on", p.id === "tab-" + name); });
-    window.scrollTo(0, 0);
-  }
+    _statusUI = buildStatusUI()
+    _statusAccum = 0
+    setStatusText("Saving game..")
 
-  tabs.forEach(function(t){
-    t.addEventListener("click", function(e){
-      e.preventDefault();
-      show(t.dataset.tab);
-    });
-  });
+    if opts.KillAllScripts then
+        pcall(function()
+            for _, s in ipairs(game:GetDescendants()) do
+                if s:IsA("Script") or s:IsA("LocalScript") or s:IsA("ModuleScript") then
+                    pcall(function() s.Disabled = true end)
+                end
+            end
+        end)
+    end
 
-  document.querySelectorAll("[data-jump]").forEach(function(el){
-    el.addEventListener("click", function(e){
-      e.preventDefault();
-      show(el.dataset.jump);
-    });
-  });
+    log("Serializing...")
+    task.wait()
 
-  function highlight(src){
-    src = src.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-    var rx = /(--\[\[[\s\S]*?\]\]|--[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')|(\b0x[0-9a-fA-F]+\b|\b\d+(?:\.\d+)?\b)|(\b(?:local|function|end|if|then|else|elseif|for|while|do|return|break|in|repeat|until|and|or|not|nil|true|false|self)\b)|(\b(?:print|pairs|ipairs|tostring|tonumber|type|typeof|pcall|xpcall|error|assert|require|select|unpack|setmetatable|getmetatable|rawget|rawset|loadstring|next|game|workspace|script|Instance|Enum|task|wait|getgenv|writefile|readfile|isfile|isfolder|makefolder|delfile|HttpGet|HttpGetAsync|Save|SaveGame|SaveScripts|SaveModels|Init|LoadData|FishAPI)\b)/g;
-    return src.replace(rx, function(m, com, str, num, kw, fn){
-      if (com) return '<span class="c-com">'+com+'</span>';
-      if (str) return '<span class="c-str">'+str+'</span>';
-      if (num) return '<span class="c-num">'+num+'</span>';
-      if (kw)  return '<span class="c-kw">'+kw+'</span>';
-      if (fn)  return '<span class="c-fn">'+fn+'</span>';
-      return m;
-    });
-  }
+    local t0 = tick()
+    Walker.refs = {}
+    Walker.refCount = 0
+    Walker.totalInst = 0
 
-  document.querySelectorAll("pre").forEach(function(pre){
-    if (pre.id === "out" || pre.id === "dataOut") return;
-    var raw = pre.textContent;
-    pre.dataset.raw = raw;
-    pre.innerHTML = highlight(raw);
-  });
+    local charRefs = {}
+    local coreRefs = {}
+    local refs = {}
+    Walker.refs = refs
 
-  var mode = "full";
-  var out = document.getElementById("out");
-  var URL_BASE = "https://civilation.github.io/Fishilizer/Fishilizer.lua";
-  var desc = {
-    full:    "-- full: everything",
-    scripts: "-- scripts: only Script, LocalScript, ModuleScript",
-    models:  "-- models: everything except scripts"
-  };
+    if opts.RemovePlayerCharacters then
+        local okp, plist = pcall(function() return Players:GetPlayers() end)
+        if okp and plist then
+            for _, p in ipairs(plist) do
+                local okc, char = pcall(function() return p.Character end)
+                if okc and char then
+                    charRefs[char] = true
+                    local okd, desc = pcall(function() return char:GetDescendants() end)
+                    if okd and desc then for _, d in ipairs(desc) do charRefs[d] = true end end
+                end
+            end
+        end
+    end
 
-  function render(){
-    var lines = [];
-    lines.push(desc[mode]);
-    lines.push("getgenv().FISHILIZER_CONFIG = {");
-    document.querySelectorAll("input[data-k]").forEach(function(cb){
-      lines.push("    " + cb.dataset.k + " = " + (cb.checked ? "true" : "false") + ",");
-    });
-    lines.push('    Mode = "' + mode + '",');
-    lines.push("}");
-    lines.push("");
-    lines.push("loadstring(game:HttpGetAsync(");
-    lines.push('    "' + URL_BASE + '"');
-    lines.push("))()");
-    var raw = lines.join("\n");
-    out.dataset.raw = raw;
-    out.innerHTML = highlight(raw);
-  }
+    local roots = {}
+    if type(instance) == "table" then
+        for _, r in ipairs(instance) do if typeof(r) == "Instance" then table.insert(roots, r) end end
+    elseif typeof(instance) == "Instance" then
+        table.insert(roots, instance)
+    end
 
-  document.querySelectorAll("input[data-k]").forEach(function(cb){
-    cb.addEventListener("change", render);
-  });
+    if #roots == 0 then
+        fadeStatusAndDestroy()
+        notify("Fishilizer: FAILED", "No valid root instance", 10)
+        return nil
+    end
 
-  document.querySelectorAll("#modes button").forEach(function(b){
-    b.addEventListener("click", function(){
-      document.querySelectorAll("#modes button").forEach(function(x){ x.classList.remove("on"); });
-      b.classList.add("on");
-      mode = b.dataset.m;
-      render();
-    });
-  });
+    local didMoveBackpack = false
+    if opts.IncludeBackpack then
+        local okM = pcall(moveBackpackToStarter)
+        didMoveBackpack = okM
+    end
 
-  document.querySelectorAll(".copy-btn").forEach(function(btn){
-    btn.addEventListener("click", function(){
-      if (btn.id === "dataCopy" || btn.id === "dataDownload") return;
-      var el = document.getElementById(btn.dataset.t);
-      if (!el) return;
-      var txt = el.dataset.raw || el.textContent;
-      function done(){
-        var old = btn.textContent;
-        btn.textContent = "copied";
-        btn.classList.add("done");
-        setTimeout(function(){ btn.textContent = old; btn.classList.remove("done"); }, 1200);
-      }
-      if (navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(txt).then(done).catch(function(){ fallback(txt, done); });
-      } else {
-        fallback(txt, done);
-      }
-    });
-  });
+    local okSave, result = pcall(function()
+        for _, root in ipairs(roots) do
+            if root == game then
+                local ok0, kids0 = pcall(function() return game:GetChildren() end)
+                if ok0 and kids0 then
+                    for _, svc in ipairs(kids0) do
+                        if keepInst(svc, opts, charRefs, coreRefs) then walkRef(svc, 1, opts, refs, charRefs, coreRefs) end
+                    end
+                end
+            else
+                if keepInst(root, opts, charRefs, coreRefs) then walkRef(root, 1, opts, refs, charRefs, coreRefs) end
+            end
+        end
 
-  function fallback(txt, done){
-    var ta = document.createElement("textarea");
-    ta.value = txt;
-    ta.style.position = "fixed";
-    ta.style.opacity = "0";
-    document.body.appendChild(ta);
-    ta.select();
-    try { document.execCommand("copy"); done(); } catch(e){}
-    document.body.removeChild(ta);
-  }
+        log("Walked " .. Walker.refCount .. " instances")
+        setStatusText("Saving game.. decompiling")
+        task.wait()
 
-  var optDesc = {
-    Decompile: "Runs the LunaUX decompiler on every LocalScript and ModuleScript.",
-    MaxThreads: "Number of parallel decompile workers.",
-    SaveBytecode: "If decompilation fails or source is empty, saves base64 bytecode instead.",
-    RemovePlayerCharacters: "Strips every player character model from the save.",
-    IncludeBackpack: "Temporarily moves runtime tools to StarterPack to preserve hotbar icons.",
-    IgnoreDefaultProps: "Compares properties to a fresh Instance.new() and skips them.",
-    IgnoreNotArchivable: "Skips any instance where Archivable = false.",
-    UseGetProperties: "Calls getproperties(inst) to enumerate every engine property.",
-    FetchDocs: "Pulls the MaximumADHD API dump on Init to generate live class maps.",
-    APIProperties: "Gates every emitted property against the API dump for stability.",
-    Mode: "Accepts full, scripts, or models.",
-    FilePath: "Absolute output path. Overrides OUT.",
-    Callback: "function(xml) instead of writing to disk.",
-    Clipboard: "Copies the XML to the clipboard instead of writing a file.",
-    AvoidFileOverwrite: "Does not delete existing files at the target path.",
-    KillAllScripts: "Disables all running scripts before saving.",
-    Anonymous: "Replaces player names with Player_UserId.",
-    EmitTags: "Serializes CollectionService tags.",
-    EmitAttributes: "Serializes GetAttributes() into binary blobs.",
-    StripCharacters: "Automatically removes character models.",
-    StripCoreScripts: "Automatically removes Roblox internal modules.",
-    TerrainResolution: "Voxel resolution for Terrain:ReadVoxels() capture.",
-    TerrainCellCap: "Max voxel count before resolution auto-raises.",
-    Depth: "Maximum recursion depth.",
-    Notify: "Toasts on start, finish, and fail.",
-    ShowStatus: "Shows the fading status text in CoreGui.",
-    ReadMe: "Emits an enabled README Script at game root next to Lighting.",
-    OUT: "Folder name when no FilePath is specified.",
-    DataAPIURL: "Where to fetch the data JSON from.",
-    APIDumpURL: "Where to fetch the Roblox API dump from."
-  };
+        local buf = {}
+        local decompileCache = {}
 
-  var optTable = document.getElementById("optionsTable");
-  var opts = FishAPI.options;
-  Object.keys(opts).sort().forEach(function(k){
-    var tr = document.createElement("tr");
-    var td1 = document.createElement("td");
-    td1.innerHTML = "<code>" + k + "</code>";
-    var td2 = document.createElement("td");
-    td2.className = "n";
-    var val = opts[k];
-    td2.textContent = typeof val === "string" ? '"' + val + '"' : String(val);
-    var td3 = document.createElement("td");
-    td3.textContent = optDesc[k] || "";
-    tr.appendChild(td1);
-    tr.appendChild(td2);
-    tr.appendChild(td3);
-    optTable.appendChild(tr);
-  });
+        if opts.Decompile and Fish._decompileFn then
+            local scriptTotal = 0
+            for inst in pairs(refs) do
+                local cls = inst.ClassName
+                if cls == "LocalScript" or cls == "ModuleScript" then
+                    local existing = readProp(inst, "Source")
+                    if not existing or existing == "" then scriptTotal = scriptTotal + 1 end
+                end
+            end
+            local scriptCount = 0
+            local iterCount = 0
+            for inst in pairs(refs) do
+                iterCount = iterCount + 1
+                local cls = inst.ClassName
+                if cls == "LocalScript" or cls == "ModuleScript" then
+                    local existing = readProp(inst, "Source")
+                    if not existing or existing == "" then
+                        scriptCount = scriptCount + 1
+                        setStatusText("Decompiling " .. scriptCount .. "/" .. scriptTotal)
+                        local ok, res = pcall(Fish._decompileFn, inst)
+                        if ok and type(res) == "string" and res ~= "" then decompileCache[inst] = res end
+                        task.wait()
+                    end
+                end
+                if iterCount % 100 == 0 then task.wait() end
+            end
+        end
 
-  var dataList = document.getElementById("dataList");
-  var dataOut = document.getElementById("dataOut");
-  var dataSearch = document.getElementById("dataSearch");
-  var dataCopy = document.getElementById("dataCopy");
-  var dataDownload = document.getElementById("dataDownload");
-  var activePath = null;
-  var activeValue = null;
+        setStatusText("Saving game.. writing")
 
-  function formatBytes(n){
-    if (n < 1024) return n + "B";
-    if (n < 1048576) return (n / 1024).toFixed(1) + "KB";
-    return (n / 1048576).toFixed(1) + "MB";
-  }
+        table.insert(buf, '<?xml version="1.0" encoding="utf-8"?>')
+        table.insert(buf, '<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">')
 
-  function buildList(){
-    var q = (dataSearch.value || "").toLowerCase().trim();
-    dataList.innerHTML = "";
-    FishAPI.endpoints.forEach(function(ep){
-      if (q && ep.path.toLowerCase().indexOf(q) === -1) return;
-      var v = ep.data();
-      var size = JSON.stringify(v).length;
-      var el = document.createElement("div");
-      el.className = "data-item" + (activePath === ep.path ? " on" : "");
-      el.innerHTML = '<span class="ep-path">' + ep.path + '</span><span class="ep-size">' + formatBytes(size) + '</span>';
-      el.addEventListener("click", function(){
-        selectEndpoint(ep.path);
-      });
-      dataList.appendChild(el);
-    });
-    if (q){
-      var cls = FishAPI.classes.filter(function(c){ return c.toLowerCase().indexOf(q) !== -1; });
-      cls.slice(0, 40).forEach(function(c){
-        var el = document.createElement("div");
-        el.className = "data-item" + (activePath === "/api/instance-specific/" + c ? " on" : "");
-        el.innerHTML = '<span class="ep-path">/api/instance-specific/' + c + '</span><span class="ep-size">' + FishAPI.tables.instance_specific[c].length + '</span>';
-        el.addEventListener("click", function(){ selectEndpoint("/api/instance-specific/" + c); });
-        dataList.appendChild(el);
-      });
-    }
-  }
+        local readmeEmitted = false
+        for _, root in ipairs(roots) do
+            if root == game then
+                local ok0, kids0 = pcall(function() return game:GetChildren() end)
+                if ok0 and kids0 then
+                    for _, svc in ipairs(kids0) do
+                        if refs[svc] then
+                            emitInst(buf, svc, 1, opts, decompileCache, refs, Walker.refCount)
+                            if opts._readmeXMLFn and not readmeEmitted and svc:IsA("Lighting") then
+                                local readmeXml = opts._readmeXMLFn(1)
+                                if readmeXml then
+                                    table.insert(buf, readmeXml)
+                                    readmeEmitted = true
+                                end
+                            end
+                        end
+                    end
+                end
+            else
+                if refs[root] then emitInst(buf, root, 1, opts, decompileCache, refs, Walker.refCount) end
+            end
+        end
 
-  function selectEndpoint(path){
-    activePath = path;
-    activeValue = FishAPI.get(path);
-    dataOut.textContent = JSON.stringify(activeValue, null, 2);
-    buildList();
-  }
+        if opts._readmeXMLFn and not readmeEmitted then
+            local readmeXml = opts._readmeXMLFn(1)
+            if readmeXml then
+                table.insert(buf, readmeXml)
+                readmeEmitted = true
+            end
+        end
 
-  dataSearch.addEventListener("input", buildList);
-  buildList();
-  selectEndpoint("/api/version");
+        table.insert(buf, '</roblox>')
 
-  dataCopy.addEventListener("click", function(){
-    if (activeValue === null) return;
-    var txt = JSON.stringify(activeValue, null, 2);
-    function done(){
-      var old = dataCopy.textContent;
-      dataCopy.textContent = "copied";
-      dataCopy.classList.add("done");
-      setTimeout(function(){ dataCopy.textContent = old; dataCopy.classList.remove("done"); }, 1200);
-    }
-    if (navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(txt).then(done).catch(function(){ fallback(txt, done); });
-    } else {
-      fallback(txt, done);
-    }
-  });
+        local xml = table.concat(buf, "\n")
+        local finalName = name or placeName()
+        local fname = finalName .. ".rbxlx"
+        local elapsed = tick() - t0
 
-  dataDownload.addEventListener("click", function(){
-    if (activeValue === null) return;
-    var slug = activePath.replace(/^\/api\//, "").replace(/\//g, "_");
-    var blob = new Blob([JSON.stringify(activeValue, null, 2)], { type: "application/json" });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement("a");
-    a.href = url;
-    a.download = "fishilizer_" + slug + ".json";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-  });
+        log("XML: " .. #xml .. " bytes, " .. Walker.totalInst .. " items emitted in " .. string.format("%.2fs", elapsed))
 
-  render();
-})();
-</script>
-</body>
-</html>
+        if opts.Callback and type(opts.Callback) == "function" then
+            pcall(opts.Callback, xml)
+            setStatusText("Saved!", Color3.fromRGB(86, 255, 128))
+            fadeStatusAndDestroy()
+            return xml
+        end
+
+        if opts.Clipboard then
+            pcall(function() if IO.setclipboard then IO.setclipboard(xml) end end)
+            setStatusText("Saved!", Color3.fromRGB(86, 255, 128))
+            fadeStatusAndDestroy()
+            return xml
+        end
+
+        local paths = {}
+        if opts.FilePath then table.insert(paths, opts.FilePath) end
+        table.insert(paths, opts.OUT .. "/" .. fname)
+        table.insert(paths, fname)
+
+        if IO.makefolder and IO.isfolder then
+            local okF, exists = pcall(IO.isfolder, opts.OUT)
+            if not okF or not exists then pcall(IO.makefolder, opts.OUT) end
+        end
+
+        local wrote = false
+        for _, path in ipairs(paths) do
+            if IO.isfile and IO.delfile then
+                local okI, exists = pcall(IO.isfile, path)
+                if okI and exists and not opts.AvoidFileOverwrite then pcall(IO.delfile, path) end
+            end
+            local ok, err = pcall(IO.writefile, path, xml)
+            if ok then
+                log("Wrote: " .. path .. " (" .. #xml .. " bytes)")
+                wrote = true
+                break
+            else
+                log("Write fail " .. path .. ": " .. tostring(err))
+            end
+        end
+
+        if not wrote then
+            setStatusText("Save failed (writefile)", Color3.fromRGB(255, 86, 86))
+            task.delay(2, fadeStatusAndDestroy)
+            return xml
+        end
+
+        setStatusText("Saved!", Color3.fromRGB(86, 255, 128))
+        task.wait(0.4)
+        fadeStatusAndDestroy()
+        return xml
+    end)
+
+    if didMoveBackpack then
+        restoreBackpack()
+    end
+
+    if not okSave then
+        log("Save error: " .. tostring(result))
+        setStatusText("Save failed: " .. tostring(result):sub(1, 60), Color3.fromRGB(255, 86, 86))
+        task.delay(2, fadeStatusAndDestroy)
+        return nil
+    end
+
+    return result
+end
+
+function Fish.SavePlace(name, userOpts)
+    return Fish.Save(game, name, userOpts)
+end
+
+function Fish.SaveInstance(instance, name, userOpts)
+    local merged = userOpts or {}
+    merged.Mode = merged.Mode or "full"
+    return Fish.Save(instance, name, merged)
+end
+
+function Fish.SaveScripts(instance, name, userOpts)
+    local merged = userOpts or {}
+    merged.Mode = "scripts"
+    merged.Decompile = true
+    return Fish.Save(instance, name, merged)
+end
+
+function Fish.SaveModels(instance, name, userOpts)
+    local merged = userOpts or {}
+    merged.Mode = "models"
+    merged.Decompile = false
+    return Fish.Save(instance, name, merged)
+end
+
+Fish.LoadData = loadFromAPI
+Fish.Data = DATA
+Fish.ValidPropsForClass = apiClassProps
+Fish.EncodeBase64 = b64
+Fish.ExtractUri = extractUri
+Fish.SerializeProp = serializeProp
+Fish.EncodeAttributes = encodeAttributes
+Fish.EncodeTags = encodeTags
+Fish.DecompileScript = lunauxDecompile
+Fish.HttpPost = httpPost
+Fish.ReadTerrainVoxels = readTerrainVoxels
+Fish.DeepClone = function(t)
+    if type(t) ~= "table" then return t end
+    local n = {}
+    for k, v in pairs(t) do n[k] = Fish.DeepClone(v) end
+    return n
+end
+
+local genv = (getgenv and getgenv()) or _G or _ENV
+
+genv.fishilizer = function(name, opts)
+    Fish.Init()
+    return Fish.SavePlace(name, opts)
+end
+
+genv.saveplace = function(name, opts)
+    Fish.Init()
+    return Fish.SavePlace(name, opts)
+end
+
+genv.dumpgame = function(name, opts)
+    Fish.Init()
+    return Fish.SavePlace(name, opts)
+end
+
+genv.fishsave = function(name, opts)
+    Fish.Init()
+    return Fish.SavePlace(name, opts)
+end
+
+genv.fetchplace = function(name, opts)
+    Fish.Init()
+    return Fish.SavePlace(name, opts)
+end
+
+genv.serialize = function(name, opts)
+    Fish.Init()
+    return Fish.SavePlace(name, opts)
+end
+
+genv.saveinstance = function(inst, name, opts)
+    Fish.Init()
+    return Fish.SaveInstance(inst, name, opts)
+end
+
+local SESSION_KEY = "__FISHILIZER_SESSION_" .. tostring(game.PlaceId)
+
+if genv and type(genv.FISHILIZER_CONFIG) == "table" then
+    for k, v in pairs(genv.FISHILIZER_CONFIG) do
+        Fish.Options[k] = v
+    end
+end
+
+if genv and not genv[SESSION_KEY] and not genv.FISHILIZER_NO_AUTORUN then
+    local ok, err = pcall(function()
+        Fish.Init()
+        local result = Fish.SavePlace()
+        if result then genv[SESSION_KEY] = true end
+    end)
+    if not ok then
+        log("Auto-run failed: " .. tostring(err))
+        if _statusUI then
+            setStatusText("Save failed: " .. tostring(err):sub(1, 60), Color3.fromRGB(255, 86, 86))
+            task.delay(2, fadeStatusAndDestroy)
+        end
+    end
+end
+
+return Fish
