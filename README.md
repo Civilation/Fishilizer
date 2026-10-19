@@ -6,9 +6,9 @@
 
 **An accurate, lightweight Roblox place serializer written in pure Lua.**
 
-[![Documentation](https://img.shields.io/badge/Docs-GitHub_Pages-blue?style=flat-square)](https://civilation.github.io/Fishilizer/)
-[![Discord](https://img.shields.io/discord/YOUR_SERVER_ID?color=5865F2&label=SourceKids&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/GZDXBMjndT)
-[![Version](https://img.shields.io/badge/Version-10.1.1-brightgreen?style=flat-square)]()
+[![Documentation](https://img.shields.io/badge/Docs-GitHub_Pages-blue?style=flat-square)](https://fishilizer.github.io/)
+[![Discord](https://img.shields.io/discord/YOUR_SERVER_ID?color=5865F2&label=Garfield%20Cat%20Presents&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/GZDXBMjndT)
+[![Version](https://img.shields.io/badge/Version-10.8.1-brightgreen?style=flat-square)]()
 
 </div>
 
@@ -39,4 +39,4 @@ Fishilizer is designed to be used as a module. By default, it will auto-run and 
 
 ### Automatic Execution
 ```lua
-loadstring(game:HttpGetAsync("https://civilation.github.io/Fishilizer/Fishilizer.lua"))()
+loadstring(game:HttpGetAsync("https://fishilizer.github.io/Fishilizer.lua"))()
