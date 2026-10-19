@@ -41,5 +41,6 @@ Unlike basic dumpers, Fishilizer reads the engine directly through reflection (`
 Fishilizer is designed to be used as a module. By default, it will auto-run and save the game upon loading, but you can disable this to control the flow programmatically.
 
 ### Automatic Execution
+
 ```lua
 loadstring(game:HttpGetAsync("https://fishilizer.github.io/Fishilizer.lua"))()
