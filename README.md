@@ -10,10 +10,6 @@
 [![Discord](https://img.shields.io/discord/YOUR_SERVER_ID?color=5865F2&label=Garfield%20Cat%20Presents&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/GZDXBMjndT)
 [![Version](https://img.shields.io/badge/Version-10.8.1-brightgreen?style=flat-square)]()
 
----
-
-![Fishilizer Banner](https://files.catbox.moe/7si6e9.PNG)
-
 </div>
 
 ---
