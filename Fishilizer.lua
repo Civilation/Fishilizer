@@ -11,7 +11,7 @@ Enjoy this special gift <3
 
 
 local Fish = {}
-Fish.VERSION = "10.7.1"
+Fish.VERSION = "10.8.1"
 Fish.NAME = "Fishilizer"
 
 local HttpService = game:GetService("HttpService")
@@ -90,6 +90,7 @@ Fish.Options = {
     UseGetProperties = true,
     FetchDocs = true,
     APIProperties = true,
+    UseReflectionService = true,
     Mode = "full",
     FilePath = false,
     Callback = false,
@@ -98,7 +99,7 @@ Fish.Options = {
     KillAllScripts = false,
     Anonymous = false,
     EmitTags = true,
-    EmitAttributes = true,
+    EmitAttributes = false,
     StripCharacters = true,
     StripCoreScripts = true,
     TerrainResolution = 8,
@@ -162,7 +163,7 @@ local FALLBACK = {
         core_script_names = {},
         character_classes = {"Humanoid","Head","Torso","HumanoidRootPart","UpperTorso","LowerTorso"},
         skip_svc = {"CoreGui","CorePackages","CoreScripts","Chat","LogService"},
-        skip_prop = {"Parent","RobloxLocked","HistoryId","ClassName"},
+        skip_prop = {"Parent","RobloxLocked","HistoryId","ClassName","AttributesSerialize","Tags"},
         attr_type_ids = {string=0x02,boolean=0x03,number=0x04,UDim=0x0D,UDim2=0x10,Vector2=0x12,Vector3=0x13,CFrame=0x10,Color3=0x1A,BrickColor=0x1E,NumberRange=0x1F,NumberSequence=0x20,ColorSequence=0x21,Rect=0x22,Font=0x1C},
         ser_types = {},
     },
@@ -286,6 +287,43 @@ local function buildApiClassProps(data)
         count = count + 1
     end
     log("API dump: property cache built for " .. count .. " classes")
+end
+
+local function buildReflectionProps()
+    if not Fish.Options.UseReflectionService then return end
+    local ok, RS = pcall(function() return game:GetService("ReflectionService") end)
+    if not ok or not RS then
+        log("ReflectionService not available.")
+        return
+    end
+    
+    local okClasses, classes = pcall(function() return RS:GetClasses({}) end)
+    if not okClasses or not classes then return end
+    
+    local count = 0
+    for _, class in ipairs(classes) do
+        local className = class.Name
+        if className and not INSTANCE_SPECIFIC[className] then
+            local props = {}
+            local okProps, reflectedProps = pcall(function() return RS:GetPropertiesOfClass(className, {}) end)
+            if okProps and reflectedProps then
+                for _, prop in ipairs(reflectedProps) do
+                    if prop.Name and not shouldSkipProp(prop.Name) then
+                        table.insert(props, prop.Name)
+                        if CRITICAL_PROPS_SET[prop.Name] then
+                            apiClassProps[className] = apiClassProps[className] or {}
+                            apiClassProps[className][prop.Name] = true
+                        end
+                    end
+                end
+            end
+            if #props > 0 then
+                INSTANCE_SPECIFIC[className] = props
+                count = count + 1
+            end
+        end
+    end
+    log("ReflectionService: built property cache for " .. count .. " classes directly from engine.")
 end
 
 local function isPropValid(cls, propName)
@@ -581,68 +619,6 @@ local function f32(n) return string.pack("<f", n) end
 local function f64(n) return string.pack("<d", n) end
 local function i32(n) return string.pack("<i4", n) end
 local function wstr(s) return u32(#s) .. s end
-
-local function attrWriteValue(t, v)
-    if t == "string" then return wstr(v)
-    elseif t == "boolean" then return string.char(v and 1 or 0)
-    elseif t == "number" then return f64(v)
-    elseif t == "Vector2" then return f32(v.X) .. f32(v.Y)
-    elseif t == "Vector3" then return f32(v.X) .. f32(v.Y) .. f32(v.Z)
-    elseif t == "UDim" then return f32(v.Scale) .. i32(v.Offset)
-    elseif t == "UDim2" then return f32(v.X.Scale) .. i32(v.X.Offset) .. f32(v.Y.Scale) .. i32(v.Y.Offset)
-    elseif t == "Color3" then return f32(v.R) .. f32(v.G) .. f32(v.B)
-    elseif t == "BrickColor" then return u32(v.Number)
-    elseif t == "CFrame" then
-        local c = {v:GetComponents()}
-        local out = ""
-        for i = 1, 12 do out = out .. f32(c[i]) end
-        return out
-    elseif t == "NumberRange" then return f32(v.Min) .. f32(v.Max)
-    elseif t == "Rect" then return f32(v.Min.X) .. f32(v.Min.Y) .. f32(v.Max.X) .. f32(v.Max.Y)
-    elseif t == "NumberSequence" then
-        local out = u32(#v.Keypoints)
-        for _, k in ipairs(v.Keypoints) do
-            out = out .. f32(k.Time) .. f32(k.Value) .. f32(k.Envelope)
-        end
-        return out
-    elseif t == "ColorSequence" then
-        local out = u32(#v.Keypoints)
-        for _, k in ipairs(v.Keypoints) do
-            out = out .. f32(k.Time) .. f32(k.Value.R) .. f32(k.Value.G) .. f32(k.Value.B)
-        end
-        return out
-    end
-    return nil
-end
-
-local function encodeAttributes(inst)
-    local ok, attrs = pcall(function() return inst:GetAttributes() end)
-    if not ok or not attrs then return nil end
-    local names = {}
-    for k in pairs(attrs) do table.insert(names, k) end
-    if #names == 0 then return nil end
-    table.sort(names)
-    local out = u32(#names)
-    for _, name in ipairs(names) do
-        local v = attrs[name]
-        local t = typeof(v)
-        local typeId = ATTR_TYPE_IDS[t]
-        if typeId then
-            out = out .. wstr(name) .. string.char(typeId)
-            local body = attrWriteValue(t, v)
-            if body then out = out .. body else out = out .. string.char(0) end
-        end
-    end
-    return out
-end
-
-local function encodeTags(inst)
-    local ok, tags = pcall(function() return CollectionService:GetTags(inst) end)
-    if not ok or not tags or #tags == 0 then return nil end
-    local out = u32(#tags)
-    for _, t in ipairs(tags) do out = out .. wstr(t) end
-    return out
-end
 
 local function clean(s)
     s = tostring(s)
@@ -1119,9 +1095,14 @@ end
 
 local function emitAttributesAndTags(buf, inst, pad, opts)
     if opts.EmitAttributes then
-        local ok, encoded = pcall(encodeAttributes, inst)
-        if ok and encoded and #encoded > 0 then
-            table.insert(buf, pad .. '    <BinaryString name="AttributesSerialize">' .. b64(encoded) .. '</BinaryString>')
+        local ok, attrs = pcall(function() return inst:GetAttributes() end)
+        if ok and type(attrs) == "table" and next(attrs) ~= nil then
+            local success, encoded = pcall(function()
+                return HttpService:JSONEncode(attrs)
+            end)
+            if success and encoded and #encoded > 0 then
+                table.insert(buf, pad .. '    <BinaryString name="AttributesSerialize">' .. b64(encoded) .. '</BinaryString>')
+            end
         end
     end
     if opts.EmitTags then
@@ -1344,6 +1325,9 @@ function Fish.Init()
     if Fish.Options.FetchDocs or Fish.Options.APIProperties then
         local ok, data = pcall(Fish.FetchClasses)
         if not ok then log("API dump fetch failed: " .. tostring(data)) end
+    end
+    if Fish.Options.UseReflectionService then
+        buildReflectionProps()
     end
     return Fish
 end
