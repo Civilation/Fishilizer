@@ -13,6 +13,11 @@ Enjoy this special gift <3
 local Fish = {}
 Fish.VERSION = "10.8.1"
 Fish.NAME = "Fishilizer"
+-[[
+
+i added these because i was bored and had nothing else to do before i started this (adhd me xD)
+
+  ]]
 
 local HttpService = game:GetService("HttpService")
 local CollectionService = game:GetService("CollectionService")
@@ -43,6 +48,7 @@ local IO = {
     setclipboard = resolveIO("setclipboard"),
     getproperties = resolveIO("getproperties"),
 }
+---lowk if you dont have any of these on ur executor its ggs
 
 local function log(msg)
     pcall(function() print("[Fishilizer] " .. tostring(msg)) end)
@@ -110,7 +116,8 @@ Fish.Options = {
     ReadMe = true,
     OUT = "Fishilizer",
     DataAPIURL = "https://civilation.github.io/Fishilizer/",
-    APIDumpURL = "https://raw.githubusercontent.com/MaximumADHD/Roblox-Client-Tracker/roblox/API-Dump.json",
+    APIDumpURL = "https://raw.githubusercontent.com/MaximumADHD/Roblox-Client-Tracker/roblox/API-Dump.json", -- why do i still use this
+
     LunaUXURL = "https://lunaux-decompiler.dev/api/decompile",
 }
 
@@ -145,6 +152,8 @@ local INSTANCE_SPECIFIC = {}
 local ATTR_TYPE_IDS = { string=0x02, boolean=0x03, number=0x04 }
 local _dataLoaded = false
 
+
+---basically just got claude to do this part for me since i dont know how to make fallbacks :pray:
 local FALLBACK = {
     meta = { version = "0.0.0" },
     tables = {
@@ -244,7 +253,7 @@ local function loadFromAPI()
             end
         end
     end
-    log("Data API unreachable, using fallback tables")
+    log("Data API unreachable")
     applyData(FALLBACK)
     _dataLoaded = true
     return false
@@ -426,6 +435,9 @@ local function lunauxDecompile(inst)
         return nil
     end
 
+
+    --16/10/26
+    --ok so looks like lunaux didnt work afterall so i guess im just gonna have to scrap this and use lua.expert :(
     local dc = DATA.decompiler or {}
     local url = dc.url or Fish.Options.LunaUXURL
     local headers = dc.headers or { ["Content-Type"] = "application/json" }
@@ -566,7 +578,7 @@ local function buildStatusUI()
     end)
 
     local gui = Instance.new("ScreenGui")
-    gui.Name = "__FishilizerStatus__"
+    gui.Name = "Fishilizer"
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.ResetOnSpawn = false
     gui.IgnoreGuiInset = true
@@ -812,6 +824,15 @@ local serByType = {
     Ray = serRay, Font = serFont, FontFace = serFont,
 }
 
+
+--[[
+
+String class incase anything fails, we use this as a backup
+
+]]
+
+
+
 local specialPropHandlers = { Shape = serTokenNumber, Face = serTokenNumber, Material = serTokenNumber }
 
 local function serializeProp(name, v)
@@ -971,6 +992,8 @@ local function readProp(inst, name)
     return nil
 end
 
+
+-- Terrain doesn't save if your executor has low UNC but atleast it tries
 local function readTerrainVoxels(terrain, res)
     if not terrain then return nil end
     res = res or Fish.Options.TerrainResolution or 8
@@ -1461,7 +1484,7 @@ function Fish.Save(instance, name, userOpts)
 
         table.insert(buf, '<?xml version="1.0" encoding="utf-8"?>')
         table.insert(buf, '<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">')
-
+-- Another list of APIS i personally use alot for XML related stuff
         local readmeEmitted = false
         for _, root in ipairs(roots) do
             if root == game then
@@ -1599,16 +1622,20 @@ Fish.EncodeBase64 = b64
 Fish.ExtractUri = extractUri
 Fish.SerializeProp = serializeProp
 Fish.EncodeAttributes = encodeAttributes
-Fish.EncodeTags = encodeTags
-Fish.DecompileScript = lunauxDecompile
-Fish.HttpPost = httpPost
-Fish.ReadTerrainVoxels = readTerrainVoxels
+Fish.EncodeTags = encodeTags --tags
+Fish.DecompileScript = lunauxDecompile --scripts
+Fish.HttpPost = httpPost --http (obv)
+Fish.ReadTerrainVoxels = readTerrainVoxels --useless shit
 Fish.DeepClone = function(t)
     if type(t) ~= "table" then return t end
     local n = {}
     for k, v in pairs(t) do n[k] = Fish.DeepClone(v) end
     return n
 end
+
+
+-- Let's you use SavePlace() (of course Konstant Uses that 🤬)
+-- Let's you use Fishilizer()
 
 local genv = (getgenv and getgenv()) or _G or _ENV
 
@@ -1648,6 +1675,8 @@ genv.saveinstance = function(inst, name, opts)
 end
 
 local SESSION_KEY = "__FISHILIZER_SESSION_" .. tostring(game.PlaceId)
+
+-- Thank you claude for adding useless underscores
 
 if genv and type(genv.FISHILIZER_CONFIG) == "table" then
     for k, v in pairs(genv.FISHILIZER_CONFIG) do
