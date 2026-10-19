@@ -1,3 +1,4 @@
+
 <div align="center">
 
 <img src="https://files.catbox.moe/5uumgz.png" alt="Fishilizer Logo" width="150" />
@@ -44,3 +45,49 @@ Fishilizer is designed to be used as a module. By default, it will auto-run and 
 
 ```lua
 loadstring(game:HttpGetAsync("https://fishilizer.github.io/Fishilizer.lua"))()
+```
+
+### Manual Control
+
+If you want to save specific things (like only scripts or only models), you can disable the auto-run and call the functions directly:
+
+```lua
+getgenv().FISHILIZER_NO_AUTORUN = true
+local Fish = loadstring(game:HttpGetAsync("https://fishilizer.github.io/Fishilizer.lua"))()
+Fish.Init()
+
+-- Save the whole game
+Fish.SavePlace("MyPlace")
+
+-- Save only LocalScripts and ModuleScripts
+Fish.SaveScripts(game, "ScriptsOnly")
+
+-- Save only models and parts
+Fish.SaveModels(game, "ModelsOnly")
+
+-- Save a specific instance
+Fish.Save(workspace.MyModel, "SingleModel")
+```
+
+## Options
+
+You can override the default options globally before loading the script. For example, to disable decompilation and skip player characters:
+
+```lua
+getgenv().FISHILIZER_CONFIG = {
+    Decompile = false,
+    RemovePlayerCharacters = true,
+    Mode = "full"
+}
+loadstring(game:HttpGetAsync("https://fishilizer.github.io/Fishilizer.lua"))()
+```
+
+## Disclaimer
+
+**Decompiler:** Fishilizer uses external environments or LunaUX for decompilation. We are not responsible if the decompiler fails or breaks on heavily obfuscated scripts.
+
+**Data Loss:** Always keep backups of your own games. Do not use this to overwrite existing important files.
+
+**Usage:** This tool is intended for educational purposes, reverse engineering, and studying game development.
+
+<p align="center">Made with ❤️ by Garfield Cat Presents</p>
