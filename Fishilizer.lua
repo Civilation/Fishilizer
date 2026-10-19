@@ -2,9 +2,26 @@
 
 Fishilizer is now open-sourced.
 
-A gift from Garfield Cat. Eventually, once Fishilizer reaches its full capabilities, it will no longer be open-sourced.
+A gift from Garfield Cat Presents
+
+The source is available for anyone who wants to contribute to its development
+
+Fishilizer is still being worked on, and there is more to come.
+There are features to improve, and things to fix
+
+Eventually, once Fishilizer reaches its full power, it will no longer
+be open-sourced. Until then, enjoy this special gift and make the most of it.
+
+If you find bugs or have suggestions, feel free to share them with the
+community. Feedback is always appreciated!!
+
+Please give credit to the original project if you use or modify its code.
+
+Thank you to everyone who has supported Fishilizer so far.
 
 Enjoy this special gift <3
+
+Made by Garfield Cat Presents.
 
 ]]
 
