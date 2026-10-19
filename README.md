@@ -13,6 +13,7 @@ Fishilizer saves Roblox instances and their properties to `.rbxlx` files that ca
 [![Options](https://img.shields.io/badge/Configuration-Options-orange?style=flat-square)](https://fishilizer.github.io/options.html)
 [![Version](https://img.shields.io/badge/Version-10.8.1-brightgreen?style=flat-square)](https://fishilizer.github.io/)
 [![Discord](https://img.shields.io/badge/Discord-Community-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/GZDXBMjndT)
+[![Cash App](https://img.shields.io/badge/Cash%20App-Support-00C244?style=flat-square&logo=cashapp&logoColor=white)](https://cash.app/$aeroglass)
 
 [Website](https://fishilizer.github.io/) · [Documentation](https://fishilizer.github.io/documentation.html) · [Loadstring Builder](https://fishilizer.github.io/builder.html) · [Data API](https://fishilizer.github.io/data.html)
 
@@ -367,6 +368,14 @@ File-writing and clipboard functions depend on the environment. Successfully cre
 
 The unchecked items are things that could be worked on in the future. They are not finished features.
 
+## Support Fishilizer
+
+If you'd like to support Fishilizer and its development, you can send a donation through Cash App. It's completely optional, but any support is appreciated. <3
+
+[![Cash App](https://img.shields.io/badge/Cash%20App-Support%20Fishilizer-00C244?style=flat-square&logo=cashapp&logoColor=white)](https://cash.app/$aeroglass)
+
+Cash App: [$aeroglass](https://cash.app/$aeroglass)
+
 ## Links
 
 - [Website](https://fishilizer.github.io/)
@@ -376,6 +385,7 @@ The unchecked items are things that could be worked on in the future. They are n
 - [Data API](https://fishilizer.github.io/data.html)
 - [Source code](https://github.com/Civilation/Fishilizer/blob/main/Fishilizer.lua)
 - [Discord](https://discord.gg/GZDXBMjndT)
+- [Cash App](https://cash.app/$aeroglass)
 
 ## Disclaimer
 
