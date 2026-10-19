@@ -22,7 +22,7 @@ Unlike basic dumpers, Fishilizer reads the engine directly through reflection (`
 
 ## Preview
 
-![Fishilizer decompiled game open in Studio](https://files.catbox.moe/vaj6vt.PNG)
+![Fishilizer decompiled game open in Studio](https://files.catbox.moe/7si6e9.PNG)
 
 ## Features
 
