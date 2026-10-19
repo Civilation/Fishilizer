@@ -20,6 +20,8 @@ Fishilizer extracts the entire DataModel from a running Roblox instance and writ
 
 Unlike basic dumpers, Fishilizer reads the engine directly through reflection (`getproperties`) when available, falling back to an extensive hardcoded property map for older environments. It serializes attributes and tags as native `rbx-dom` binary payloads, ensuring a byte-identical reconstruction when the file is opened in Roblox Studio.
 
+> ⚠️ **Note:** Fishilizer is still in active development. While it handles most games perfectly, you may run into issues with massive games or those with aggressive client-side anti-cheats. If a game fails to save, please report it in the Discord!
+
 ## Preview
 
 ![Fishilizer decompiled game open in Studio](https://files.catbox.moe/7si6e9.PNG)
@@ -32,6 +34,7 @@ Unlike basic dumpers, Fishilizer reads the engine directly through reflection (`
 - **Backpack Preservation:** Temporarily moves runtime tools into `StarterPack` during the save process, keeping hotbar icons intact and preventing duplicates.
 - **Decompilation Support:** Extracts script source via environment-provided decompilers or falls back to base64 bytecode.
 - **Live Class Maps:** Optional API dump download to automatically generate property maps for newly released instances.
+- **ReflectionService Integration:** Uses the live engine to query property lists instead of relying solely on external JSON dumps.
 
 ## Usage
 
