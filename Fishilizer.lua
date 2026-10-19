@@ -13,8 +13,7 @@ Enjoy this special gift <3
 local Fish = {}
 Fish.VERSION = "10.8.1"
 Fish.NAME = "Fishilizer"
-
--[[
+--[[
 
 i added these because i was bored and had nothing else to do before i started this (adhd me xD)
 
