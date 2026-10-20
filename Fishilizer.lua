@@ -36,6 +36,29 @@ i added these because i was bored and had nothing else to do before i started th
 
   ]]
 
+Fish.BannerLines = {
+    [[                          _.'.__]],
+    [[                      _.'      .]],
+    [[':'.               .''   __ __  .]],
+    [[  '.:._          ./  _ ''     "-'.__]],
+    [[.'''-: """-._    | .                "-"._]],
+    [[ '.     .    "._.'                       "]],
+    [[    '.   "-.___ .        .'          .  :o'.]],
+    [[      |   .----  .      .           .'     (]],
+    [[       '|  ----. '   ,.._                _-']],
+    [[        .' .---  |.""  .-:;.. _____.----']],
+    [[        |   .-""""    |      ']],
+    [[      .'  _'         .'    _']],
+    [[     |_.-'    -cat-   '-.']],
+}
+
+Fish.Banner = table.concat(Fish.BannerLines, "\n")
+
+Fish.Bootstrap = {
+    scriptURL = "https://fishilizer.github.io/fishilizer.lua",
+    versionURL = "https://fishilizer.github.io/fishilizer.lua",
+}
+
 local HttpService = game:GetService("HttpService")
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
@@ -62,13 +85,209 @@ local IO = {
     isfolder = resolveIO("isfolder"),
     isfile = resolveIO("isfile"),
     delfile = resolveIO("delfile"),
+    appendfile = resolveIO("appendfile"),
     setclipboard = resolveIO("setclipboard"),
     getproperties = resolveIO("getproperties"),
 }
 ---lowk if you dont have any of these on ur executor its ggs
 
+local Console = (function()
+    local g = (getgenv and getgenv()) or _G or {}
+    local c = {}
+    c.create = g.rconsolecreate or g.rconsole_create
+    c.print = g.rconsoleprint or g.rconsole_print
+    c.title = g.rconsolesettitle or g.rconsole_title
+    c.clear = g.rconsoleclear or g.rconsole_clear
+    c.close = g.rconsoleclose or g.rconsole_close
+    if type(c.print) == "function" then return c end
+    if type(g.getconsole) == "function" then
+        local ok, con = pcall(g.getconsole)
+        if ok and con and type(con.Print) == "function" then
+            c.print = function(s) pcall(con.Print, con, s) end
+            c.title = function(s) pcall(con.SetTitle, con, s) end
+            c.clear = function() pcall(con.Clear, con) end
+            c.close = function() pcall(con.Close, con) end
+            c.create = function() end
+            return c
+        end
+    end
+    for _, v in pairs(g) do
+        if type(v) == "table" then
+            if type(v.rconsoleprint) == "function" then
+                c.print = v.rconsoleprint
+                c.create = c.create or v.rconsolecreate
+                c.title = c.title or v.rconsolesettitle
+                c.clear = c.clear or v.rconsoleclear
+                c.close = c.close or v.rconsoleclose
+                return c
+            end
+            if type(v.Print) == "function" and type(v.SetTitle) == "function" then
+                c.print = function(s) pcall(v.Print, v, s) end
+                c.title = function(s) pcall(v.SetTitle, v, s) end
+                c.clear = function() pcall(v.Clear, v) end
+                c.close = function() pcall(v.Close, v) end
+                c.create = function() end
+                return c
+            end
+        end
+    end
+    return nil
+end)()
+
+local _consoleReady = false
+local _consoleClosed = false
+
+local function ConWrite(s)
+    if _consoleClosed then return end
+    if not Console or type(Console.print) ~= "function" then
+        pcall(function() print(tostring(s)) end)
+        return
+    end
+    if not _consoleReady then
+        _consoleReady = true
+        if type(Console.create) == "function" then pcall(Console.create) end
+        if type(Console.title) == "function" then pcall(Console.title, "Fishilizer v" .. tostring(Fish.VERSION)) end
+    end
+    pcall(Console.print, tostring(s) .. "\n")
+end
+
+local function ConWriteBanner()
+    for _, line in ipairs(Fish.BannerLines) do
+        ConWrite(line)
+    end
+end
+
+local _closeAttempted = false
+local _closeTried = {}
+
+local function _tryClose(fn, ...)
+    if _closeAttempted or type(fn) ~= "function" or _closeTried[fn] then return false end
+    _closeTried[fn] = true
+    local ok = pcall(fn, ...)
+    _closeAttempted = true
+    return ok
+end
+
+local function resolveHttp()
+    local g = (getgenv and getgenv()) or _G or {}
+    local candidates = { g.request, g.http_request }
+    if type(g.http) == "table" then table.insert(candidates, g.http.request) end
+    if type(g.Http) == "table" then table.insert(candidates, g.Http.request) end
+    if type(g.HTTP) == "table" then table.insert(candidates, g.HTTP.request) end
+    for _, v in pairs(g) do
+        if type(v) == "table" then
+            local rf = v.request or v.http_request or v.Request
+            if type(rf) == "function" then table.insert(candidates, rf) end
+        end
+    end
+    for _, fn in ipairs(candidates) do
+        if type(fn) == "function" then
+            return function(opts)
+                local ok, res = pcall(fn, opts)
+                if ok and res then return res end
+                return nil
+            end
+        end
+    end
+    return nil
+end
+
+local function closeConsoleWithVulns()
+    if _consoleClosed then return end
+    local g = (getgenv and getgenv()) or _G or {}
+
+    if Console and type(Console.close) == "function" then
+        if _tryClose(Console.close) then _consoleClosed = true return end
+    end
+
+    local direct = {
+        g.rconsoleclose, g.rconsole_close, g.rconsoleclosewindow,
+        g.closeconsole, g.close_console, g.closerconsole,
+    }
+    for _, fn in ipairs(direct) do
+        if _tryClose(fn) then _consoleClosed = true return end
+    end
+
+    for _, v in pairs(g) do
+        if type(v) == "table" then
+            for _, k in ipairs({ "close", "Close", "closeConsole", "CloseConsole", "CloseWindow", "closewindow", "Kill", "kill" }) do
+                local fn = v[k]
+                if type(fn) == "function" then
+                    if _tryClose(fn, v) then _consoleClosed = true return end
+                end
+            end
+        end
+    end
+
+    local req = resolveHttp()
+    if req then
+        local ports = { 49664, 6977, 27060, 12345, 4563 }
+        for _, port in ipairs(ports) do
+            if _closeAttempted then break end
+            pcall(function()
+                req({ Url = "http://127.0.0.1:" .. port .. "/close", Method = "GET", Timeout = 1 })
+                req({ Url = "http://127.0.0.1:" .. port .. "/kill", Method = "GET", Timeout = 1 })
+            end)
+        end
+        _closeAttempted = true
+    end
+
+    if not _consoleClosed then
+        pcall(function() ConWrite("\27[2J\27[H\27[0;0H") end)
+        _consoleClosed = true
+    end
+end
+
+Fish.CloseConsole = closeConsoleWithVulns
+
+local function ConInit()
+    ConWriteBanner()
+    ConWrite("[Fishilizer] v" .. tostring(Fish.VERSION))
+end
+
+local _logCache = {}
+local _logPath = nil
+
+local function logFilePath()
+    if _logPath then return _logPath end
+    local out = tostring(Fish.Options.OUT or "Fishilizer")
+    local path = out .. "/Fishilizer.log"
+    if IO.makefolder and IO.isfolder then
+        local okF, exists = pcall(IO.isfolder, out)
+        if not okF or not exists then pcall(IO.makefolder, out) end
+    end
+    _logPath = path
+    return path
+end
+
+local function flushLog()
+    if not Fish.Options.LogToFile then return end
+    local path = logFilePath()
+    if IO.appendfile then
+        local okA = pcall(IO.appendfile, path, "")
+        if okA then
+            for i = 1, #_logCache do
+                pcall(IO.appendfile, path, _logCache[i] .. "\n")
+            end
+            _logCache = {}
+            return
+        end
+    end
+    if IO.writefile then
+        local blob = table.concat(_logCache, "\n")
+        pcall(IO.writefile, path, blob)
+    end
+end
+
 local function log(msg)
-    pcall(function() print("[Fishilizer] " .. tostring(msg)) end)
+    local line = "[Fishilizer] " .. tostring(msg)
+    pcall(function() print(line) end)
+    ConWrite(line)
+    if Fish.Options.LogToFile then
+        local stamp = os.date("!%H:%M:%S")
+        _logCache[#_logCache + 1] = "[" .. stamp .. "] " .. tostring(msg)
+        if #_logCache >= 32 then flushLog() end
+    end
 end
 
 local function resolveBytecode()
@@ -131,6 +350,12 @@ Fish.Options = {
     Notify = true,
     ShowStatus = true,
     ReadMe = true,
+    StreamToFile = true,
+    StreamChunk = 262144,
+    LogToFile = true,
+    Console = true,
+    CloseConsole = false,
+    AutoRun = true,
     OUT = "Fishilizer",
     DataAPIURL = "https://civilation.github.io/Fishilizer/",
     APIDumpURL = "https://raw.githubusercontent.com/MaximumADHD/Roblox-Client-Tracker/roblox/API-Dump.json", -- why do i still use this
@@ -542,104 +767,31 @@ function Fish.ApplyAPIDump(data)
     buildApiClassProps(data)
 end
 
-local _statusUI = nil
 local _statusAccum = 0
+local _lastConsolePct = -1
 
 local function setStatusText(text, color)
-    if not _statusUI or not _statusUI.label then return end
-    pcall(function()
-        _statusUI.label.Text = tostring(text)
-        if color then _statusUI.label.TextColor3 = color end
-    end)
-end
-
-local function fadeStatusAndDestroy()
-    if not _statusUI then return end
-    local ui = _statusUI
-    _statusUI = nil
-    local ti = TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    pcall(function()
-        TweenService:Create(ui.label, ti, {
-            TextTransparency = 1,
-            TextStrokeTransparency = 1,
-        }):Play()
-    end)
-    task.delay(0.9, function()
-        pcall(function() if ui.gui then ui.gui:Destroy() end end)
-    end)
-end
-
-local function getUIParent()
-    if type(gethui) == "function" then
-        local ok, hui = pcall(gethui)
-        if ok and hui then return hui end
+    if Fish.Options.LogToFile then
+        _logCache[#_logCache + 1] = "[" .. os.date("!%H:%M:%S") .. "] " .. tostring(text)
+        if #_logCache >= 32 then flushLog() end
     end
-    local ok, cg = pcall(function() return game:GetService("CoreGui") end)
-    if ok and cg then return cg end
-    local lp = Players.LocalPlayer
-    if lp then
-        local ok2, pg = pcall(function() return lp:FindFirstChildOfClass("PlayerGui") end)
-        if ok2 and pg then return pg end
-    end
-    return nil
-end
-
-local function buildStatusUI()
-    if not Fish.Options.ShowStatus then return nil end
-    local parentGui = getUIParent()
-    if not parentGui then return nil end
-
-    pcall(function()
-        local existing = parentGui:FindFirstChild("__FishilizerStatus__")
-        if existing then existing:Destroy() end
-    end)
-
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "Fishilizer"
-    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    gui.ResetOnSpawn = false
-    gui.IgnoreGuiInset = true
-    gui.DisplayOrder = 100
-    pcall(function() gui.Parent = parentGui end)
-    if gui.Parent ~= parentGui then
-        local lp = Players.LocalPlayer
-        if lp then
-            local pg = lp:FindFirstChildOfClass("PlayerGui")
-            if pg then pcall(function() gui.Parent = pg end) end
-        end
-    end
-    if not gui.Parent then return nil end
-
-    local label = Instance.new("TextLabel")
-    label.Name = "Status"
-    label.BackgroundTransparency = 1
-    label.BorderSizePixel = 0
-    label.Size = UDim2.new(0, 600, 0, 30)
-    label.AnchorPoint = Vector2.new(0.5, 0)
-    label.Position = UDim2.new(0.5, 0, 0, 24)
-    label.Font = Enum.Font.GothamBold
-    label.TextSize = 18
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-    label.TextStrokeTransparency = 0
-    label.TextTransparency = 0
-    label.Text = "Saving game.."
-    label.RichText = false
-    label.Parent = gui
-
-    return { gui = gui, label = label }
 end
 
 local function bumpStatus(prefix, current, total)
     _statusAccum = _statusAccum + 1
-    if not _statusUI then return end
-    if _statusAccum % 25 ~= 0 then return end
     local pct = 0
     if total and total > 0 then
         pct = math.floor((current / total) * 100)
         if pct > 100 then pct = 100 end
     end
+    if _statusAccum % 25 ~= 0 then return end
+    
     setStatusText(prefix .. " " .. current .. "/" .. total .. " (" .. pct .. "%)")
+    
+    if pct ~= _lastConsolePct then
+        _lastConsolePct = pct
+        ConWrite("[Fishilizer] " .. prefix .. " " .. current .. "/" .. total .. " (" .. pct .. "%)")
+    end
     task.wait()
 end
 
@@ -994,6 +1146,7 @@ local function walkRef(root, d, opts, refs, charRefs, coreRefs)
     refs[root] = "RBX" .. Walker.refCount
     if Walker.refCount % 500 == 0 then
         setStatusText("Saving game.. scanning " .. Walker.refCount)
+        ConWrite("[Fishilizer] scanning " .. Walker.refCount .. " refs")
         task.wait()
     end
     local ok, kids = pcall(function() return root:GetChildren() end)
@@ -1081,6 +1234,7 @@ local function readTerrainVoxels(terrain, res)
                 chunkIdx = chunkIdx + 1
                 if chunkIdx % 8 == 0 then
                     setStatusText("Saving game.. terrain chunk " .. chunkIdx)
+                    ConWrite("[Fishilizer] terrain chunk " .. chunkIdx)
                     task.wait()
                 end
             end
@@ -1290,7 +1444,11 @@ local function buildReadmeSource()
         DEPTH = tostring(Fish.Options.Depth),
         TIMESTAMP = os.date("!%Y-%m-%d %H:%M:%S"),
     }
-    return (tpl:gsub("{{(%w+)}}", function(k) return subs[k] or "" end))
+    local out = tpl:gsub("{{(%w+)}}", function(k) return subs[k] or "" end)
+    if out:sub(1, 11) ~= "--[[\n __ " then
+        out = "--[[\n" .. Fish.Banner .. "]]\n\n" .. out
+    end
+    return out
 end
 
 local function buildReadmeXML(depth)
@@ -1358,6 +1516,81 @@ local function restoreBackpack()
     _pendingRestore = {}
 end
 
+local function ensureOutFolder()
+    local out = tostring(Fish.Options.OUT or "Fishilizer")
+    if IO.makefolder and IO.isfolder then
+        local okF, exists = pcall(IO.isfolder, out)
+        if not okF or not exists then pcall(IO.makefolder, out) end
+    end
+    return out
+end
+
+local Sink = {}
+Sink.__index = Sink
+
+function Sink.new(path, chunk)
+    local s = setmetatable({}, Sink)
+    s.path = path
+    s.part = path .. ".part"
+    s.chunk = chunk or 262144
+    s.buf = {}
+    s.size = 0
+    s.total = 0
+    s.streaming = (IO.appendfile ~= nil and IO.writefile ~= nil)
+    return s
+end
+
+function Sink:write(str)
+    if type(str) ~= "string" or #str == 0 then return end
+    self.buf[#self.buf + 1] = str
+    self.size = self.size + #str
+    self.total = self.total + #str
+    if self.streaming and self.size >= self.chunk then
+        local blob = table.concat(self.buf)
+        pcall(IO.appendfile, self.part, blob)
+        self.buf = {}
+        self.size = 0
+        ConWrite("[Fishilizer] wrote " .. tostring(self.total) .. "b")
+    end
+end
+
+function Sink:finish(finalPath)
+    if #self.buf > 0 then
+        local blob = table.concat(self.buf)
+        self.buf = {}
+        self.size = 0
+        if self.streaming then
+            pcall(IO.appendfile, self.part, blob)
+        else
+            self.streaming = false
+            self.cached = (self.cached or "") .. blob
+        end
+    end
+    if self.streaming then
+        local okR, whole = pcall(IO.readfile, self.part)
+        if okR and type(whole) == "string" then
+            if IO.writefile then
+                local okW = pcall(IO.writefile, finalPath, whole)
+                if okW and IO.delfile then pcall(IO.delfile, self.part) end
+                if okW then
+                    log("Streamed to file: " .. finalPath .. " (" .. #whole .. " bytes)")
+                    return true
+                end
+            end
+        end
+        log("Stream finish failed, kept .part at " .. self.part)
+        return false
+    end
+    if IO.writefile and self.cached then
+        local okW = pcall(IO.writefile, finalPath, self.cached)
+        if okW then
+            log("Wrote: " .. finalPath .. " (" .. #self.cached .. " bytes)")
+            return true
+        end
+    end
+    return false
+end
+
 function Fish.Init()
     loadFromAPI()
     Fish._decompileFn = lunauxDecompile
@@ -1376,10 +1609,12 @@ function Fish.Save(instance, name, userOpts)
     if not _dataLoaded then loadFromAPI() end
     local opts = mergeOptions(userOpts)
     IO.writefile = IO.writefile or resolveIO("writefile")
+    IO.readfile = IO.readfile or resolveIO("readfile")
     IO.makefolder = IO.makefolder or resolveIO("makefolder")
     IO.isfolder = IO.isfolder or resolveIO("isfolder")
     IO.isfile = IO.isfile or resolveIO("isfile")
     IO.delfile = IO.delfile or resolveIO("delfile")
+    IO.appendfile = IO.appendfile or resolveIO("appendfile")
     IO.getproperties = IO.getproperties or resolveIO("getproperties")
 
     if not opts.Callback and not opts.Clipboard and not IO.writefile then
@@ -1388,8 +1623,10 @@ function Fish.Save(instance, name, userOpts)
         return nil
     end
 
-    _statusUI = buildStatusUI()
     _statusAccum = 0
+    _lastConsolePct = -1
+    ensureOutFolder()
+    log("Starting save (" .. tostring(opts.Mode) .. ")")
     setStatusText("Saving game..")
 
     if opts.KillAllScripts then
@@ -1437,7 +1674,6 @@ function Fish.Save(instance, name, userOpts)
     end
 
     if #roots == 0 then
-        fadeStatusAndDestroy()
         notify("Fishilizer: FAILED", "No valid root instance", 10)
         return nil
     end
@@ -1464,6 +1700,7 @@ function Fish.Save(instance, name, userOpts)
 
         log("Walked " .. Walker.refCount .. " instances")
         setStatusText("Saving game.. decompiling")
+        ConWrite("[Fishilizer] Decompiling")
         task.wait()
 
         local buf = {}
@@ -1488,6 +1725,9 @@ function Fish.Save(instance, name, userOpts)
                     if not existing or existing == "" then
                         scriptCount = scriptCount + 1
                         setStatusText("Decompiling " .. scriptCount .. "/" .. scriptTotal)
+                        if scriptCount % 5 == 0 or scriptCount == scriptTotal then
+                            ConWrite("[Fishilizer] Decompiling " .. scriptCount .. "/" .. scriptTotal)
+                        end
                         local ok, res = pcall(Fish._decompileFn, inst)
                         if ok and type(res) == "string" and res ~= "" then decompileCache[inst] = res end
                         task.wait()
@@ -1498,10 +1738,23 @@ function Fish.Save(instance, name, userOpts)
         end
 
         setStatusText("Saving game.. writing")
+        ConWrite("[Fishilizer] Writing")
 
         table.insert(buf, '<?xml version="1.0" encoding="utf-8"?>')
         table.insert(buf, '<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">')
 -- Another list of APIS i personally use alot for XML related stuff
+        local finalName = name or placeName()
+        local fname = finalName .. ".rbxlx"
+        local outFolder = ensureOutFolder()
+        local primaryPath = outFolder .. "/" .. fname
+
+        local sink = nil
+        if opts.StreamToFile and IO.appendfile and IO.writefile then
+            sink = Sink.new(primaryPath, opts.StreamChunk)
+            sink:write(table.concat(buf, "\n") .. "\n")
+            buf = {}
+        end
+
         local readmeEmitted = false
         for _, root in ipairs(roots) do
             if root == game then
@@ -1517,11 +1770,19 @@ function Fish.Save(instance, name, userOpts)
                                     readmeEmitted = true
                                 end
                             end
+                            if sink and #buf > 0 then
+                                sink:write(table.concat(buf, "\n") .. "\n")
+                                buf = {}
+                            end
                         end
                     end
                 end
             else
                 if refs[root] then emitInst(buf, root, 1, opts, decompileCache, refs, Walker.refCount) end
+                if sink and #buf > 0 then
+                    sink:write(table.concat(buf, "\n") .. "\n")
+                    buf = {}
+                end
             end
         end
 
@@ -1535,62 +1796,73 @@ function Fish.Save(instance, name, userOpts)
 
         table.insert(buf, '</roblox>')
 
-        local xml = table.concat(buf, "\n")
-        local finalName = name or placeName()
-        local fname = finalName .. ".rbxlx"
+        local xml
+        if sink then
+            sink:write(table.concat(buf, "\n"))
+            buf = {}
+            ConWrite("[Fishilizer] Finishing write")
+            local okFinish = sink:finish(primaryPath)
+            if okFinish then
+                xml = primaryPath
+            end
+        else
+            xml = table.concat(buf, "\n")
+        end
+
         local elapsed = tick() - t0
 
-        log("XML: " .. #xml .. " bytes, " .. Walker.totalInst .. " items emitted in " .. string.format("%.2fs", elapsed))
+        if sink and xml == primaryPath then
+            log("XML streamed to " .. primaryPath .. " in " .. string.format("%.2fs", elapsed))
+        else
+            log("XML: " .. #xml .. " bytes, " .. Walker.totalInst .. " items emitted in " .. string.format("%.2fs", elapsed))
+        end
 
         if opts.Callback and type(opts.Callback) == "function" then
             pcall(opts.Callback, xml)
-            setStatusText("Saved!", Color3.fromRGB(86, 255, 128))
-            fadeStatusAndDestroy()
+            setStatusText("Saved!")
+            ConWrite("[Fishilizer] Saved!")
             return xml
         end
 
         if opts.Clipboard then
             pcall(function() if IO.setclipboard then IO.setclipboard(xml) end end)
-            setStatusText("Saved!", Color3.fromRGB(86, 255, 128))
-            fadeStatusAndDestroy()
+            setStatusText("Saved!")
+            ConWrite("[Fishilizer] Saved!")
             return xml
         end
 
         local paths = {}
         if opts.FilePath then table.insert(paths, opts.FilePath) end
-        table.insert(paths, opts.OUT .. "/" .. fname)
+        table.insert(paths, primaryPath)
         table.insert(paths, fname)
 
-        if IO.makefolder and IO.isfolder then
-            local okF, exists = pcall(IO.isfolder, opts.OUT)
-            if not okF or not exists then pcall(IO.makefolder, opts.OUT) end
-        end
-
-        local wrote = false
-        for _, path in ipairs(paths) do
-            if IO.isfile and IO.delfile then
-                local okI, exists = pcall(IO.isfile, path)
-                if okI and exists and not opts.AvoidFileOverwrite then pcall(IO.delfile, path) end
-            end
-            local ok, err = pcall(IO.writefile, path, xml)
-            if ok then
-                log("Wrote: " .. path .. " (" .. #xml .. " bytes)")
-                wrote = true
-                break
-            else
-                log("Write fail " .. path .. ": " .. tostring(err))
+        local wrote = (sink ~= nil and xml == primaryPath)
+        if not wrote then
+            for _, path in ipairs(paths) do
+                if IO.isfile and IO.delfile then
+                    local okI, exists = pcall(IO.isfile, path)
+                    if okI and exists and not opts.AvoidFileOverwrite then pcall(IO.delfile, path) end
+                end
+                local ok, err = pcall(IO.writefile, path, xml)
+                if ok then
+                    log("Wrote: " .. path .. " (" .. #xml .. " bytes)")
+                    wrote = true
+                    break
+                else
+                    log("Write fail " .. path .. ": " .. tostring(err))
+                end
             end
         end
 
         if not wrote then
-            setStatusText("Save failed (writefile)", Color3.fromRGB(255, 86, 86))
-            task.delay(2, fadeStatusAndDestroy)
+            setStatusText("Save failed (writefile)")
+            ConWrite("[Fishilizer] Save failed")
             return xml
         end
 
-        setStatusText("Saved!", Color3.fromRGB(86, 255, 128))
+        setStatusText("Saved!")
+        ConWrite("[Fishilizer] Saved!")
         task.wait(0.4)
-        fadeStatusAndDestroy()
         return xml
     end)
 
@@ -1598,12 +1870,16 @@ function Fish.Save(instance, name, userOpts)
         restoreBackpack()
     end
 
+    flushLog()
+
     if not okSave then
         log("Save error: " .. tostring(result))
-        setStatusText("Save failed: " .. tostring(result):sub(1, 60), Color3.fromRGB(255, 86, 86))
-        task.delay(2, fadeStatusAndDestroy)
+        setStatusText("Save failed: " .. tostring(result):sub(1, 60))
+        ConWrite("[Fishilizer] Save error: " .. tostring(result))
         return nil
     end
+
+    if Fish.Options.CloseConsole then closeConsoleWithVulns() end
 
     return result
 end
@@ -1643,6 +1919,7 @@ Fish.EncodeTags = encodeTags --tags
 Fish.DecompileScript = lunauxDecompile --scripts
 Fish.HttpPost = httpPost --http (obv)
 Fish.ReadTerrainVoxels = readTerrainVoxels --useless shit
+Fish.Print = ConWrite
 Fish.DeepClone = function(t)
     if type(t) ~= "table" then return t end
     local n = {}
@@ -1655,43 +1932,67 @@ end
 -- Let's you use Fishilizer()
 
 local genv = (getgenv and getgenv()) or _G or _ENV
+local _fetching = false
+
+local function fetchLatest(kind, a, b)
+    if _fetching then
+        Fish.Init()
+        if kind == "instance" then return Fish.SaveInstance(a, b) end
+        return Fish.SavePlace(a, b)
+    end
+    _fetching = true
+    pcall(function()
+        local lua = game:HttpGetAsync(Fish.Bootstrap.scriptURL)
+        local fn = loadstring(lua)
+        if type(fn) == "function" then fn() end
+    end)
+    _fetching = false
+    local g = (getgenv and getgenv()) or _G
+    if g and g.Fish and type(g.Fish.SavePlace) == "function" then
+        if kind == "instance" then
+            return g.Fish.SaveInstance(a, b)
+        end
+        return g.Fish.SavePlace(a, b)
+    end
+    Fish.Init()
+    if kind == "instance" then return Fish.SaveInstance(a, b) end
+    return Fish.SavePlace(a, b)
+end
 
 genv.fishilizer = function(name, opts)
-    Fish.Init()
-    return Fish.SavePlace(name, opts)
+    return fetchLatest("place", name, opts)
+end
+
+genv.fishilize = function(name, opts)
+    return fetchLatest("place", name, opts)
 end
 
 genv.saveplace = function(name, opts)
-    Fish.Init()
-    return Fish.SavePlace(name, opts)
+    return fetchLatest("place", name, opts)
 end
 
 genv.dumpgame = function(name, opts)
-    Fish.Init()
-    return Fish.SavePlace(name, opts)
+    return fetchLatest("place", name, opts)
 end
 
 genv.fishsave = function(name, opts)
-    Fish.Init()
-    return Fish.SavePlace(name, opts)
+    return fetchLatest("place", name, opts)
 end
 
 genv.fetchplace = function(name, opts)
-    Fish.Init()
-    return Fish.SavePlace(name, opts)
+    return fetchLatest("place", name, opts)
 end
 
 genv.serialize = function(name, opts)
-    Fish.Init()
-    return Fish.SavePlace(name, opts)
+    return fetchLatest("place", name, opts)
 end
 
 genv.saveinstance = function(inst, name, opts)
-    Fish.Init()
-    return Fish.SaveInstance(inst, name, opts)
+    return fetchLatest("instance", inst, name, opts)
 end
 
-local SESSION_KEY = "__FISHILIZER_SESSION_" .. tostring(game.PlaceId)
+genv.Fish = Fish
+genv.Fishilizer = Fish
 
 -- Thank you claude for adding useless underscores
 
@@ -1701,18 +2002,13 @@ if genv and type(genv.FISHILIZER_CONFIG) == "table" then
     end
 end
 
-if genv and not genv[SESSION_KEY] and not genv.FISHILIZER_NO_AUTORUN then
-    local ok, err = pcall(function()
-        Fish.Init()
-        local result = Fish.SavePlace()
-        if result then genv[SESSION_KEY] = true end
-    end)
-    if not ok then
-        log("Auto-run failed: " .. tostring(err))
-        if _statusUI then
-            setStatusText("Save failed: " .. tostring(err):sub(1, 60), Color3.fromRGB(255, 86, 86))
-            task.delay(2, fadeStatusAndDestroy)
-        end
+if Fish.Options.Console then
+    ConInit()
+    if Fish.Options.AutoRun then
+        task.spawn(function()
+            task.wait(1)
+            fetchLatest("place")
+        end)
     end
 end
 
