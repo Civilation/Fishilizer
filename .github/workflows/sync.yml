@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Main Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Push to Website Repo
         uses: dmnemec/copy_file_to_another_repo_action@main
@@ -21,7 +21,6 @@ jobs:
           source_file: 'Fishilizer.lua'
           destination_repo: 'fishilizer/fishilizer.github.io'
           destination_branch: 'main'
-          destination_folder: '' 
           user_email: 'civilation@users.noreply.github.com'
           user_name: 'Civilation'
           commit_message: 'Auto-sync Fishilizer.lua from main repo'
