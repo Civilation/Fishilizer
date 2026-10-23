@@ -8,7 +8,13 @@ A Roblox place serializer written in Lua.
 
 Fishilizer saves Roblox instances and their properties to .rbxlx files that can be opened in Roblox Studio.
 
-![Source Code](https://img.shields.io/badge/Source-GitHub-181717?style=flat-square&logo=github) ![Version](https://img.shields.io/badge/Version-10.8.1-brightgreen?style=flat-square) ![Discord](https://img.shields.io/badge/Discord-Community-5865F2?style=flat-square&logo=discord&logoColor=white) ![Cash App](https://img.shields.io/badge/Cash%20App-Support-00C244?style=flat-square&logo=cashapp&logoColor=white)
+![Source Code](https://img.shields.io/badge/Source-GitHub-181717?style=flat-square&logo=github)
+
+![Version](https://img.shields.io/badge/Version-10.8.1-brightgreen?style=flat-square)
+
+![Discord](https://img.shields.io/badge/Discord-Community-5865F2?style=flat-square&logo=discord&logoColor=white)
+
+![Cash App](https://img.shields.io/badge/Cash%20App-Support-00C244?style=flat-square&logo=cashapp&logoColor=white)
 
 GitHub Repository · Source Code · Discord
 
@@ -26,7 +32,11 @@ The goal is to save as much of the original place as possible. Some properties a
 
 Preview
 
-!Fishilizer Preview
+<div align="center">
+
+<img src="https://files.catbox.moe/7si6e9.PNG" alt="Fishilizer Preview" width="100%" />
+
+</div>
 
 Features
 Property discovery: Uses getproperties() when available, with fallback property maps for other environments.
@@ -44,7 +54,7 @@ Tool preservation: Can temporarily move eligible backpack tools into StarterPack
 Output options: Supports file output and other methods available in the environment.
 Remote data: Loads supporting serializer data and uses fallback data when needed.
 Progress display: Shows save progress when supported.
-Getting started
+Getting Started
 Requirements
 
 Fishilizer depends on the functions available in the environment where it runs.
@@ -59,18 +69,16 @@ Compatible decompilation or bytecode functions for script recovery.
 
 Not every environment supports all of these functions. Features that depend on unavailable functions may be skipped or produce incomplete results.
 
-Automatic execution
+Automatic Execution
 
-Load Fishilizer with the following code:
+Run the following loadstring in a compatible environment:
 
-loadstring(game:HttpGet(
-    "https://raw.githubusercontent.com/Civilation/Fishilizer/main/Fishilizer.lua"
-))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Civilation/Fishilizer/main/Fishilizer.lua"))()
 
 
-This loads Fishilizer and runs its default save behavior.
+This downloads Fishilizer.lua directly from the GitHub repository and executes it.
 
-Manual execution
+Manual Execution
 
 To control what gets saved, disable automatic execution before loading Fishilizer.
 
@@ -97,10 +105,7 @@ Fish.Save(workspace.MyModel, "SingleModel")
 
 Saving to disk requires an environment with the appropriate file-writing functions.
 
-Export modes
-
-Fishilizer has three main export modes.
-
+Export Modes
 Mode	Description
 full	Saves supported instances and properties, including scripts.
 scripts	Saves script instances such as Script, LocalScript, and ModuleScript.
@@ -108,22 +113,22 @@ models	Saves non-script instances.
 
 The SaveScripts() and SaveModels() functions select their respective modes automatically.
 
-Save a specific model
+Save a Specific Model
 Fish.Save(workspace.MyModel, "MyModel")
 
-Save scripts from a model
+Save Scripts From a Model
 Fish.SaveScripts(workspace.MyModel, "MyScripts")
 
-Save non-script instances from a folder
+Save Non-Script Instances From a Folder
 Fish.SaveModels(workspace.MyFolder, "MyModels")
 
-Save the entire place
+Save the Entire Place
 Fish.SavePlace("MyPlace")
 
 
 The resulting file depends on the selected options and the functions available in the environment.
 
-API reference
+API Reference
 
 The main functions available through the Fish table include:
 
@@ -137,6 +142,7 @@ Fish.SaveModels(instance, name?, opts?)	Saves non-script instances.
 Fish.FetchClasses(cacheFile?)	Fetches or loads cached Roblox API information.
 Fish.LoadData()	Loads supporting serializer data.
 Fish.ApplyAPIDump(data)	Reads API dump information for property discovery.
+Environment Aliases
 
 Fishilizer also registers convenience aliases in the execution environment:
 
@@ -148,9 +154,6 @@ fishsave(name?, opts?)	Saves the current place.
 fetchplace(name?, opts?)	Saves the current place.
 serialize(name?, opts?)	Saves the current place.
 saveinstance(inst, name?, opts?)	Saves a specific instance.
-
-See the GitHub repository for source code and available project documentation.
-
 Configuration
 
 Configuration can be set through FISHILIZER_CONFIG before loading the script.
@@ -182,7 +185,7 @@ loadstring(game:HttpGet(
 
 This example turns off decompilation, enables attribute and tag saving, and excludes player characters.
 
-Per-save options
+Per-Save Options
 
 You can also pass options directly to a save function.
 
@@ -197,7 +200,7 @@ Fish.SavePlace("MyPlace", {
 
 This changes the settings for one export without changing the global configuration.
 
-Common options
+Common Options
 Option	Default	Description
 Mode	"full"	Selects the export mode.
 Decompile	true	Attempts to recover script source when supported.
@@ -224,7 +227,7 @@ These are the main options and their documented defaults. Other options may be a
 
 [!WARNING]
 KillAllScripts is an available option that defaults to false. Enabling it can disable accessible script instances during saving and affect the running game.
-How it works
+How It Works
 
 Fishilizer goes through the selected instances and builds an XML file from the data it can access.
 
@@ -243,7 +246,7 @@ Limitations
 
 Fishilizer cannot save every Roblox place perfectly. The result depends on which instances and properties the environment can access.
 
-Script source
+Script Source
 
 Server Script instances receive placeholder source in the current implementation. Their original source should not be expected in the exported file.
 
@@ -259,34 +262,34 @@ Properties
 
 Some properties may be inaccessible, unsupported, or filtered out. Roblox updates can introduce new classes and properties that the current property maps do not cover.
 
-Runtime state
+Runtime State
 
 Not all runtime data can be restored from an exported file. Engine-managed values, unavailable assets, server-only data, and unsupported instance types can prevent an exact copy.
 
-File output
+File Output
 
 File-writing and clipboard functions depend on the environment. Successfully creating the XML does not always mean the file was saved correctly.
 
 Troubleshooting
-The save fails
+The Save Fails
 Check the execution output for errors.
 Make sure the required functions are available.
 Check that file writing is supported.
-Try saving a smaller model to find out which instances might be causing the problem.
-Properties are missing
+Try saving a smaller model to identify possible problem instances.
+Properties Are Missing
 Check whether getproperties() is available.
 Check the API property settings.
 Review which properties are filtered by your options.
 Update supporting API data if it is outdated.
-Terrain is incomplete
+Terrain Is Incomplete
 Check whether voxel-reading functions are available.
 Try saving a smaller terrain region.
 Review TerrainResolution and TerrainCellCap.
-Scripts are missing source
+Scripts Are Missing Source
 Check whether Decompile is enabled.
 Check whether the environment has compatible decompilation functions.
 Remember that the current implementation does not recover the original source of server scripts.
-The exported file will not open
+The Exported File Will Not Open
 Check the output for serialization errors.
 Make sure the file was written completely.
 Try exporting a smaller section.
@@ -316,22 +319,22 @@ Make serialization errors easier to understand.
 Add more examples to the documentation.
 Add tests for attributes, tags, terrain, and CSG data.
 
-The unchecked items are things that could be worked on in the future. They are not finished features.
+The unchecked items are planned improvements, not completed features.
 
 Support Fishilizer
 
-If you'd like to support Fishilizer and its development, you can send a donation through Cash App. It's completely optional, but any support is appreciated. <3
+If you'd like to support Fishilizer and its development, you can send a donation through Cash App. It's completely optional, but any support is appreciated. ❤️
 
 ![Cash App](https://img.shields.io/badge/Cash%20App-Support%20Fishilizer-00C244?style=flat-square&logo=cashapp&logoColor=white)
 
 Cash App: $aeroglass
 
 Links
-GitHub Repository
-Source Code
-Raw Script
-Discord
-Cash App
+GitHub Repository: https://github.com/Civilation/Fishilizer
+Source Code: https://github.com/Civilation/Fishilizer/blob/main/Fishilizer.lua
+Raw Script: https://raw.githubusercontent.com/Civilation/Fishilizer/main/Fishilizer.lua
+Discord: https://discord.gg/GZDXBMjndT
+Cash App: https://cash.app/$aeroglass
 Disclaimer
 
 Fishilizer is an independent project for Roblox serialization and game development research. It is not affiliated with or endorsed by Roblox Corporation.
