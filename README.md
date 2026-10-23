@@ -9,13 +9,13 @@
 
 Fishilizer saves Roblox instances and their properties to `.rbxlx` files that can be opened in Roblox Studio.
 
-[![Documentation](https://img.shields.io/badge/Documentation-Read%20the%20Docs-blue?style=flat-square)](https://fishilizer.github.io/documentation.html)
-[![Options](https://img.shields.io/badge/Configuration-Options-orange?style=flat-square)](https://fishilizer.github.io/options.html)
-[![Version](https://img.shields.io/badge/Version-10.8.1-brightgreen?style=flat-square)](https://fishilizer.github.io/)
+[![Repository](https://img.shields.io/badge/GitHub-Repository-181717?style=flat-square&logo=github)](https://github.com/Civilation/Fishilizer)
+[![Source](https://img.shields.io/badge/Source-Lua-blue?style=flat-square)](https://github.com/Civilation/Fishilizer/blob/main/Fishilizer.lua)
+[![Version](https://img.shields.io/badge/Version-10.8.1-brightgreen?style=flat-square)](https://github.com/Civilation/Fishilizer)
 [![Discord](https://img.shields.io/badge/Discord-Community-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/GZDXBMjndT)
 [![Cash App](https://img.shields.io/badge/Cash%20App-Support-00C244?style=flat-square&logo=cashapp&logoColor=white)](https://cash.app/$aeroglass)
 
-[Website](https://fishilizer.github.io/) · [Documentation](https://fishilizer.github.io/documentation.html) · [Loadstring Builder](https://fishilizer.github.io/builder.html) · [Data API](https://fishilizer.github.io/data.html)
+[GitHub Repository](https://github.com/Civilation/Fishilizer) · [Source Code](https://github.com/Civilation/Fishilizer/blob/main/Fishilizer.lua) · [Raw Lua Source](https://raw.githubusercontent.com/Civilation/Fishilizer/main/Fishilizer.lua)
 
 </div>
 
@@ -48,7 +48,7 @@ The goal is to save as much of the original place as possible. Some properties a
 - **Instance filtering:** Provides options for excluding player characters, core scripts, and other instances.
 - **Tool preservation:** Can temporarily move eligible backpack tools into `StarterPack` while saving.
 - **Output options:** Supports file output and other methods available in the environment.
-- **Remote data:** Loads serializer data from the project website and uses fallback data when needed.
+- **Remote data:** Loads serializer data and uses fallback data when needed.
 - **Progress display:** Shows save progress when supported.
 
 ## Getting started
@@ -73,7 +73,7 @@ Load Fishilizer with the following code:
 
 ```lua
 loadstring(game:HttpGetAsync(
-    "https://fishilizer.github.io/Fishilizer.lua"
+    "https://raw.githubusercontent.com/Civilation/Fishilizer/main/Fishilizer.lua"
 ))()
 ```
 
@@ -87,7 +87,7 @@ To control what gets saved, disable automatic execution before loading Fishilize
 getgenv().FISHILIZER_NO_AUTORUN = true
 
 local Fish = loadstring(game:HttpGetAsync(
-    "https://fishilizer.github.io/Fishilizer.lua"
+    "https://raw.githubusercontent.com/Civilation/Fishilizer/main/Fishilizer.lua"
 ))()
 
 Fish.Init()
@@ -173,7 +173,7 @@ Fishilizer also registers convenience aliases in the execution environment:
 | `serialize(name?, opts?)` | Saves the current place. |
 | `saveinstance(inst, name?, opts?)` | Saves a specific instance. |
 
-For more details, see the [API documentation](https://fishilizer.github.io/documentation.html).
+For additional information, see the [Fishilizer GitHub repository](https://github.com/Civilation/Fishilizer).
 
 ## Configuration
 
@@ -202,7 +202,7 @@ getgenv().FISHILIZER_CONFIG = {
 }
 
 loadstring(game:HttpGetAsync(
-    "https://fishilizer.github.io/Fishilizer.lua"
+    "https://raw.githubusercontent.com/Civilation/Fishilizer/main/Fishilizer.lua"
 ))()
 ```
 
@@ -251,7 +251,7 @@ This changes the settings for one export without changing the global configurati
 
 These are the main options and their documented defaults. Other options may be available in the current version.
 
-See the [Options page](https://fishilizer.github.io/options.html) for the complete list.
+See the [Fishilizer GitHub repository](https://github.com/Civilation/Fishilizer) for project information and source code.
 
 > [!WARNING]
 > `KillAllScripts` is an available option that defaults to `false`. Enabling it can disable accessible script instances during saving and affect the running game.
@@ -271,7 +271,7 @@ Fishilizer goes through the selected instances and builds an XML file from the d
 
 Some properties need special handling because they contain binary data or values that cannot be written as ordinary XML.
 
-The [Data API](https://fishilizer.github.io/data.html) contains information about the data Fishilizer uses, including class maps, property lists, binary properties, and other supporting information.
+Supporting API data includes class maps, property lists, binary properties, and other information used by Fishilizer.
 
 ## Limitations
 
@@ -353,7 +353,7 @@ File-writing and clipboard functions depend on the environment. Successfully cre
 - [x] Add optional script decompilation and bytecode fallback.
 - [x] Add remote configuration data and fallback tables.
 - [x] Add progress display and different output methods.
-- [x] Publish the documentation and configuration pages.
+- [x] Publish the source code on GitHub.
 
 ### Planned
 
@@ -378,12 +378,9 @@ Cash App: [$aeroglass](https://cash.app/$aeroglass)
 
 ## Links
 
-- [Website](https://fishilizer.github.io/)
-- [Documentation](https://fishilizer.github.io/documentation.html)
-- [Configuration options](https://fishilizer.github.io/options.html)
-- [Loadstring Builder](https://fishilizer.github.io/builder.html)
-- [Data API](https://fishilizer.github.io/data.html)
-- [Source code](https://github.com/Civilation/Fishilizer/blob/main/Fishilizer.lua)
+- [GitHub Repository](https://github.com/Civilation/Fishilizer)
+- [Source Code](https://github.com/Civilation/Fishilizer/blob/main/Fishilizer.lua)
+- [Raw Lua Source](https://raw.githubusercontent.com/Civilation/Fishilizer/main/Fishilizer.lua)
 - [Discord](https://discord.gg/GZDXBMjndT)
 - [Cash App](https://cash.app/$aeroglass)
 
