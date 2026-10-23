@@ -29,9 +29,6 @@ Fishilizer uses Roblox API information, fallback property maps, and engine refle
 
 The goal is to save as much of the original place as possible. Some properties and data may not be accessible, so exported files might not be exact copies of the original.
 
-## Preview
-
-![Fishilizer Preview](https://files.catbox.moe/7si6e9.PNG)
 
 ## Features
 
