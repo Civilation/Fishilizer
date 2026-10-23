@@ -32,11 +32,7 @@ The goal is to save as much of the original place as possible. Some properties a
 
 Preview
 
-<div align="center">
-
-<img src="https://files.catbox.moe/7si6e9.PNG" alt="Fishilizer Preview" width="100%" />
-
-</div>
+!Fishilizer Preview
 
 Features
 Property discovery: Uses getproperties() when available, with fallback property maps for other environments.
@@ -71,12 +67,12 @@ Not every environment supports all of these functions. Features that depend on u
 
 Automatic Execution
 
-Run the following loadstring in a compatible environment:
+Use the following loadstring to download Fishilizer directly from GitHub:
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Civilation/Fishilizer/main/Fishilizer.lua"))()
 
 
-This downloads Fishilizer.lua directly from the GitHub repository and executes it.
+This loads and executes the script from the repository's main branch.
 
 Manual Execution
 
@@ -106,6 +102,9 @@ Fish.Save(workspace.MyModel, "SingleModel")
 Saving to disk requires an environment with the appropriate file-writing functions.
 
 Export Modes
+
+Fishilizer has three main export modes.
+
 Mode	Description
 full	Saves supported instances and properties, including scripts.
 scripts	Saves script instances such as Script, LocalScript, and ModuleScript.
@@ -154,6 +153,9 @@ fishsave(name?, opts?)	Saves the current place.
 fetchplace(name?, opts?)	Saves the current place.
 serialize(name?, opts?)	Saves the current place.
 saveinstance(inst, name?, opts?)	Saves a specific instance.
+
+For implementation details, see the Fishilizer source code.
+
 Configuration
 
 Configuration can be set through FISHILIZER_CONFIG before loading the script.
@@ -244,109 +246,4 @@ Some properties need special handling because they contain binary data or values
 
 Limitations
 
-Fishilizer cannot save every Roblox place perfectly. The result depends on which instances and properties the environment can access.
-
-Script Source
-
-Server Script instances receive placeholder source in the current implementation. Their original source should not be expected in the exported file.
-
-LocalScript and ModuleScript source recovery depends on available source access and decompilation functions. Bytecode fallback does not guarantee that the original source can be recovered.
-
-Terrain
-
-Terrain saving depends on accessible voxel APIs. Large regions may exceed the configured cell limit, and some terrain data may not be available.
-
-Adjust TerrainResolution and TerrainCellCap when working with large terrain regions.
-
-Properties
-
-Some properties may be inaccessible, unsupported, or filtered out. Roblox updates can introduce new classes and properties that the current property maps do not cover.
-
-Runtime State
-
-Not all runtime data can be restored from an exported file. Engine-managed values, unavailable assets, server-only data, and unsupported instance types can prevent an exact copy.
-
-File Output
-
-File-writing and clipboard functions depend on the environment. Successfully creating the XML does not always mean the file was saved correctly.
-
-Troubleshooting
-The Save Fails
-Check the execution output for errors.
-Make sure the required functions are available.
-Check that file writing is supported.
-Try saving a smaller model to identify possible problem instances.
-Properties Are Missing
-Check whether getproperties() is available.
-Check the API property settings.
-Review which properties are filtered by your options.
-Update supporting API data if it is outdated.
-Terrain Is Incomplete
-Check whether voxel-reading functions are available.
-Try saving a smaller terrain region.
-Review TerrainResolution and TerrainCellCap.
-Scripts Are Missing Source
-Check whether Decompile is enabled.
-Check whether the environment has compatible decompilation functions.
-Remember that the current implementation does not recover the original source of server scripts.
-The Exported File Will Not Open
-Check the output for serialization errors.
-Make sure the file was written completely.
-Try exporting a smaller section.
-Open the file in Roblox Studio to see whether any data is invalid or unsupported.
-TODO
-Completed
-Make the core XML serializer.
-Add full-place, script-only, and model-only export modes.
-Add support for saving individual instances.
-Add property discovery and fallback property maps.
-Add Roblox API dump support.
-Add engine reflection support where available.
-Add instance filtering options.
-Add attribute and CollectionService tag saving.
-Add terrain voxel capture.
-Add support for accessible CSG binary properties.
-Add optional script decompilation and bytecode fallback.
-Add remote configuration data and fallback tables.
-Add progress display and different output methods.
-Planned
-Improve terrain saving, especially for large regions.
-Add support for more engine-specific properties.
-Add tests to check whether generated .rbxlx files are valid.
-Test compatibility with Roblox updates.
-Show which instances and properties were skipped.
-Make serialization errors easier to understand.
-Add more examples to the documentation.
-Add tests for attributes, tags, terrain, and CSG data.
-
-The unchecked items are planned improvements, not completed features.
-
-Support Fishilizer
-
-If you'd like to support Fishilizer and its development, you can send a donation through Cash App. It's completely optional, but any support is appreciated. ❤️
-
-![Cash App](https://img.shields.io/badge/Cash%20App-Support%20Fishilizer-00C244?style=flat-square&logo=cashapp&logoColor=white)
-
-Cash App: $aeroglass
-
-Links
-GitHub Repository: https://github.com/Civilation/Fishilizer
-Source Code: https://github.com/Civilation/Fishilizer/blob/main/Fishilizer.lua
-Raw Script: https://raw.githubusercontent.com/Civilation/Fishilizer/main/Fishilizer.lua
-Discord: https://discord.gg/GZDXBMjndT
-Cash App: https://cash.app/$aeroglass
-Disclaimer
-
-Fishilizer is an independent project for Roblox serialization and game development research. It is not affiliated with or endorsed by Roblox Corporation.
-
-Only save places and data you are allowed to access. Respect other creators' work and Roblox's rules.
-
-Saving and decompilation depend on the environment. Fishilizer cannot guarantee that every instance, property, or script will be recovered. Keep backups of important files before using it.
-
-<div align="center">
-
-Made with ❤️ by Garfield Cat Presents
-
-Thanks for checking out Fishilizer!
-
-</div>
+Fishilizer cannot save every Roblox place perfectly. The result depends
